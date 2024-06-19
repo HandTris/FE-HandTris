@@ -1,0 +1,66 @@
+/* styles/global.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset some default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure full height and background coverage */
+html, body {
+  height: 100%;
+  background-color: #000;
+}
+
+#game-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('/image/bg.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(1px) saturate(80%);
+  z-index: 1;
+}
+
+/* Content styling */
+.content {
+  position: relative;
+  z-index: 2;
+  color: white;
+}
+
+/* Visibility utility classes */
+.hidden {
+  display: none;
+}
+.visible {
+  display: block;
+}
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+  body {
+    font-size: 0.9rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+  }
+}
