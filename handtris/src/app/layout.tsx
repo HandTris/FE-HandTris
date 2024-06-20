@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Nanum_Gothic, Nanum_Gothic_Coding } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -19,11 +20,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body id="game-container" className={nanum.className}>
+    <html lang="en" className={nanum.className}>
+      <body
+        id="game-container"
+        className="flex flex-col w-full max-w-screen-2xl mx-auto"
+      >
         {/* <div id="overlay" /> */}
         <Header />
-        {children}
+        <main className="grow">{children}</main>
+        <Footer />
       </body>
     </html>
   );
