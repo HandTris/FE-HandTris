@@ -1,10 +1,7 @@
 import { getServerSession } from "next-auth";
 import Link from "next/link";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 async function Header() {
-  const session = await getServerSession(authOptions);
-
   return (
     <header className="flex justify-between items-center border-b text-green-400 w-full p-4">
       <Link href="/" className="hover:text-green-500">
