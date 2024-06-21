@@ -3,15 +3,57 @@ import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { HAND_CONNECTIONS, Hands } from '@mediapipe/hands';
 import { useEffect } from 'react';
+import SockJS from 'sockjs-client';
+import Stomp from 'stompjs';
 
 const Home: React.FC = () => {
   useEffect(() => {
+    // WebSocket 연결
+    const socket = new SockJS('https://806f-2001-2d8-7007-2089-40ec-99ef-1421-8c1e.ngrok-free.app/tetris');
+    const stompClient = Stomp.over(socket);
+    console.log('stompClient: ', stompClient);
+    let connected = false;
+    stompClient.connect({}, function (frame) {
+      console.log('Connected: ' + frame);
+      connected = true;
+      function drawSquare2(x: number, y: number, color: string) {
+        let gradient = ctxTetris2.createLinearGradient(x * SQ, y * SQ, x * SQ + SQ, y * SQ + SQ);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(1, "white");
+
+        ctxTetris2.fillStyle = gradient;
+        ctxTetris2.fillRect(x * SQ, y * SQ, SQ, SQ);
+
+        ctxTetris2.strokeStyle = "BLACK";
+        ctxTetris2.strokeRect(x * SQ, y * SQ, SQ, SQ);
+      }
+
+      // draw the board
+      function drawBoard2(board2) {
+        for (let r = 0; r < ROW; r++) {
+          for (let c = 0; c < COL; c++) {
+            drawSquare2(c, r, board2[r][c]);
+          }
+        }
+      }
+
+      stompClient.subscribe('/topic/tetris', function (message) {
+        let tetrisMessage = JSON.parse(message.body);
+        drawBoard2(tetrisMessage.board as any);
+      });
+    },function (error) {
+      console.error('Connection error: ' + error);
+      alert('Failed to connect to WebSocket: ' + error);
+  });
+
     const videoElement = document.getElementById('video') as HTMLVideoElement;
     const canvasElement = document.getElementById('canvas') as HTMLCanvasElement;
     const canvasCtx = canvasElement.getContext('2d') as CanvasRenderingContext2D;
     const gestureElement = document.getElementById('gesture') as HTMLDivElement;
     const canvasTetris = document.getElementById('tetris') as HTMLCanvasElement;
+    const canvasTetris2 = document.getElementById('tetrisCanvas2') as HTMLCanvasElement;
     const ctxTetris = canvasTetris.getContext('2d') as CanvasRenderingContext2D;
+    const ctxTetris2 = canvasTetris2.getContext('2d') as CanvasRenderingContext2D;
     const borderElement = document.getElementById('tetris-border') as HTMLDivElement;
     let currentGesture: string = 'None';
 
@@ -22,7 +64,6 @@ const Home: React.FC = () => {
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         for (const landmarks of results.multiHandLandmarks) {
-          // drawConnectors and drawLandmarks would need to be imported or defined
           drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#00FF00', lineWidth: 1 });
           drawLandmarks(canvasCtx, landmarks, { color: '#FF0000', lineWidth: 0.05 });
 
@@ -349,14 +390,28 @@ const Home: React.FC = () => {
     let dropStart = Date.now();
     let gameOver = false;
 
+    // 메시지 전송 함수
+    function sendTetrisMessage(board) {
+      if (connected) {
+        let message = {
+          board: board,
+        };
+        stompClient.send("/app/tetris", {}, JSON.stringify(message));
+      } else {
+        console.log("WebSocket connection is not established yet.");
+      }
+    }
+
     function drop() {
       let now = Date.now();
       let delta = now - dropStart;
       if (delta > 200) {
         p.moveDown();
         dropStart = Date.now();
+        sendTetrisMessage(board);
       }
       if (!gameOver) {
+        sendTetrisMessage(board as any);
         requestAnimationFrame(drop);
       }
     }
@@ -440,27 +495,22 @@ const Home: React.FC = () => {
 
   return (
     <>
-    <div className="grid-container">
+      <div className="grid-container">
         <div id="webcam-container">
-            <div id="gesture">Gesture: None</div>
-            <video id="video" width="320" height="240" autoPlay className="hidden"></video>
-            <canvas id="canvas" width="320" height="240"></canvas>
+          <div id="gesture">Gesture: None</div>
+          <video id="video" width="320" height="240" autoPlay className="hidden"></video>
+          <canvas id="canvas" width="320" height="240"></canvas>
         </div>
         <div id="webcam-container">
-            <div id="tetris-container">
-                <canvas id="tetris" width="320" height="640"></canvas>
-                <div id="tetris-border"></div>
-            </div>
-        </div>
-        <div id="webcam-container">
+          <div id="tetris-container">
             <canvas id="tetris" width="320" height="640"></canvas>
+            <div id="tetris-border"></div>
+          </div>
         </div>
         <div id="webcam-container">
-            <div id="gesture">Gesture: None</div>
-            <video id="video" width="320" height="240" autoPlay className="hidden"></video>
-            <canvas id="canvas" width="320" height="240"></canvas>
+          <canvas id="tetrisCanvas2" width="320" height="640"></canvas>
         </div>
-    </div>
+      </div>
     </>
   );
 };
