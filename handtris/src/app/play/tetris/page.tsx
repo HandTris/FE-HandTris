@@ -29,7 +29,7 @@ const Home: React.FC = () => {
       console.log('Connected: ' + frame);
       connected = true;
 
-      stompClient.subscribe('/topic/tetris', function (message) {
+      stompClient.subscribe('/user/queue/tetris', function (message) {
         let tetrisMessage = JSON.parse(message.body);
         let temp = stompClient.ws._transport
         console.log('temp: ', temp);
@@ -177,6 +177,14 @@ const Home: React.FC = () => {
         board[r][c] = VACANT;
       }
     }
+    // 초기 전달을 위한 보드
+    let board_forsend: string[][] = [];
+    for (let r = 0; r < ROW; r++) {
+      board_forsend[r] = [];
+      for (let c = 0; c < COL; c++) {
+        board_forsend[r][c] = VACANT;
+      }
+    }
 
     // draw the board
     function drawBoard() {
@@ -214,6 +222,9 @@ const Home: React.FC = () => {
       for (let r = 0; r < this.activeTetromino.length; r++) {
         for (let c = 0; c < this.activeTetromino[r].length; c++) {
           if (this.activeTetromino[r][c]) {
+            if (this.y + r >= 0 && this.x + c >= 0) {
+              board_forsend[this.y + r][this.x + c] = color;
+            }
             drawSquare(this.x + c, this.y + r, color);
           }
         }
@@ -322,15 +333,15 @@ function sendTetrisMessage(board) {
 
 
     function drop() {
+      sendTetrisMessage(board_forsend as any);
       let now = Date.now();
       let delta = now - dropStart;
       if (delta > 200) {
         p.moveDown();
         dropStart = Date.now();
-        sendTetrisMessage(board as any);
+        
       }
       if (!gameOver) {
-        sendTetrisMessage(board as any);
         requestAnimationFrame(drop);
       }
     }
@@ -379,6 +390,7 @@ function sendTetrisMessage(board) {
           for (let y = r; y > 1; y--) {
             for (let c = 0; c < COL; c++) {
               board[y][c] = board[y - 1][c];
+              board_forsend[y][c] = board_forsend[y - 1][c];
             }
           }
           for (let c = 0; c < COL; c++) {
