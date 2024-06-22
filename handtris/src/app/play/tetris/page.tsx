@@ -1,4 +1,5 @@
 'use client'
+import { PIECES } from '@/components/Tetromino';
 import { Camera } from '@mediapipe/camera_utils';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
 import { HAND_CONNECTIONS, Hands } from '@mediapipe/hands';
@@ -9,43 +10,40 @@ import Stomp from 'stompjs';
 const Home: React.FC = () => {
   useEffect(() => {
     // WebSocket 연결
-    const socket = new SockJS('https://806f-2001-2d8-7007-2089-40ec-99ef-1421-8c1e.ngrok-free.app/tetris');
-    const stompClient = Stomp.over(socket);
+    let socket = new SockJS('https://api.checkmatejungle.shop/tetris');
+    // const socket = new WebSocket("ws://api.checkmatejungle.shop/tetris")
+    console.log('socket: ', socket);
+    socket.onopen = function() {
+    console.log('Socket is open');
+};
+    socket.onclose = function(event) {
+    console.log('Socket is closed:', event);
+};
+    socket.onerror = function(error) {
+    console.log('Socket error:', error);
+};
+    let stompClient = Stomp.over(socket);
     console.log('stompClient: ', stompClient);
     let connected = false;
     stompClient.connect({}, function (frame) {
       console.log('Connected: ' + frame);
       connected = true;
-      function drawSquare2(x: number, y: number, color: string) {
-        let gradient = ctxTetris2.createLinearGradient(x * SQ, y * SQ, x * SQ + SQ, y * SQ + SQ);
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(1, "white");
-
-        ctxTetris2.fillStyle = gradient;
-        ctxTetris2.fillRect(x * SQ, y * SQ, SQ, SQ);
-
-        ctxTetris2.strokeStyle = "BLACK";
-        ctxTetris2.strokeRect(x * SQ, y * SQ, SQ, SQ);
-      }
-
-      // draw the board
-      function drawBoard2(board2) {
-        for (let r = 0; r < ROW; r++) {
-          for (let c = 0; c < COL; c++) {
-            drawSquare2(c, r, board2[r][c]);
-          }
-        }
-      }
 
       stompClient.subscribe('/topic/tetris', function (message) {
         let tetrisMessage = JSON.parse(message.body);
-        drawBoard2(tetrisMessage.board as any);
+        let temp = stompClient.ws._transport
+        console.log('temp: ', temp);
+        console.log('temp.url: ', temp.url);
+        console.log('tetrisMessage.sender: ', tetrisMessage.sender);
+        if (tetrisMessage.sender != temp.url) {
+          drawBoard2(tetrisMessage.board as any);
+        }
       });
     },function (error) {
       console.error('Connection error: ' + error);
       alert('Failed to connect to WebSocket: ' + error);
   });
-
+    
     const videoElement = document.getElementById('video') as HTMLVideoElement;
     const canvasElement = document.getElementById('canvas') as HTMLCanvasElement;
     const canvasCtx = canvasElement.getContext('2d') as CanvasRenderingContext2D;
@@ -190,102 +188,9 @@ const Home: React.FC = () => {
     }
     drawBoard();
 
-    // Tetromino arrays
-    const Z = [
-      [[1, 1, 0],
-      [0, 1, 1],
-      [0, 0, 0]],
-      [[0, 0, 1],
-      [0, 1, 1],
-      [0, 1, 0]]
-    ];
-
-    const S = [
-      [[0, 1, 1],
-      [1, 1, 0],
-      [0, 0, 0]],
-      [[0, 1, 0],
-      [0, 1, 1],
-      [0, 0, 1]]
-    ];
-
-    const T = [
-      [[0, 1, 0],
-      [1, 1, 1],
-      [0, 0, 0]],
-      [[0, 1, 0],
-      [0, 1, 1],
-      [0, 1, 0]],
-      [[0, 0, 0],
-      [1, 1, 1],
-      [0, 1, 0]],
-      [[0, 1, 0],
-      [1, 1, 0],
-      [0, 1, 0]]
-    ];
-
-    const O = [
-      [[0, 0, 0],
-      [0, 1, 1],
-      [0, 1, 1]]
-    ];
-
-    const L = [
-      [[0, 1, 0],
-      [0, 1, 0],
-      [0, 1, 1]],
-      [[0, 0, 0],
-      [1, 1, 1],
-      [1, 0, 0]],
-      [[1, 1, 0],
-      [0, 1, 0],
-      [0, 1, 0]],
-      [[0, 0, 1],
-      [1, 1, 1],
-      [0, 0, 0]]
-    ];
-
-    const I = [
-      [[0, 0, 0, 0],
-      [1, 1, 1, 1],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0]],
-      [[0, 0, 1, 0],
-      [0, 0, 1, 0],
-      [0, 0, 1, 0],
-      [0, 0, 1, 0]]
-    ];
-
-    const J = [
-      [[0, 1, 0],
-      [0, 1, 0],
-      [1, 1, 0]],
-      [[1, 0, 0],
-      [1, 1, 1],
-      [0, 0, 0]],
-      [[0, 1, 1],
-      [0, 1, 0],
-      [0, 1, 0]],
-      [[0, 0, 0],
-      [1, 1, 1],
-      [0, 0, 1]]
-    ];
-
-    // the pieces and their colors(블럭의 종류와 형태)
-    const PIECES = [
-      [Z, "red"],
-      [S, "green"],
-      [T, "pink"],
-      [O, "blue"],
-      [L, "purple"],
-      [I, "cyan"],
-      [J, "orange"]
-    ];
-
     // generate random pieces
     function randomPiece() {
       let r = Math.floor(Math.random() * PIECES.length); // 0 ~ 6
-      console.log('PIECES[r][0]: ', PIECES[r][0]);
       return new Piece(PIECES[r][0], PIECES[r][1]);
     }
 
@@ -390,17 +295,31 @@ const Home: React.FC = () => {
     let dropStart = Date.now();
     let gameOver = false;
 
-    // 메시지 전송 함수
-    function sendTetrisMessage(board) {
-      if (connected) {
-        let message = {
-          board: board,
-        };
-        stompClient.send("/app/tetris", {}, JSON.stringify(message));
-      } else {
-        console.log("WebSocket connection is not established yet.");
-      }
+// 메시지 전송 함수
+function sendTetrisMessage(board) {
+  // SockJS URL에서 세션 ID 추출
+  let match = /\/([^\/]+)\/(?:tetris|sockjs)/.exec(socket.url);
+  console.log(stompClient.ws)
+  let sessionId = stompClient.ws._transport
+  // match가 null인지 확인하여 에러 처리
+  if (match && match[1]) {
+    console.log("Session ID:", sessionId);
+
+    if (connected) {
+      let message = {
+        board: board,
+        sender: sessionId.url,
+      };
+      stompClient.send("/app/tetris", {}, JSON.stringify(message));
+    } else {
+      console.log("WebSocket connection is not established yet.");
     }
+  } else {
+    console.error("Session ID could not be extracted from URL.");
+  }
+}
+
+
 
     function drop() {
       let now = Date.now();
@@ -408,14 +327,33 @@ const Home: React.FC = () => {
       if (delta > 200) {
         p.moveDown();
         dropStart = Date.now();
-        sendTetrisMessage(board);
+        sendTetrisMessage(board as any);
       }
       if (!gameOver) {
         sendTetrisMessage(board as any);
         requestAnimationFrame(drop);
       }
     }
+    // draw the board
+    function drawSquare2(x: number, y: number, color: string) {
+      let gradient = ctxTetris2.createLinearGradient(x * SQ, y * SQ, x * SQ + SQ, y * SQ + SQ);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, "white");
 
+      ctxTetris2.fillStyle = gradient;
+      ctxTetris2.fillRect(x * SQ, y * SQ, SQ, SQ);
+
+      ctxTetris2.strokeStyle = "BLACK";
+      ctxTetris2.strokeRect(x * SQ, y * SQ, SQ, SQ);
+    }
+
+    function drawBoard2(board2) {
+      for (let r = 0; r < ROW; r++) {
+        for (let c = 0; c < COL; c++) {
+          drawSquare2(c, r, board2[r][c]);
+        }
+      }
+    }
     drop();
 
     Piece.prototype.lock = function (this: any) {
@@ -509,6 +447,11 @@ const Home: React.FC = () => {
         </div>
         <div id="webcam-container">
           <canvas id="tetrisCanvas2" width="320" height="640"></canvas>
+        </div>
+        <div id="webcam-container">
+          <div className=''> 상대방 웹캠 보일 디브 </div>
+          <div id="remoteStreamDiv"> remote Stream Div</div>
+          <button type="button" id="startSteamBtn">start Streams</button>
         </div>
       </div>
     </>
