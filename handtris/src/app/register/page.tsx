@@ -2,8 +2,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Formik, Form } from "formik";
-import validationSchema from "../../yup/validationSchema";
 import CustomField from "../../components/CustomField";
+import registerValidation from "../../yup/registervalidation";
 
 const Signup = () => {
   return (
@@ -22,7 +22,7 @@ const Signup = () => {
             confirmPassword: "",
             nickname: "",
           }}
-          validationSchema={validationSchema}
+          validationSchema={registerValidation}
           onSubmit={(values, { setSubmitting }) => {
             setTimeout(() => {
               alert(JSON.stringify(values, null, 2));
