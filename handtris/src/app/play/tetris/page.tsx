@@ -35,9 +35,7 @@ const Home: React.FC = () => {
         console.log('temp: ', temp);
         console.log('temp.url: ', temp.url);
         console.log('tetrisMessage.sender: ', tetrisMessage.sender);
-        if (tetrisMessage.sender != temp.url) {
-          drawBoard2(tetrisMessage.board as any);
-        }
+        drawBoard2(tetrisMessage.board as any);
       });
     },function (error) {
       console.error('Connection error: ' + error);
@@ -308,25 +306,32 @@ const Home: React.FC = () => {
 
 // 메시지 전송 함수
 function sendTetrisMessage(board) {
-  // SockJS URL에서 세션 ID 추출
-  let match = /\/([^\/]+)\/(?:tetris|sockjs)/.exec(socket.url);
-  console.log(stompClient.ws)
-  let sessionId = stompClient.ws._transport
-  // match가 null인지 확인하여 에러 처리
-  if (match && match[1]) {
-    console.log("Session ID:", sessionId);
+  if (stompClient && stompClient.ws && stompClient.ws._transport) {
+    // SockJS URL에서 세션 ID 추출
+    let socketUrl = stompClient.ws._transport.url;
+    console.log('stompClient.ws._transport: ', stompClient.ws._transport.url);
+    let match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
+    console.log('match: ', match);
 
-    if (connected) {
-      let message = {
-        board: board,
-        sender: sessionId.url,
-      };
-      stompClient.send("/app/tetris", {}, JSON.stringify(message));
+    // match가 null인지 확인하여 에러 처리
+    if (match && match[1]) {
+      let sessionId = match[1];
+      console.log("Session ID:", sessionId);
+
+      if (connected) {
+        let message = {
+          board: board,
+          sender: sessionId,
+        };
+        stompClient.send("/app/tetris", {}, JSON.stringify(message));
+      } else {
+        console.log("WebSocket connection is not established yet.");
+      }
     } else {
-      console.log("WebSocket connection is not established yet.");
+      console.error("Session ID could not be extracted from URL.");
     }
   } else {
-    console.error("Session ID could not be extracted from URL.");
+    console.error("WebSocket transport is not defined.");
   }
 }
 
