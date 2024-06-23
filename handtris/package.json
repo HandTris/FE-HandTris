@@ -14,6 +14,8 @@
     "@mediapipe/hands": "^0.4.1675469240",
     "@stomp/stompjs": "^7.0.0",
     "@types/stompjs": "^2.3.9",
+    "formik": "^2.4.6",
+    "framer-motion": "^11.2.11",
     "net": "^1.0.2",
     "next": "14.2.4",
     "next-auth": "^4.24.7",
@@ -22,7 +24,8 @@
     "sockjs": "^0.3.24",
     "sockjs-client": "^1.6.1",
     "stompjs": "^2.3.3",
-    "ws": "^8.17.1"
+    "ws": "^8.17.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^20",
