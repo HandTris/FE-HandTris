@@ -1,7 +1,7 @@
 // src/components/Home.tsx
 
 "use client";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { HAND_CONNECTIONS } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
@@ -9,14 +9,46 @@ import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 
 const Home: React.FC = () => {
+  const [isConnected, setIsConnected] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
   const canvasTetris2Ref = useRef<HTMLCanvasElement>(null);
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
-  const wsManagerRef = useRef<WebSocketManager | null>(null);
+  const wsWaitingManagerRef = useRef<WebSocketManager | null>(null);
+  const wsPlayManagerRef = useRef<WebSocketManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      wsWaitingManagerRef.current = new WebSocketManager();
+      try {
+        await wsWaitingManagerRef.current.connect(
+          "https://api.checkmatejungle.shop/ws",
+          "/topic/tetris",
+          (message: any) => {
+            console.log("대기방에서 받는 메시지: ", message);
+          }
+        );
+        setIsConnected(true);
+
+        // 연결이 성공적으로 이루어지면 메시지를 보냄
+        wsWaitingManagerRef.current.sendMessageOnWaiting({
+          isOwner: true,
+          isReady: false,
+          isStart: false,
+        });
+      } catch (error) {
+        console.error("Failed to connect to WebSocket", error);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      wsWaitingManagerRef.current?.disconnect();
+    };
+  }, []);
 
   const onResults = useCallback((results: any) => {
     const canvasCtx = canvasRef.current!.getContext("2d")!;
@@ -120,27 +152,29 @@ const Home: React.FC = () => {
     }
   };
 
-  const startGame = () => {
+  const startGame = async () => {
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
-      wsManagerRef.current = new WebSocketManager(
-        "https://api.checkmatejungle.shop/tetris",
-        (message: any) => {
-          console.log("Message received in Home: ", message);
-          tetrisGameRef.current?.drawBoard2(message.board);
-        }
-      );
-      tetrisGameRef.current = new TetrisGame(ctx, ctx2, wsManagerRef.current);
+      wsPlayManagerRef.current = new WebSocketManager();
+      try {
+        await wsPlayManagerRef.current.connect(
+          "https://api.checkmatejungle.shop/ws",
+          "/user/queue/tetris",
+          (message: any) => {
+            // console.log("게임 중 받는 메시지: ", message);
+            tetrisGameRef.current?.drawBoard2(message.board);
+          }
+        );
+        tetrisGameRef.current = new TetrisGame(ctx, ctx2, wsPlayManagerRef.current);
+      } catch (error) {
+        console.error("Failed to connect to WebSocket for game", error);
+      }
     }
 
     const handsManager = new HandGestureManager(onResults);
     handsManager.start(videoRef.current!);
   };
-
-  useEffect(() => {
-    // WebSocket and game initialization logic moved to startGame function
-  }, [onResults]);
 
   return (
     <>
