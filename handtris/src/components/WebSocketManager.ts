@@ -1,14 +1,15 @@
 // src/components/WebSocketManager.ts
-
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
 export class WebSocketManager {
     stompClient: any;
     connected: boolean;
+    onMessage: (message: any) => void;
 
     constructor(url: string, onMessage: (message: any) => void) {
         this.connected = false;
+        this.onMessage = onMessage;
         const socket = new SockJS(url);
         this.stompClient = Stomp.over(socket);
 
@@ -30,32 +31,24 @@ export class WebSocketManager {
         );
     }
 
-    sendMessage(board: any) {
-        if (
-            this.stompClient &&
-            this.stompClient.ws &&
-            this.stompClient.ws._transport
-        ) {
-            const socketUrl = this.stompClient.ws._transport.url;
-            const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
-
-            if (match && match[1]) {
-                const sessionId = match[1];
-                const message = {
-                    board: board,
-                    sender: sessionId,
-                };
-                if (this.connected) {
-                    this.stompClient.send("/app/tetris", {}, JSON.stringify(message));
-                    console.log("Message sent: ", message);
-                } else {
-                    console.log("WebSocket connection is not established yet.");
-                }
-            } else {
-                console.error("Session ID could not be extracted from URL.");
-            }
+    sendMessage(destination: string, body: any) {
+        if (this.connected) {
+            this.stompClient.send(destination, {}, JSON.stringify(body));
+            console.log("Message sent: ", body);
         } else {
-            console.error("WebSocket transport is not defined.");
+            console.log("WebSocket connection is not established yet.");
         }
+    }
+
+    joinRoom(roomId: string, username: string) {
+        this.sendMessage("/app/join", { roomId, username });
+    }
+
+    ready(roomId: string, username: string) {
+        this.sendMessage("/app/ready", { roomId, username });
+    }
+
+    startGame(roomId: string) {
+        this.sendMessage("/app/start", { roomId });
     }
 }
