@@ -9,16 +9,29 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/hands": "^0.4.1675469240",
+    "@stomp/stompjs": "^7.0.0",
+    "@types/stompjs": "^2.3.9",
+    "formik": "^2.4.6",
     "framer-motion": "^11.2.11",
+    "net": "^1.0.2",
     "next": "14.2.4",
     "next-auth": "^4.24.7",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sockjs": "^0.3.24",
+    "sockjs-client": "^1.6.1",
+    "stompjs": "^2.3.3",
+    "ws": "^8.17.1",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/sockjs-client": "^1.5.4",
     "eslint": "^8",
     "eslint-config-next": "14.2.4",
     "postcss": "^8",
