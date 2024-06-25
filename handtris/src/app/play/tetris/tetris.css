@@ -1,0 +1,26 @@
+ .ready-state {
+     animation: readyBlink 1s infinite;
+ }
+
+ @keyframes readyBlink {
+     0% {
+         border-color: green;
+     }
+
+     50% {
+         border-color: yellow;
+     }
+
+     100% {
+         border-color: green;
+     }
+ }
+
+ .not-ready-state {
+     border-color: red;
+ }
+
+ .no-animation {
+     border-color: green !important;
+     animation: none !important;
+ }
