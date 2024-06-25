@@ -92,7 +92,7 @@ export class TetrisGame {
         if (delta > 200) {
             this.p.moveDown();
             this.dropStart = Date.now();
-            this.wsManager.sendMessage(this.board_forsend);  // Send message after piece drops
+            this.wsManager.sendMessageOnGaming(this.board_forsend);  // Send message after piece drops
         }
 
         if (!this.gameOver) {
@@ -100,7 +100,7 @@ export class TetrisGame {
         }
     }
 
-    sendMessage(stompClient: any) {
+    sendMessageOnGaming(stompClient: any) {
         if (stompClient) {
             const socketUrl = stompClient.ws._transport.url;
             const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
@@ -256,7 +256,7 @@ class Piece {
             }
         }
         this.game.drawBoard();
-        this.game.wsManager.sendMessage(this.game.board_forsend); // Send message when a piece is locked
+        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend); // Send message when a piece is locked
     }
 
     collision(x: number, y: number, piece: number[][] = this.activeTetromino) {
