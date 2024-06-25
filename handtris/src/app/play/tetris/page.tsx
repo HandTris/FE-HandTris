@@ -68,6 +68,9 @@ const Home: React.FC = () => {
         (message: any) => {
           console.log("대기 정보 message received: ", message);
           setIsAllReady(message.isReady);
+          if (message.isStart) {
+            startGame();
+          }
           console.log("isAllReady 상태 업데이트: ", isAllReady);
         }
       );
@@ -83,6 +86,15 @@ const Home: React.FC = () => {
       console.log("Message sent to /app/tetris/ready");
     } catch (error) {
       console.error("Failed to send message to /app/tetris/ready", error);
+    }
+  };
+
+  const handleStartGameClick = async () => {
+    try {
+      await wsWaitingManagerRef.current?.sendMessageForStart({ isAllReady: true, isStart: true });
+      console.log("Message sent to start the game");
+    } catch (error) {
+      console.error("Failed to send message to start the game", error);
     }
   };
 
@@ -290,11 +302,7 @@ const Home: React.FC = () => {
           <button
             type="button"
             id="startSteamBtn"
-            onClick={() => {
-              if (isOwner) {
-                // subscribeToState();
-              }
-            }}
+            onClick={handleStartGameClick}
             style={isOwner && isAllReady ? buttonStyle.enabled : buttonStyle.disabled}
             disabled={!isAllReady}
           >

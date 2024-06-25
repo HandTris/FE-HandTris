@@ -36,7 +36,7 @@ export class WebSocketManager {
         });
     }
 
-    sendMessage(board: any) {
+    sendMessageOnGaming(board: any) {
         if (
             this.stompClient &&
             this.stompClient.ws &&
@@ -91,7 +91,7 @@ export class WebSocketManager {
             console.error("WebSocket transport is not defined.");
         }
     }
-    sendMessageOnWaiting(waitingInfo: any) {
+    sendMessageOnWaiting(waitingInfo: {isAllReady: boolean, isStart: boolean}) {
         if (
             this.stompClient &&
             this.stompClient.ws &&
@@ -103,7 +103,28 @@ export class WebSocketManager {
             };
 
         if (this.connected) {
+            console.log("Message: ", message);
             this.stompClient.send("/app/tetris/ready", {}, JSON.stringify(message));
+            console.log("Message sent: ", message);
+        } else {
+            console.log("WebSocket connection is not established yet.");
+        }
+    }
+}
+    sendMessageForStart(waitingInfo: {isAllReady: boolean, isStart: boolean}) {
+        if (
+            this.stompClient &&
+            this.stompClient.ws &&
+            this.stompClient.ws._transport
+        ) {
+            const message = {
+                isReady: waitingInfo.isAllReady,
+                isStart: waitingInfo.isStart,
+            };
+
+        if (this.connected) {
+            console.log("Message: ", message);
+            this.stompClient.send("/app/tetris/start", {}, JSON.stringify(message));
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");
