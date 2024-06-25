@@ -18,6 +18,7 @@ export class WebSocketManager {
             {},
             (frame: any) => {
               console.log("Connected: " + frame);
+              console.log("My session ID: " + socket._transport.url);
               this.connected = true;
     
               this.stompClient.subscribe(subscribeUrl, (message: any) => {
@@ -63,7 +64,7 @@ export class WebSocketManager {
             console.error("WebSocket transport is not defined.");
         }
     }
-    sendMessageOnWaiting(gameInfo: any) {
+    sendMessageOnEntering(gameInfo: any) {
         if (
             this.stompClient &&
             this.stompClient.ws &&
@@ -75,10 +76,7 @@ export class WebSocketManager {
             if (match && match[1]) {
                 const sessionId = match[1];
                 const message = {
-                    isOwner: gameInfo.isOwner,
-                    isReady: gameInfo.isReady,
-                    isStart: gameInfo.isStart,
-                    sessionId: sessionId,
+                    // 어떤 메시지도 보내지 않아도 됨
                 };
                 if (this.connected) {
                     this.stompClient.send("/app/owner/info", {}, JSON.stringify(message));
@@ -93,4 +91,23 @@ export class WebSocketManager {
             console.error("WebSocket transport is not defined.");
         }
     }
+    sendMessageOnWaiting(waitingInfo: any) {
+        if (
+            this.stompClient &&
+            this.stompClient.ws &&
+            this.stompClient.ws._transport
+        ) {
+            const message = {
+                isReady: waitingInfo.isAllReady,
+                isStart: waitingInfo.isStart,
+            };
+
+        if (this.connected) {
+            this.stompClient.send("/app/tetris/ready", {}, JSON.stringify(message));
+            console.log("Message sent: ", message);
+        } else {
+            console.log("WebSocket connection is not established yet.");
+        }
+    }
+}
 }
