@@ -1,11 +1,11 @@
 // src/components/WebSocketManager.ts
-
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
 export class WebSocketManager {
     stompClient: any;
     connected: boolean;
+    onMessage: (message: any) => void;
 
     constructor() {
         this.connected = false;
@@ -61,7 +61,7 @@ export class WebSocketManager {
                 console.error("Session ID could not be extracted from URL.");
             }
         } else {
-            console.error("WebSocket transport is not defined.");
+            console.log("WebSocket connection is not established yet.");
         }
     }
     sendMessageOnEntering(gameInfo: any) {
