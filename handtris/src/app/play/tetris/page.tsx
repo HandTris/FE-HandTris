@@ -11,6 +11,7 @@ const Home: React.FC = () => {
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -32,9 +33,15 @@ const Home: React.FC = () => {
           (message: any) => {
             console.log("대기방에서 받는 메시지: ", message);
             if (message.isOwner !== undefined) {
-              setIsOwner((prevIsOwner) =>
-                prevIsOwner === null ? message.isOwner : prevIsOwner
-              );
+              setIsOwner((prevIsOwner) => {
+                const newIsOwner = prevIsOwner === null ? message.isOwner : prevIsOwner;
+                if (message.isOwner === false && prevIsOwner === true) {
+                  setImageSrc("/image/guest_image.png");
+                } else if (message.isOwner === false && prevIsOwner === null) {
+                  setImageSrc("/image/host_image.webp");
+                }
+                return newIsOwner;
+              });
             }
           }
         );
@@ -303,37 +310,39 @@ const Home: React.FC = () => {
           ></canvas>
         </div>
         <div id="webcam-container">
-          <div className=""></div>
+          <div id="counter">
+            {imageSrc && <img src={imageSrc} alt="Counter Status" />}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">
         <div></div>
         <button
-        type="button"
-        // id="webcam-container"
-        onClick={handleReadyStartClick}
-        className={`${
-          isStart
-            ? 'hidden'
-            : isOwner && !isAllReady
-            ? 'bg-gray-600 text-darkgray cursor-not-allowed'
-            : 'bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600'
-        } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
-        disabled={isOwner && !isAllReady}
-      >
-        {isOwner
-          ? isAllReady
-           ? 'Game Start'
-            :'Waiting for Ready'
-            : 'Ready'}
-      </button>
+          type="button"
+          // id="webcam-container"
+          onClick={handleReadyStartClick}
+          className={`${
+            isStart
+              ? 'hidden'
+              : isOwner && !isAllReady
+              ? 'bg-gray-600 text-darkgray cursor-not-allowed'
+              : 'bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600'
+          } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+          disabled={isOwner && !isAllReady}
+        >
+          {isOwner
+            ? isAllReady
+             ? 'Game Start'
+              :'Waiting for Ready'
+              : 'Ready'}
+        </button>
       </div>
       <button
-          type="button"
-          style={{ backgroundColor: "red", color: "white", opacity: 0}}
-          onClick={handleClearButtonClick}
+        type="button"
+        style={{ backgroundColor: "red", color: "white", opacity: 0}}
+        onClick={handleClearButtonClick}
       >
-          임시버튼(눌러서 set.clear()))
+        임시버튼(눌러서 set.clear()))
       </button>
     </>
   );
