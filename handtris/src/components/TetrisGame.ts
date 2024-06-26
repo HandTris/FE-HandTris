@@ -98,7 +98,7 @@ export class TetrisGame {
         const now = Date.now();
         const delta = now - this.dropStart;
 
-        if (delta > 200) {
+        if (delta > 450) {
             this.p.moveDown();
             this.dropStart = Date.now();
             if (!this.gameEnd) {

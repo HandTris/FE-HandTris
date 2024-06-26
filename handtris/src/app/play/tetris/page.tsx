@@ -9,6 +9,8 @@ import {
   playBackgroundMusic,
   stopBackgroundMusic,
 } from "@/util/playBackgroundMusic";
+import { isHandOpen } from "@/util/handLogic";
+import Image from "next/image";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -31,6 +33,8 @@ const Home: React.FC = () => {
   const wsPlayManagerRef = useRef<WebSocketManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0 });
+  const feedbackTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const connectWebSocket = async () => {
@@ -134,8 +138,9 @@ const Home: React.FC = () => {
             tetrisGameRef.current?.drawBoard2(message.board);
             if (message.isEnd) {
               tetrisGameRef.current.gameEnd = true;
-              // alert("You WIN!");
+
               setGameResult("you WIN!");
+
             }
           }
         );
@@ -190,7 +195,7 @@ const Home: React.FC = () => {
           // gestureRef.current.innerText = `Gesture: ${gesture}`;
         }
 
-        handleHandPosition(landmarks);
+        handleGesture(gesture); // 제스처에 따라 블록 이동 처리
       }
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "none";
@@ -206,9 +211,34 @@ const Home: React.FC = () => {
     canvasCtx.restore();
   }, []);
 
-  const recognizeGesture = (landmarks: any[]): string => {
-    if (isAnimating) return "Animating";
+  const handleGesture = (gesture: string) => {
+    const now = Date.now();
 
+    if (gesture === "Palm") {
+      if (now - lastMoveTime.current.rotate < 800) {
+        return;
+      }
+      lastMoveTime.current.rotate = now;
+      tetrisGameRef.current?.p.rotate();
+      triggerGestureFeedback("Rotate");
+    } else if (gesture === "Pointing Right") {
+      if (now - lastMoveTime.current.right < 200) {
+        return;
+      }
+      lastMoveTime.current.right = now;
+      tetrisGameRef.current?.p.moveRight();
+      triggerGestureFeedback("Move Right");
+    } else if (gesture === "Pointing Left") {
+      if (now - lastMoveTime.current.left < 200) {
+        return;
+      }
+      lastMoveTime.current.left = now;
+      tetrisGameRef.current?.p.moveLeft();
+      triggerGestureFeedback("Move Left");
+    }
+  };
+
+  const recognizeGesture = (landmarks: any[]): string => {
     const thumbTip = landmarks[4];
     const indexFingerTip = landmarks[8];
     const middleFingerTip = landmarks[12];
@@ -216,64 +246,49 @@ const Home: React.FC = () => {
     const pinkyTip = landmarks[20];
     const palmBase = landmarks[0];
 
-    const allFingersExtended =
-      thumbTip.y < palmBase.y &&
-      indexFingerTip.y < palmBase.y &&
-      middleFingerTip.y < palmBase.y &&
-      ringFingerTip.y < palmBase.y &&
-      pinkyTip.y < palmBase.y;
-
-    if (allFingersExtended) {
-      triggerGestureFeedback("✋ Palm");
+    if (isHandOpen(landmarks)) {
       return "Palm";
     } else if (
-      indexFingerTip.x < thumbTip.x &&
-      middleFingerTip.x < thumbTip.x
+      thumbTip.y < middleFingerTip.y &&
+      thumbTip.y < ringFingerTip.y &&
+      thumbTip.y < pinkyTip.y &&
+      indexFingerTip.x < thumbTip.x
     ) {
-      triggerGestureFeedback("👈 Left");
-      return "Pointing Left";
-    } else if (
-      indexFingerTip.x > thumbTip.x &&
-      middleFingerTip.x > thumbTip.x
-    ) {
-      triggerGestureFeedback("👉 Right");
       return "Pointing Right";
+    } else if (
+      thumbTip.y < middleFingerTip.y &&
+      thumbTip.y < ringFingerTip.y &&
+      thumbTip.y < pinkyTip.y &&
+      indexFingerTip.x > thumbTip.x
+    ) {
+      return "Pointing Left";
     }
 
     return "Unknown";
   };
 
   const triggerGestureFeedback = async (feedback: string) => {
-    if (feedback === lastGesture) return;
+    if (feedback === lastGesture) {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      feedbackTimeoutRef.current = window.setTimeout(() => {
+        setGestureFeedback(null);
+        setIsAnimating(false);
+        setLastGesture(null);
+      }, 1000);
+      return;
+    }
 
     setIsAnimating(true);
     setGestureFeedback(feedback);
     setLastGesture(feedback);
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
-    setGestureFeedback(null);
-    setIsAnimating(false);
-    setLastGesture(null);
-  };
 
-  const handleHandPosition = (landmarks: any[]) => {
-    const indexFingerTip = landmarks[8];
-    const warningThreshold = 0.1;
-
-    const deltaX = 0.5 - indexFingerTip.x;
-    const newBlockX = Math.floor((deltaX + 0.5) * tetrisGameRef.current!.COL);
-
-    if (newBlockX >= 0 && newBlockX < tetrisGameRef.current!.COL) {
-      tetrisGameRef.current!.p.moveTo(newBlockX);
-    }
-
-    if (
-      indexFingerTip.x < warningThreshold ||
-      indexFingerTip.x > 1 - warningThreshold
-    ) {
-      if (borderRef.current) {
-        borderRef.current.style.boxShadow = "0 0 20px 20px yellow";
-      }
-    }
+    feedbackTimeoutRef.current = window.setTimeout(() => {
+      setGestureFeedback(null);
+      setIsAnimating(false);
+      setLastGesture(null);
+    }, 1000);
   };
 
   const handleClearButtonClick = async () => {
@@ -338,6 +353,42 @@ const Home: React.FC = () => {
             className="hidden"
           ></video>
           <canvas ref={canvasRef} id="canvas" width="320" height="240"></canvas>
+          {gestureFeedback && (
+            <div>
+              {gestureFeedback === "Move Right" && (
+                <Image
+                  src="/image/right.png"
+                  width={200}
+                  height={200}
+                  alt="right"
+                />
+              )}
+              {gestureFeedback === "Move Left" && (
+                <Image
+                  src="/image/left.png"
+                  width={200}
+                  height={200}
+                  alt="left"
+                />
+              )}
+              {gestureFeedback === "Rotate" && (
+                <Image
+                  src="/image/rotate.png"
+                  width={200}
+                  height={200}
+                  alt="rotate"
+                />
+              )}
+              {gestureFeedback === "Drop" && (
+                <Image
+                  src="/image/drop.png"
+                  width={200}
+                  height={200}
+                  alt="drop"
+                />
+              )}
+            </div>
+          )}
         </div>
         <div id="webcam-container">
           <div id="tetris-container">
@@ -396,25 +447,9 @@ const Home: React.FC = () => {
         style={{ backgroundColor: "red", color: "white", opacity: 0 }}
         onClick={handleClearButtonClick}
       >
-        임시버튼(눌러서 set.clear()))
+        임시버튼(눌러서 set.clear())
       </button>
-      {gestureFeedback && (
-        <div className="gesture-feedback">{gestureFeedback}</div>
-      )}
       <style jsx>{`
-        .gesture-feedback {
-          position: absolute;
-          top: 350px; /* Adjusted to be below the camera */
-          left: 50%;
-          transform: translateX(-50%);
-          padding: 10px 20px;
-          background-color: rgba(0, 0, 0, 0.8);
-          color: white;
-          border-radius: 5px;
-          font-size: 24px;
-          animation: fadeout 1s forwards, move-up 1s forwards;
-          z-index: 1000;
-        }
         @keyframes fadeout {
           0% {
             opacity: 1;
@@ -425,10 +460,10 @@ const Home: React.FC = () => {
         }
         @keyframes move-up {
           0% {
-            top: 350px;
+            top: 10px;
           }
           100% {
-            top: 290px;
+            top: -50px;
           }
         }
       `}</style>
