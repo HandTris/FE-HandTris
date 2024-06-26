@@ -82,7 +82,7 @@ export default function HomePage() {
               >
                 <button
                   className="w-full bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border border-blue-500 border-opacity-40 text-blue-500 font-bold py-4 px-8 rounded-lg shadow-lg transform transition hover:scale-105"
-                  onClick={() => handleSelect("about", "/about")}
+                  onClick={() => handleSelect("about", "/play/tetris")}
                 >
                   <div className="flex items-center justify-between">
                     <Image

@@ -1,7 +1,6 @@
-// src/components/TetrisGame.ts
-
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
+import { playSound } from "@/util/playSound";
 
 export class TetrisGame {
     ROW = 20;
@@ -12,7 +11,7 @@ export class TetrisGame {
     board_forsend: string[][];
     ctx: CanvasRenderingContext2D;
     ctx2: CanvasRenderingContext2D;
-    p: any;
+    p: Piece;
     dropStart: number;
     gameOver: boolean;
     gameEnd: boolean;
@@ -37,8 +36,8 @@ export class TetrisGame {
         this.drop();
     }
 
-    createBoard() {
-        let board = [];
+    createBoard(): string[][] {
+        let board: string[][] = [];
         for (let r = 0; r < this.ROW; r++) {
             board[r] = [];
             for (let c = 0; c < this.COL; c++) {
@@ -86,9 +85,10 @@ export class TetrisGame {
         }
     }
 
-    randomPiece() {
-        let r = Math.floor(Math.random() * PIECES.length);
-        return new Piece(PIECES[r][0], PIECES[r][1], this);
+    randomPiece(): Piece {
+        const r = Math.floor(Math.random() * PIECES.length);
+        const piece = PIECES[r];
+        return new Piece(piece.shape, piece.color, this);
     }
 
     drop() {
@@ -141,15 +141,15 @@ export class TetrisGame {
 }
 
 class Piece {
-    tetromino: any;
+    tetromino: number[][][];
     color: string;
     tetrominoN: number;
-    activeTetromino: any;
+    activeTetromino: number[][];
     x: number;
     y: number;
     game: TetrisGame;
 
-    constructor(tetromino: any, color: string, game: TetrisGame) {
+    constructor(tetromino: number[][][], color: string, game: TetrisGame) {
         this.tetromino = tetromino;
         this.color = color;
         this.tetrominoN = 0;
@@ -268,8 +268,10 @@ class Piece {
                 for (let c = 0; c < this.game.COL; c++) {
                     this.game.board[0][c] = this.game.VACANT;
                 }
+                playSound("/sounds/clear.wav");
             }
         }
+        playSound("/sounds/blockdown.wav");
         this.game.drawBoard();
         this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd); // Send message when a piece is locked
     }

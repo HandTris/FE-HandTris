@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Room } from "@/types";
 import RoomCard from "./RoomCard";
 import CreateRoomModal from "./CreateRoomModal";
-import WaitingRoomModal from "./WaitingRoomModal";
 import { AnimatePresence } from "framer-motion";
 
 type Props = {
@@ -58,13 +57,6 @@ function RoomGrid({ rooms = [] }: Props) {
             isOpen={isCreateModalOpen}
             onClose={handleCloseCreateModal}
             onCreateRoom={handleCreateRoom}
-          />
-        )}
-        {isWaitingModalOpen && currentRoom && (
-          <WaitingRoomModal
-            isOpen={isWaitingModalOpen}
-            onClose={handleCloseWaitingModal}
-            room={currentRoom}
           />
         )}
       </AnimatePresence>
