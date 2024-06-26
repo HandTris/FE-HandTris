@@ -21,6 +21,7 @@ const Home: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [gameResult, setGameResult] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -137,14 +138,17 @@ const Home: React.FC = () => {
             tetrisGameRef.current?.drawBoard2(message.board);
             if (message.isEnd) {
               tetrisGameRef.current.gameEnd = true;
-              alert("You WIN!");
+
+              setGameResult("you WIN!");
+
             }
           }
         );
         tetrisGameRef.current = new TetrisGame(
           ctx,
           ctx2,
-          wsPlayManagerRef.current
+          wsPlayManagerRef.current,
+          setGameResult,
         );
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
@@ -317,6 +321,9 @@ const Home: React.FC = () => {
       handleReadyClick();
     }
   };
+  const gameResultStyle = "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-20 bg-white bg-opacity-20 text-white text-6xl rounded-3xl text-center backdrop-blur-xl border-xl border-white border-opacity-20";
+  const resultText = gameResult;
+  const resultClass = resultText === "you WIN!" ? "animate-win" : "animate-lose";
 
   useEffect(() => {
     if (videoRef.current) {
@@ -429,6 +436,12 @@ const Home: React.FC = () => {
             : "Ready"}
         </button>
       </div>
+      {/* LOSE, WIN 표시 DIV */}
+      {gameResult && (
+                <div id="gameResult" className={`${gameResultStyle} ${resultClass}`}>
+                    {gameResult}
+                </div>
+            )}
       <button
         type="button"
         style={{ backgroundColor: "red", color: "white", opacity: 0 }}

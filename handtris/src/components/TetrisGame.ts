@@ -18,8 +18,9 @@ export class TetrisGame {
     isEnd: boolean;
     hasSentEndMessage: boolean;
     wsManager: WebSocketManager;
+    setGameResult: (result: string) => void;
 
-    constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager) {
+    constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager, setGameResult: (result: string) => void) {
         this.isEnd = false;
         this.gameEnd = false;
         this.hasSentEndMessage = false;
@@ -31,6 +32,8 @@ export class TetrisGame {
         this.dropStart = Date.now();
         this.gameOver = false;
         this.wsManager = wsManager;
+        this.setGameResult = setGameResult;
+        
 
         this.drawBoard();
         this.drop();
@@ -137,6 +140,9 @@ export class TetrisGame {
         } else {
             console.error("WebSocket transport is not defined.");
         }
+    }
+    showGameResult(result: string) {
+        this.setGameResult(result);
     }
 }
 
@@ -246,7 +252,8 @@ class Piece {
                 if (this.y + r < 0) {
                     this.game.gameOver = true;
                     this.game.isEnd = true;
-                    alert("You lose!");
+                    // alert("You lose!");
+                    this.game.showGameResult("you LOSE!");
                     break;
                 }
                 this.game.board[this.y + r][this.x + c] = this.color;
