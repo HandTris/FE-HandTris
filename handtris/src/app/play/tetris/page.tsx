@@ -10,6 +10,8 @@ const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
+  const [isStart, setIsStart] = useState(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -31,9 +33,15 @@ const Home: React.FC = () => {
           (message: any) => {
             console.log("대기방에서 받는 메시지: ", message);
             if (message.isOwner !== undefined) {
-              setIsOwner((prevIsOwner) =>
-                prevIsOwner === null ? message.isOwner : prevIsOwner
-              );
+              setIsOwner((prevIsOwner) => {
+                const newIsOwner = prevIsOwner === null ? message.isOwner : prevIsOwner;
+                if (message.isOwner === false && prevIsOwner === true) {
+                  setImageSrc("/image/guest_image.png");
+                } else if (message.isOwner === false && prevIsOwner === null) {
+                  setImageSrc("/image/host_image.webp");
+                }
+                return newIsOwner;
+              });
             }
           }
         );
@@ -71,6 +79,7 @@ const Home: React.FC = () => {
           console.log("대기 정보 message received: ", message);
           setIsAllReady(message.isReady);
           if (message.isStart) {
+            setIsStart(true);
             startGame();
           }
           console.log("isAllReady 상태 업데이트: ", isAllReady);
@@ -163,7 +172,7 @@ const Home: React.FC = () => {
 
         const gesture = recognizeGesture(landmarks);
         if (gestureRef.current) {
-          gestureRef.current.innerText = `Gesture: ${gesture}`;
+          // gestureRef.current.innerText = `Gesture: ${gesture}`;
         }
 
         handleHandPosition(landmarks);
@@ -173,7 +182,7 @@ const Home: React.FC = () => {
       }
     } else {
       if (gestureRef.current) {
-        gestureRef.current.innerText = "Gesture: None";
+        // gestureRef.current.innerText = "Gesture: None";
       }
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "0 0 20px 20px red";
@@ -255,33 +264,22 @@ const Home: React.FC = () => {
       console.error("Error during GET request: ", error);
     }
   };
-
-  const buttonStyle = {
-    enabled: {
-      backgroundColor: "blue",
-      color: "white",
-      cursor: "pointer",
-      padding: "10px",
-      margin: "10px",
-      border: "none",
-      borderRadius: "5px",
-    },
-    disabled: {
-      backgroundColor: "gray",
-      color: "darkgray",
-      cursor: "not-allowed",
-      padding: "10px",
-      margin: "10px",
-      border: "none",
-      borderRadius: "5px",
-    },
+  
+  const handleReadyStartClick = () => {
+    if (isOwner) {
+      if (isAllReady) {
+        handleStartGameClick();
+      }
+    } else {
+      handleReadyClick();
+    }
   };
 
   return (
     <>
       <div className="grid-container">
         <div id="webcam-container">
-          <div ref={gestureRef}>Gesture: None</div>
+          <div ref={gestureRef}></div>
           <video
             ref={videoRef}
             id="video"
@@ -312,46 +310,40 @@ const Home: React.FC = () => {
           ></canvas>
         </div>
         <div id="webcam-container">
-          <div className=""></div>
-          <button
-            type="button"
-            id="startSteamBtn"
-            onClick={handleStartGameClick}
-            style={
-              isOwner && isAllReady ? buttonStyle.enabled : buttonStyle.disabled
-            }
-            disabled={!isAllReady}
-          >
-            (isOwner === true)Start Game
-          </button>
-          <button
-            type="button"
-            id="readyBtn"
-            onClick={() => {
-              if (!isOwner) {
-                handleReadyClick();
-              }
-            }}
-            style={isOwner ? buttonStyle.disabled : buttonStyle.enabled}
-            disabled={isOwner}
-          >
-            (isOwner === false)Ready
-          </button>
+          <div id="counter">
+            {imageSrc && <img src={imageSrc} alt="Counter Status" />}
+          </div>
         </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 mt-3">
+        <div></div>
         <button
           type="button"
-          style={{ backgroundColor: "red", color: "white" }}
-          onClick={handleClearButtonClick}
+          // id="webcam-container"
+          onClick={handleReadyStartClick}
+          className={`${
+            isStart
+              ? 'hidden'
+              : isOwner && !isAllReady
+              ? 'bg-gray-600 text-darkgray cursor-not-allowed'
+              : 'bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600'
+          } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+          disabled={isOwner && !isAllReady}
         >
-          POST Request(눌러서 set.clear()))
-        </button>
-        <div>
-          WebSocket 연결 상태: {isConnected ? "연결됨" : "연결되지 않음"}
-        </div>
-        <button type="button" id="startSteamBtn" onClick={startGame}>
-          수정전 start game 버튼
+          {isOwner
+            ? isAllReady
+             ? 'Game Start'
+              :'Waiting for Ready'
+              : 'Ready'}
         </button>
       </div>
+      <button
+        type="button"
+        style={{ backgroundColor: "red", color: "white", opacity: 0}}
+        onClick={handleClearButtonClick}
+      >
+        임시버튼(눌러서 set.clear()))
+      </button>
     </>
   );
 };
