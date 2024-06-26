@@ -15,9 +15,15 @@ export class TetrisGame {
     p: any;
     dropStart: number;
     gameOver: boolean;
+    gameEnd: boolean;
+    isEnd: boolean;
+    hasSentEndMessage: boolean;
     wsManager: WebSocketManager;
 
     constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager) {
+        this.isEnd = false;
+        this.gameEnd = false;
+        this.hasSentEndMessage = false;
         this.board = this.createBoard();
         this.board_forsend = this.createBoard();
         this.ctx = ctx;
@@ -92,10 +98,12 @@ export class TetrisGame {
         if (delta > 200) {
             this.p.moveDown();
             this.dropStart = Date.now();
-            this.wsManager.sendMessageOnGaming(this.board_forsend);  // Send message after piece drops
+            if (!this.gameEnd) {
+                this.wsManager.sendMessageOnGaming(this.board_forsend, this.isEnd);  // Send message after piece drops
+            }
         }
 
-        if (!this.gameOver) {
+        if (!this.gameEnd && !this.gameOver) {
             requestAnimationFrame(this.drop.bind(this));
         }
     }
@@ -110,10 +118,16 @@ export class TetrisGame {
                 const message = {
                     board: this.board_forsend,
                     sender: sessionId,
+                    isEnd: this.isEnd,
                 };
 
                 if (stompClient.connected) {
-                    stompClient.send("/app/tetris", {}, JSON.stringify(message));
+                    if (!this.isEnd && !this.hasSentEndMessage) {
+                        stompClient.send("/app/tetris", {}, JSON.stringify(message));
+                        this.hasSentEndMessage = true;
+                    } else if (!this.isEnd) {
+                        stompClient.send("/app/tetris", {}, JSON.stringify(message));
+                    }
                 } else {
                     console.log("WebSocket connection is not established yet.");
                 }
@@ -230,8 +244,9 @@ class Piece {
                     continue;
                 }
                 if (this.y + r < 0) {
-                    alert("Game Over");
                     this.game.gameOver = true;
+                    this.game.isEnd = true;
+                    alert("You lose!");
                     break;
                 }
                 this.game.board[this.y + r][this.x + c] = this.color;
@@ -256,7 +271,7 @@ class Piece {
             }
         }
         this.game.drawBoard();
-        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend); // Send message when a piece is locked
+        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd); // Send message when a piece is locked
     }
 
     collision(x: number, y: number, piece: number[][] = this.activeTetromino) {

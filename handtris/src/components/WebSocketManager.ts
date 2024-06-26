@@ -36,7 +36,7 @@ export class WebSocketManager {
         });
     }
 
-    sendMessageOnGaming(board: any) {
+    sendMessageOnGaming(board: any, isEnd: boolean) {
         if (
             this.stompClient &&
             this.stompClient.ws &&
@@ -50,6 +50,7 @@ export class WebSocketManager {
                 const message = {
                     board: board,
                     sender: sessionId,
+                    isEnd: isEnd,
                 };
                 if (this.connected) {
                     this.stompClient.send("/app/tetris", {}, JSON.stringify(message));
