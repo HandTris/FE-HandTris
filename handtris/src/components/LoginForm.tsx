@@ -1,13 +1,21 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Formik, Form } from "formik";
+import { Formik, Form, FormikHelpers } from "formik";
 import CustomField from "./CustomField";
 import loginValidation from "../yup/loginvalidation";
 import Link from "next/link";
 import axios from "axios";
 import Cookies from "js-cookie";
 
+interface LoginFormValues {
+  username: string;
+  password: string;
+  api?: string;
+}
+
 const LoginForm = () => {
+  const initialValues: LoginFormValues = { username: "", password: "" };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -17,9 +25,16 @@ const LoginForm = () => {
     >
       <h1 className="text-4xl mb-12 text-white font-bold">Login</h1>
       <Formik
-        initialValues={{ username: "", password: "" }}
+        initialValues={initialValues}
         validationSchema={loginValidation}
-        onSubmit={(values, { setSubmitting, setErrors }) => {
+        onSubmit={(
+          values,
+          {
+            setSubmitting,
+            setErrors,
+            setFieldError,
+          }: FormikHelpers<LoginFormValues>
+        ) => {
           axios
             .post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signin`, values)
             .then((response) => {
@@ -41,15 +56,17 @@ const LoginForm = () => {
             })
             .catch((error) => {
               if (error.response) {
-                setErrors({
-                  api: error.response.data.message || "Login failed",
-                });
+                setFieldError(
+                  "api",
+                  error.response.data.message || "Login failed"
+                );
               } else if (error.request) {
-                setErrors({ api: "Network error. Please try again." });
+                setFieldError("api", "Network error. Please try again.");
               } else {
-                setErrors({
-                  api: "Something went wrong. Please try again later.",
-                });
+                setFieldError(
+                  "api",
+                  "Something went wrong. Please try again later."
+                );
               }
               setSubmitting(false);
             });
@@ -106,7 +123,7 @@ const LoginForm = () => {
         transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
       >
         <p className="text-white mt-4">
-          Don't have an account?{" "}
+          {"Don't have an account?"}
           <Link href="/register" className="text-green-400">
             Sign Up
           </Link>
