@@ -9,8 +9,9 @@ import {
   playBackgroundMusic,
   stopBackgroundMusic,
 } from "@/util/playBackgroundMusic";
-import { isHandOpen } from "@/util/handLogic";
+import { isFingerStraight, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
+import { playSound } from "@/util/playSound";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -90,7 +91,7 @@ const Home: React.FC = () => {
           setIsAllReady(message.isReady);
           if (message.isStart) {
             setIsStart(true);
-            startGame();
+            startGame(); // 클라이언트 시작 로직 
           }
           console.log("isAllReady 상태 업데이트: ", isAllReady);
         }
@@ -139,6 +140,7 @@ const Home: React.FC = () => {
             if (message.isEnd) {
               tetrisGameRef.current.gameEnd = true;
 
+              playSound("/sound/winner.wav");
               setGameResult("you WIN!");
 
             }
@@ -252,14 +254,16 @@ const Home: React.FC = () => {
       thumbTip.y < middleFingerTip.y &&
       thumbTip.y < ringFingerTip.y &&
       thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x < thumbTip.x
+      indexFingerTip.x < thumbTip.x&&
+      isFingerStraight(landmarks, 1)
     ) {
       return "Pointing Right";
     } else if (
       thumbTip.y < middleFingerTip.y &&
       thumbTip.y < ringFingerTip.y &&
       thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x > thumbTip.x
+      indexFingerTip.x > thumbTip.x&&
+      isFingerStraight(landmarks, 1)
     ) {
       return "Pointing Left";
     }
@@ -267,7 +271,7 @@ const Home: React.FC = () => {
     return "Unknown";
   };
 
-  const triggerGestureFeedback = async (feedback: string) => {
+  const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
@@ -283,6 +287,10 @@ const Home: React.FC = () => {
     setIsAnimating(true);
     setGestureFeedback(feedback);
     setLastGesture(feedback);
+    
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+      }
 
     feedbackTimeoutRef.current = window.setTimeout(() => {
       setGestureFeedback(null);
@@ -411,8 +419,15 @@ const Home: React.FC = () => {
         </div>
         <div id="webcam-container">
           <div id="counter">
-            {imageSrc && <img src={imageSrc} alt="Counter Status" />}
+            {imageSrc && <Image 
+            width={200}
+            height={200}
+            src={imageSrc} alt="profile" />}
           </div>
+            <span className=" text-2xl text-green-400">
+            User01
+            </span>
+          
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">

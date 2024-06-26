@@ -6,7 +6,7 @@ export class TetrisGame {
     ROW = 20;
     COL = 10;
     SQ = 32;
-    VACANT = "Grey";
+    VACANT = "GREY";
     board: string[][];
     board_forsend: string[][];
     ctx: CanvasRenderingContext2D;
@@ -98,7 +98,7 @@ export class TetrisGame {
         const now = Date.now();
         const delta = now - this.dropStart;
 
-        if (delta > 450) {
+        if (delta > 200) {
             this.p.moveDown();
             this.dropStart = Date.now();
             if (!this.gameEnd) {
@@ -253,6 +253,7 @@ class Piece {
                     this.game.gameOver = true;
                     this.game.isEnd = true;
                     // alert("You lose!");
+                    playSound("/sounds/attack.mp3");
                     this.game.showGameResult("you LOSE!");
                     break;
                 }
