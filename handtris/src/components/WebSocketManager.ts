@@ -37,14 +37,32 @@ export class WebSocketManager {
         });
     }
 
-    sendMessageOnGaming(board: any) {
-        if (this.stompClient && this.connected) {
-            const message = {
-                board: board,
-                sender: this.getSessionId(),
-            };
-            this.stompClient.send("/app/tetris", {}, JSON.stringify(message));
-            console.log("Message sent: ", message);
+    sendMessageOnGaming(board: any, isEnd: boolean) {
+        if (
+            this.stompClient &&
+            this.stompClient.ws &&
+            this.stompClient.ws._transport
+        ) {
+            const socketUrl = this.stompClient.ws._transport.url;
+            const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
+
+            if (match && match[1]) {
+                const sessionId = match[1];
+                const message = {
+                    board: board,
+                    sender: sessionId,
+                    isEnd: isEnd,
+                };
+                if (this.connected) {
+                    this.stompClient.send("/app/tetris", {}, JSON.stringify(message));
+                    console.log("Message sent: ", message);
+                } else {
+                    console.log("WebSocket connection is not established yet.");
+                }
+            } else {
+                console.error("Session ID could not be extracted from URL.");
+            }
+
         } else {
             console.log("WebSocket connection is not established yet.");
         }

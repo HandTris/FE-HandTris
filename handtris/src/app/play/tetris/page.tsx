@@ -125,12 +125,18 @@ const Home: React.FC = () => {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
       wsPlayManagerRef.current = new WebSocketManager();
+      let hasAlertShown = false;
       try {
         await wsPlayManagerRef.current.connect(
           "https://api.checkmatejungle.shop/ws",
           "/user/queue/tetris",
           (message: any) => {
             tetrisGameRef.current?.drawBoard2(message.board);
+            if (message.isEnd) {
+              tetrisGameRef.current.gameEnd = true;
+              alert("You WIN!");
+              // tetrisGameRef.current.gameOver = true;
+            }
           }
         );
         tetrisGameRef.current = new TetrisGame(
