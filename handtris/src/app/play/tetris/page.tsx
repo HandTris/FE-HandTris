@@ -42,7 +42,8 @@ const Home: React.FC = () => {
             console.log("대기방에서 받는 메시지: ", message);
             if (message.isOwner !== undefined) {
               setIsOwner((prevIsOwner) => {
-                const newIsOwner = prevIsOwner === null ? message.isOwner : prevIsOwner;
+                const newIsOwner =
+                  prevIsOwner === null ? message.isOwner : prevIsOwner;
                 if (message.isOwner === false && prevIsOwner === true) {
                   setImageSrc("/image/guest_image.png");
                 } else if (message.isOwner === false && prevIsOwner === null) {
@@ -62,10 +63,6 @@ const Home: React.FC = () => {
     };
 
     connectWebSocket();
-
-    return () => {
-      wsEnteringManagerRef.current?.disconnect();
-    };
   }, []);
 
   useEffect(() => {
@@ -369,20 +366,18 @@ const Home: React.FC = () => {
               ? "bg-gray-600 text-darkgray cursor-not-allowed"
               : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
           } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
-          disabled={isOwner && !isAllReady}
+          disabled={(isOwner && !isAllReady) || false}
         >
           {isOwner
             ? isAllReady
               ? "Game Start"
               : "Waiting for Ready"
             : "Ready"}
-
         </button>
       </div>
       <button
         type="button"
         style={{ backgroundColor: "red", color: "white", opacity: 0 }}
-
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear()))

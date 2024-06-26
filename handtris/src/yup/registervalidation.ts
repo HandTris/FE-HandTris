@@ -19,7 +19,7 @@ const registerValidation = Yup.object({
             "비밀번호는 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다."
         ),
     confirmPassword: Yup.string()
-        .oneOf([Yup.ref("password"), null], "비밀번호가 일치하지 않습니다.")
+        .oneOf([Yup.ref("password"), undefined], "비밀번호가 일치하지 않습니다.")
         .required("비밀번호 확인은 필수 입력 값입니다."),
     nickname: Yup.string()
         .required("닉네임은 필수 입력 값입니다.")

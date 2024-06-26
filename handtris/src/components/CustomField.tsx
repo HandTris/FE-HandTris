@@ -1,7 +1,12 @@
 import React from "react";
 import { useField, ErrorMessage } from "formik";
 
-const CustomField = ({ ...props }) => {
+interface CustomFieldProps {
+  name: string;
+  [x: string]: any;
+}
+
+const CustomField: React.FC<CustomFieldProps> = ({ ...props }) => {
   const [field, meta] = useField(props);
   return (
     <div className="mb-6">
