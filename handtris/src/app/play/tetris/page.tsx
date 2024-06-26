@@ -306,7 +306,7 @@ const Home: React.FC = () => {
       handleReadyClick();
     }
   };
-  const gameResultStyle = "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-5 bg-white bg-opacity-20 text-white text-2xl rounded-lg text-center backdrop-blur-xl border border-white border-opacity-20";
+  const gameResultStyle = "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-20 bg-white bg-opacity-20 text-white text-6xl rounded-3xl text-center backdrop-blur-xl border-xl border-white border-opacity-20";
   const resultText = gameResult;
   const resultClass = resultText === "you WIN!" ? "animate-win" : "animate-lose";
 
