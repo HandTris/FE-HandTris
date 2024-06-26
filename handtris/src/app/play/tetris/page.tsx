@@ -18,6 +18,7 @@ const Home: React.FC = () => {
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -40,9 +41,15 @@ const Home: React.FC = () => {
           (message: any) => {
             console.log("대기방에서 받는 메시지: ", message);
             if (message.isOwner !== undefined) {
-              setIsOwner((prevIsOwner) =>
-                prevIsOwner === null ? message.isOwner : prevIsOwner
-              );
+              setIsOwner((prevIsOwner) => {
+                const newIsOwner = prevIsOwner === null ? message.isOwner : prevIsOwner;
+                if (message.isOwner === false && prevIsOwner === true) {
+                  setImageSrc("/image/guest_image.png");
+                } else if (message.isOwner === false && prevIsOwner === null) {
+                  setImageSrc("/image/host_image.webp");
+                }
+                return newIsOwner;
+              });
             }
           }
         );
@@ -345,7 +352,9 @@ const Home: React.FC = () => {
           ></canvas>
         </div>
         <div id="webcam-container">
-          <div className=""></div>
+          <div id="counter">
+            {imageSrc && <img src={imageSrc} alt="Counter Status" />}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">
@@ -367,11 +376,13 @@ const Home: React.FC = () => {
               ? "Game Start"
               : "Waiting for Ready"
             : "Ready"}
+
         </button>
       </div>
       <button
         type="button"
         style={{ backgroundColor: "red", color: "white", opacity: 0 }}
+
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear()))
