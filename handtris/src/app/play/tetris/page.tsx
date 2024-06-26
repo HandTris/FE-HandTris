@@ -5,12 +5,19 @@ import { HAND_CONNECTIONS } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
 import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
+import {
+  playBackgroundMusic,
+  stopBackgroundMusic,
+} from "@/util/playBackgroundMusic";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
+  const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [lastGesture, setLastGesture] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -21,6 +28,7 @@ const Home: React.FC = () => {
   const wsWaitingManagerRef = useRef<WebSocketManager | null>(null);
   const wsPlayManagerRef = useRef<WebSocketManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const connectWebSocket = async () => {
@@ -133,6 +141,9 @@ const Home: React.FC = () => {
 
     const handsManager = new HandGestureManager(onResults);
     handsManager.start(videoRef.current!);
+
+    const audio = playBackgroundMusic();
+    audioRef.current = audio;
   };
 
   const onResults = useCallback((results: any) => {
@@ -185,6 +196,8 @@ const Home: React.FC = () => {
   }, []);
 
   const recognizeGesture = (landmarks: any[]): string => {
+    if (isAnimating) return "Animating";
+
     const thumbTip = landmarks[4];
     const indexFingerTip = landmarks[8];
     const middleFingerTip = landmarks[12];
@@ -200,20 +213,35 @@ const Home: React.FC = () => {
       pinkyTip.y < palmBase.y;
 
     if (allFingersExtended) {
+      triggerGestureFeedback("✋ Palm");
       return "Palm";
     } else if (
       indexFingerTip.x < thumbTip.x &&
       middleFingerTip.x < thumbTip.x
     ) {
-      return "Pointing Right";
+      triggerGestureFeedback("👈 Left");
+      return "Pointing Left";
     } else if (
       indexFingerTip.x > thumbTip.x &&
       middleFingerTip.x > thumbTip.x
     ) {
-      return "Pointing Left";
+      triggerGestureFeedback("👉 Right");
+      return "Pointing Right";
     }
 
     return "Unknown";
+  };
+
+  const triggerGestureFeedback = async (feedback: string) => {
+    if (feedback === lastGesture) return;
+
+    setIsAnimating(true);
+    setGestureFeedback(feedback);
+    setLastGesture(feedback);
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
+    setGestureFeedback(null);
+    setIsAnimating(false);
+    setLastGesture(null);
   };
 
   const handleHandPosition = (landmarks: any[]) => {
@@ -257,7 +285,7 @@ const Home: React.FC = () => {
       console.error("Error during GET request: ", error);
     }
   };
-  
+
   const handleReadyStartClick = () => {
     if (isOwner) {
       if (isAllReady) {
@@ -267,6 +295,20 @@ const Home: React.FC = () => {
       handleReadyClick();
     }
   };
+
+  useEffect(() => {
+    if (videoRef.current) {
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          videoRef.current!.srcObject = stream;
+          videoRef.current!.play();
+        })
+        .catch((err) => {
+          console.error("Error accessing webcam: ", err);
+        });
+    }
+  }, []);
 
   return (
     <>
@@ -309,32 +351,65 @@ const Home: React.FC = () => {
       <div className="grid grid-cols-3 gap-4 mt-3">
         <div></div>
         <button
-        type="button"
-        // id="webcam-container"
-        onClick={handleReadyStartClick}
-        className={`${
-          isStart
-            ? 'hidden'
-            : isOwner && !isAllReady
-            ? 'bg-gray-600 text-darkgray cursor-not-allowed'
-            : 'bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600'
-        } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
-        disabled={isOwner && !isAllReady}
-      >
-        {isOwner
-          ? isAllReady
-           ? 'Game Start'
-            :'Waiting for Ready'
-            : 'Ready'}
-      </button>
+          type="button"
+          onClick={handleReadyStartClick}
+          className={`${
+            isStart
+              ? "hidden"
+              : isOwner && !isAllReady
+              ? "bg-gray-600 text-darkgray cursor-not-allowed"
+              : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
+          } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+          disabled={isOwner && !isAllReady}
+        >
+          {isOwner
+            ? isAllReady
+              ? "Game Start"
+              : "Waiting for Ready"
+            : "Ready"}
+        </button>
       </div>
       <button
-          type="button"
-          style={{ backgroundColor: "red", color: "white", opacity: 0}}
-          onClick={handleClearButtonClick}
+        type="button"
+        style={{ backgroundColor: "red", color: "white", opacity: 0 }}
+        onClick={handleClearButtonClick}
       >
-          임시버튼(눌러서 set.clear()))
+        임시버튼(눌러서 set.clear()))
       </button>
+      {gestureFeedback && (
+        <div className="gesture-feedback">{gestureFeedback}</div>
+      )}
+      <style jsx>{`
+        .gesture-feedback {
+          position: absolute;
+          top: 350px; /* Adjusted to be below the camera */
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 10px 20px;
+          background-color: rgba(0, 0, 0, 0.8);
+          color: white;
+          border-radius: 5px;
+          font-size: 24px;
+          animation: fadeout 1s forwards, move-up 1s forwards;
+          z-index: 1000;
+        }
+        @keyframes fadeout {
+          0% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+        @keyframes move-up {
+          0% {
+            top: 350px;
+          }
+          100% {
+            top: 290px;
+          }
+        }
+      `}</style>
     </>
   );
 };

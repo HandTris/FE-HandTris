@@ -1,7 +1,7 @@
-// src/components/TetrisGame.ts
-
+// components/TetrisGame.ts
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
+import { playSound } from "@/util/playSound";
 
 export class TetrisGame {
     ROW = 20;
@@ -253,8 +253,10 @@ class Piece {
                 for (let c = 0; c < this.game.COL; c++) {
                     this.game.board[0][c] = this.game.VACANT;
                 }
+                playSound("/sounds/clear.wav");
             }
         }
+        playSound("/sounds/blockdown.wav");
         this.game.drawBoard();
         this.game.wsManager.sendMessageOnGaming(this.game.board_forsend); // Send message when a piece is locked
     }
