@@ -12,6 +12,7 @@ import {
 import { isFingerStraight, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
 import { playSound } from "@/util/playSound";
+import ThreeScene from "@/components/ThreeScene";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -23,6 +24,7 @@ const Home: React.FC = () => {
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
+  const [landmarks, setLandmarks] = useState([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -53,7 +55,7 @@ const Home: React.FC = () => {
                 if (message.isOwner === false && prevIsOwner === true) {
                   setImageSrc("/image/guest_image.png");
                 } else if (message.isOwner === false && prevIsOwner === null) {
-                  setImageSrc("/image/host_image.webp");
+                  setImageSrc("/image/guest_image2.png");
                 }
                 return newIsOwner;
               });
@@ -139,8 +141,8 @@ const Home: React.FC = () => {
             tetrisGameRef.current?.drawBoard2(message.board);
             if (message.isEnd) {
               tetrisGameRef.current.gameEnd = true;
-
-              playSound("/sound/winner.wav");
+              stopBackgroundMusic(audioRef.current!);
+              playSound("/sounds/winner.wav");
               setGameResult("you WIN!");
 
             }
@@ -199,6 +201,7 @@ const Home: React.FC = () => {
 
         handleGesture(gesture); // 제스처에 따라 블록 이동 처리
       }
+      setLandmarks(results.multiHandLandmarks); // landmarks 업데이트
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "none";
       }
@@ -247,7 +250,6 @@ const Home: React.FC = () => {
     const ringFingerTip = landmarks[16];
     const pinkyTip = landmarks[20];
     const palmBase = landmarks[0];
-
     if (isHandOpen(landmarks)) {
       return "Palm";
     } else if (
@@ -424,10 +426,14 @@ const Home: React.FC = () => {
             height={200}
             src={imageSrc} alt="profile" />}
           </div>
-            <span className=" text-2xl text-green-400">
+            {/* <span className=" text-2xl text-green-400">
             User01
-            </span>
-          
+            </span> */}
+            {imageSrc === "/image/guest_image.png" && (
+        <span className="text-2xl text-green-400">
+          User01
+        </span>
+      )}
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">
@@ -457,6 +463,7 @@ const Home: React.FC = () => {
                     {gameResult}
                 </div>
             )}
+      <ThreeScene handLandmarks={landmarks} />
       <button
         type="button"
         style={{ backgroundColor: "red", color: "white", opacity: 0 }}

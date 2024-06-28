@@ -1,6 +1,7 @@
 export const playBackgroundMusic = () => {
     const audio = new Audio("/sounds/tetris.mp3");
     audio.loop = true;
+    audio.volume = 0.4;
 
     audio
         .play()
