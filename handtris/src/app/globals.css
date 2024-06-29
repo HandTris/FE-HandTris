@@ -1,137 +1,200 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+
+
+
+@font-face {
+    font-family: "Press Start 2P";
+    src: url('/fonts/PressStart2P-Regular.ttf');
+}
+.press {
+  font-family: "Press Start 2P", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-html, body {
-  height: 100vh;
-  background-color: #000;
-  @apply overflow-y-auto;
+html,
+body {
+    height: 100vh;
+    background: url('/image/bg__t.png') repeat;
+    background-size: cover;
+    background-color: #000;
+    @apply overflow-y-auto;
 }
 
+@font-face {
+    font-family: 'Press Start 2P';
+    src: url(
+            '/fonts/PressStart2P-Regular.ttf'
+        )
+        format('truetype');
+}
 #game-container {
-  /* position: relative;
+    
+    /* position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh; */
-  background-image: url('/image/bg.png');
+    /* background-image: url('/image/bg.png');
   background-size: cover;
   background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-attachment: fixed; */
 }
 
 #overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(1px) saturate(80%);
-  z-index: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(1px) saturate(80%);
+    z-index: 1;
 }
 
 .content {
-  position: relative;
-  z-index: 2;
-  color: white;
+    position: relative;
+    z-index: 2;
+    color: white;
 }
 
 .hidden {
-  display: none;
+    display: none;
 }
+
 .visible {
-  display: block;
+    display: block;
 }
-
-/* @media (max-width: 768px) {
-  body {
-    font-size: 0.9rem;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-  }
-} */
 
 a {
-  color: inherit;
-  text-decoration: none;
+    color: inherit;
+    text-decoration: none;
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 img {
-  max-width: 100%;
-  height: auto;
+    max-width: 100%;
+    height: auto;
 }
 
 h1,
 h2,
 p,
 ul {
-  margin: 0;
+    margin: 0;
 }
 
 ul {
-  padding: 0;
-  list-style: none;
+    padding: 0;
+    list-style: none;
 }
 
 button {
-  padding: 0.5rem 1rem;
-  font-weight: bold;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
 }
+
 #webcam-container {
-  position: relative;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  margin-left: 20px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin-left: 20px;
 }
-video, canvas {
-  display: block;
+
+#play-container{
+    position: relative;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* padding: 20px; */
+    margin-left: 20px;
 }
+
+video,
+canvas {
+    display: block;
+}
+
 #gesture {
-  transform: translateX(-50%);
-  font-size: 24px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 10px;
+    transform: translateX(-50%);
+    font-size: 24px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 10px;
 }
+
 .hidden {
-  display: none;
+    display: none;
 }
+
 .grid-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background-color: #000;
+/* background opacity */
+    background: rgba(0, 0, 0, 0.5);
+    grid-gap: 10px;
 }
+
 #tetris-container {
-  position: relative;
+    position: relative;
 }
+
 #tetris-border {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+
+
+@keyframes fadeout {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes move-up {
+    0% {
+        top: 10px;
+    }
+
+    100% {
+        top: -50px;
+    }
 }

@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Nanum_Gothic, Nanum_Gothic_Coding } from "next/font/google";
+import {
+  Nanum_Gothic,
+  Nanum_Gothic_Coding,
+  Press_Start_2P,
+} from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";

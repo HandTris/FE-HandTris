@@ -115,7 +115,7 @@ const J = [
 const PIECES: { shape: number[][][]; color: string }[] = [
   { shape: Z, color: "red" },
   { shape: S, color: "green" },
-  { shape: T, color: "pink" },
+  { shape: T, color: "yellow" },
   { shape: O, color: "blue" },
   { shape: L, color: "purple" },
   { shape: I, color: "cyan" },

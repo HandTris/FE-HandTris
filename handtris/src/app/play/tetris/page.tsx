@@ -13,6 +13,7 @@ import { isFingerStraight, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
 import { playSound } from "@/util/playSound";
 import ThreeScene from "@/components/ThreeScene";
+import { NAME_LABEL, NameLabel } from "@/styles";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -93,7 +94,7 @@ const Home: React.FC = () => {
           setIsAllReady(message.isReady);
           if (message.isStart) {
             setIsStart(true);
-            startGame(); // 클라이언트 시작 로직 
+            startGame(); // 클라이언트 시작 로직
           }
           console.log("isAllReady 상태 업데이트: ", isAllReady);
         }
@@ -144,7 +145,6 @@ const Home: React.FC = () => {
               stopBackgroundMusic(audioRef.current!);
               playSound("/sounds/winner.wav");
               setGameResult("you WIN!");
-
             }
           }
         );
@@ -152,7 +152,7 @@ const Home: React.FC = () => {
           ctx,
           ctx2,
           wsPlayManagerRef.current,
-          setGameResult,
+          setGameResult
         );
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
@@ -256,7 +256,7 @@ const Home: React.FC = () => {
       thumbTip.y < middleFingerTip.y &&
       thumbTip.y < ringFingerTip.y &&
       thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x < thumbTip.x&&
+      indexFingerTip.x < thumbTip.x &&
       isFingerStraight(landmarks, 1)
     ) {
       return "Pointing Right";
@@ -264,7 +264,7 @@ const Home: React.FC = () => {
       thumbTip.y < middleFingerTip.y &&
       thumbTip.y < ringFingerTip.y &&
       thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x > thumbTip.x&&
+      indexFingerTip.x > thumbTip.x &&
       isFingerStraight(landmarks, 1)
     ) {
       return "Pointing Left";
@@ -289,10 +289,10 @@ const Home: React.FC = () => {
     setIsAnimating(true);
     setGestureFeedback(feedback);
     setLastGesture(feedback);
-    
+
     if (feedbackTimeoutRef.current) {
       clearTimeout(feedbackTimeoutRef.current);
-      }
+    }
 
     feedbackTimeoutRef.current = window.setTimeout(() => {
       setGestureFeedback(null);
@@ -331,9 +331,11 @@ const Home: React.FC = () => {
       handleReadyClick();
     }
   };
-  const gameResultStyle = "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-20 bg-white bg-opacity-20 text-white text-6xl rounded-3xl text-center backdrop-blur-xl border-xl border-white border-opacity-20";
+  const gameResultStyle =
+    "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-20 bg-white bg-opacity-20 text-white text-6xl rounded-3xl text-center backdrop-blur-xl border-xl border-white border-opacity-20";
   const resultText = gameResult;
-  const resultClass = resultText === "you WIN!" ? "animate-win" : "animate-lose";
+  const resultClass =
+    resultText === "you WIN!" ? "animate-win" : "animate-lose";
 
   useEffect(() => {
     if (videoRef.current) {
@@ -353,7 +355,7 @@ const Home: React.FC = () => {
     <>
       <div className="grid-container">
         <div id="webcam-container">
-          <div ref={gestureRef}></div>
+          <div ref={gestureRef} />
           <video
             ref={videoRef}
             id="video"
@@ -361,8 +363,14 @@ const Home: React.FC = () => {
             height="240"
             autoPlay
             className="hidden"
-          ></video>
-          <canvas ref={canvasRef} id="canvas" width="320" height="240"></canvas>
+          />
+          <canvas
+            ref={canvasRef}
+            id="canvas"
+            width="320"
+            height="240"
+            className="hidden"
+          />
           {gestureFeedback && (
             <div>
               {gestureFeedback === "Move Right" && (
@@ -400,40 +408,36 @@ const Home: React.FC = () => {
             </div>
           )}
         </div>
-        <div id="webcam-container">
-          <div id="tetris-container">
+        <div id="play-container">
+          <div id="tetris-container" className="overflow-hidden">
+            <NameLabel name={"USER1"} />
             <canvas
               ref={canvasTetrisRef}
               id="tetris"
-              width="320"
-              height="640"
-            ></canvas>
-            <div ref={borderRef} id="tetris-border"></div>
+              width="400"
+              height="800"
+            />
+            <div ref={borderRef} id="tetris-border" />
           </div>
         </div>
-        <div id="webcam-container">
+        <div id="play-container">
+          <NameLabel name={"USER2"} />
           <canvas
             ref={canvasTetris2Ref}
             id="tetrisCanvas2"
-            width="320"
-            height="640"
+            width="400"
+            height="800"
           ></canvas>
         </div>
         <div id="webcam-container">
           <div id="counter">
-            {imageSrc && <Image 
-            width={200}
-            height={200}
-            src={imageSrc} alt="profile" />}
+            {imageSrc && (
+              <Image width={200} height={200} src={imageSrc} alt="profile" />
+            )}
           </div>
-            {/* <span className=" text-2xl text-green-400">
-            User01
-            </span> */}
-            {imageSrc === "/image/guest_image.png" && (
-        <span className="text-2xl text-green-400">
-          User01
-        </span>
-      )}
+          {imageSrc === "/image/guest_image.png" && (
+            <span className="text-2xl text-green-400">User2</span>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">
@@ -459,10 +463,13 @@ const Home: React.FC = () => {
       </div>
       {/* LOSE, WIN 표시 DIV */}
       {gameResult && (
-                <div id="gameResult" className={`${gameResultStyle} ${resultClass}`}>
-                    {gameResult}
-                </div>
-            )}
+        <div
+          id="gameResult"
+          className={`${gameResultStyle} ${resultClass} press text-2xl leading-15`}
+        >
+          {gameResult}
+        </div>
+      )}
       <ThreeScene handLandmarks={landmarks} />
       <button
         type="button"
@@ -471,24 +478,6 @@ const Home: React.FC = () => {
       >
         임시버튼(눌러서 set.clear())
       </button>
-      <style jsx>{`
-        @keyframes fadeout {
-          0% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-        @keyframes move-up {
-          0% {
-            top: 10px;
-          }
-          100% {
-            top: -50px;
-          }
-        }
-      `}</style>
     </>
   );
 };
