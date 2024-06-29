@@ -17,6 +17,7 @@
     "axios": "^1.7.2",
     "formik": "^2.4.6",
     "framer-motion": "^11.2.11",
+    "howler": "^2.2.4",
     "js-cookie": "^3.0.5",
     "net": "^1.0.2",
     "next": "14.2.4",
@@ -32,6 +33,7 @@
     "yup": "^1.4.0"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.11",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^18",

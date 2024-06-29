@@ -1,6 +1,6 @@
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
-import { playSound } from "@/util/playSound";
+import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 const COLORS = {
     cyan: { light: "#5BFFFF", main: "#00FFFF", dark: "#00CCCC" },
     blue: { light: "#5B5BFF", main: "#0000FF", dark: "#0000CC" },
@@ -188,7 +188,7 @@ export class TetrisGame {
         let flashCount = 6; // Flash 3 times
         let flashInterval = 100; // Time between flashes in milliseconds
         let isWhite = true;
-    
+
         let flashIntervalId = setInterval(() => {
             for (let c = 0; c < this.COL; c++) {
                 this.drawSquare(this.ctx, c, row, isWhite ? "GREY" : this.board[row][c]);
@@ -259,6 +259,7 @@ class Piece {
             this.unDraw();
             this.x++;
             this.draw();
+            // playSoundEffect("/sound/move.ogg");
         }
     }
 
@@ -267,7 +268,9 @@ class Piece {
             this.unDraw();
             this.x--;
             this.draw();
+
         }
+
     }
 
     moveTo(x: number) {
@@ -297,9 +300,10 @@ class Piece {
             this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
             this.activeTetromino = nextPattern;
             this.draw();
+            playSoundEffect("/sound/move.ogg");
         }
     }
-    
+
     lock() {
         for (let r = 0; r < this.activeTetromino.length; r++) {
             for (let c = 0; c < this.activeTetromino[r].length; c++) {
@@ -309,7 +313,8 @@ class Piece {
                 if (this.y + r < 0) {
                     this.game.gameOver = true;
                     this.game.isEnd = true;
-                    playSound("/sounds/attack.mp3");
+                    backgroundMusic.pause();
+                    playSoundEffect("/sounds/attack.mp3");
                     this.game.showGameResult("you LOSE!");
                     break;
                 }
@@ -330,10 +335,10 @@ class Piece {
                     }
                 }
                 this.game.flashRow(r);
-                playSound("/sounds/clear.wav");
+                playSoundEffect("/sounds/clear.wav");
             }
         }
-        playSound("/sounds/blockdown.wav");
+        playSoundEffect("/sound/placed.ogg");
         this.game.drawBoard();
         this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd); // Send message when a piece is locked
     }
