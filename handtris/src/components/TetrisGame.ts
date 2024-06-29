@@ -1,12 +1,22 @@
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
 import { playSound } from "@/util/playSound";
+const COLORS = {
+    cyan: { light: "#5BFFFF", main: "#00FFFF", dark: "#00CCCC" },
+    blue: { light: "#5B5BFF", main: "#0000FF", dark: "#0000CC" },
+    orange: { light: "#FFAD5B", main: "#FF8C00", dark: "#CC7000" },
+    yellow: { light: "#FFFF5B", main: "#FFFF00", dark: "#CCCC00" },
+    green: { light: "#5BFF5B", main: "#00FF00", dark: "#00CC00" },
+    purple: { light: "#AD5BFF", main: "#8C00FF", dark: "#7000CC" },
+    red: { light: "#FF5B5B", main: "#FF0000", dark: "#CC0000" }
+};
 
 export class TetrisGame {
     ROW = 20;
     COL = 10;
-    SQ = 32;
-    VACANT = "GREY";
+    SQ = 40;
+    VACANT = "#303030";
+    GRID_COLOR = "#2B292A";
     board: string[][];
     board_forsend: string[][];
     ctx: CanvasRenderingContext2D;
@@ -35,8 +45,10 @@ export class TetrisGame {
         this.gameOver = false;
         this.wsManager = wsManager;
         this.setGameResult = setGameResult;
+
         this.flashRow = this.flashRowEffect;
         this.clearRow = this.clearFullRow;
+
         this.drawBoard();
         this.drop();
     }
@@ -63,29 +75,39 @@ export class TetrisGame {
         return board;
     }
 
-    drawSquare(
-        ctx: CanvasRenderingContext2D,
-        x: number,
-        y: number,
-        color: string
-    ) {
-        let gradient = ctx.createLinearGradient(
-            x * this.SQ,
-            y * this.SQ,
-            x * this.SQ + this.SQ,
-            y * this.SQ + this.SQ
-        );
-        gradient.addColorStop(0, color);
-        gradient.addColorStop(1, "white");
+    drawSquare(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+        const colorSet = COLORS[color as keyof typeof COLORS] || { light: color, main: color, dark: color };
 
-        ctx.fillStyle = gradient;
+        // 메인 색상으로 사각형 그리기
+        ctx.fillStyle = colorSet.main;
         ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-        ctx.strokeStyle = "BLACK";
+        // 밝은 부분 (좌측, 상단)
+        ctx.beginPath();
+        ctx.moveTo(x * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.light;
+        ctx.fill();
+
+        // 어두운 부분 (우측, 하단)
+        ctx.beginPath();
+        ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.dark;
+        ctx.fill();
+
+        // 그리드 선
+        ctx.strokeStyle = this.GRID_COLOR;
         ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
     }
 
     drawBoard() {
+        // Draw the entire board background
+        this.ctx.fillStyle = this.VACANT;
+        this.ctx.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
+
         for (let r = 0; r < this.ROW; r++) {
             for (let c = 0; c < this.COL; c++) {
                 this.drawSquare(this.ctx, c, r, this.board[r][c]);
@@ -94,6 +116,10 @@ export class TetrisGame {
     }
 
     drawBoard2(board2: string[][]) {
+        // Draw the entire board background
+        this.ctx2.fillStyle = this.VACANT;
+        this.ctx2.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
+
         for (let r = 0; r < this.ROW; r++) {
             for (let c = 0; c < this.COL; c++) {
                 this.drawSquare(this.ctx2, c, r, board2[r][c]);
@@ -154,6 +180,7 @@ export class TetrisGame {
             console.error("WebSocket transport is not defined.");
         }
     }
+
     showGameResult(result: string) {
         this.setGameResult(result);
     }
@@ -282,7 +309,6 @@ class Piece {
                 if (this.y + r < 0) {
                     this.game.gameOver = true;
                     this.game.isEnd = true;
-                    // alert("You lose!");
                     playSound("/sounds/attack.mp3");
                     this.game.showGameResult("you LOSE!");
                     break;
