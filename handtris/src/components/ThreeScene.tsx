@@ -144,18 +144,19 @@ const ThreeScene = ({ handLandmarks }) => {
       // Calculate the angle between the z coordinates of landmark0 and landmark3
       const deltaZ = landmark3.z - landmark0.z; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
       const deltaX = landmark0.x - landmark3.x;
-      const angle = -Math.atan2(deltaZ, deltaX);
-      console.log('angle: ', angle);
+      const angle = -Math.atan2(deltaZ, deltaX); // theta, 단위: rad
 
       // Rotate the joystick model based on the calculated angle
-      joystick.rotation.z = angle;
+      if (angle > 0.3 && angle < 3.0){ // 17도 이상 171도 이하 움직임 제한
+        joystick.rotation.z = angle;
+      }
 
       // Adjust camera only if it hasn't been adjusted yet
       if (!cameraAdjusted) {
         const box = new THREE.Box3().setFromObject(joystick);
         const boxSize = box.getSize(new THREE.Vector3()).length();
         const boxCenter = box.getCenter(new THREE.Vector3());
-
+        
         const halfSizeToFitOnScreen = boxSize * 0.5;
         const halfFovY = THREE.MathUtils.degToRad(cameraRef.current.fov * 0.5);
         const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
