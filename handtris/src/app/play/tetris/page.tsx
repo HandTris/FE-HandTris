@@ -9,7 +9,7 @@ import {
   playBackgroundMusic,
   stopBackgroundMusic,
 } from "@/util/playBackgroundMusic";
-import { isFingerStraight, isHandOpen } from "@/util/handLogic";
+import { isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
 import { playSound } from "@/util/playSound";
 import ThreeScene from "@/components/ThreeScene";
@@ -80,7 +80,6 @@ const Home: React.FC = () => {
   }, [isOwner]);
 
   const subscribeToState = async () => {
-    console.log("subscribeToState 함수 앞", isAllReady);
     if (!wsWaitingManagerRef.current) {
       wsWaitingManagerRef.current = new WebSocketManager();
     }
@@ -95,7 +94,6 @@ const Home: React.FC = () => {
             setIsStart(true);
             startGame(); // 클라이언트 시작 로직 
           }
-          console.log("isAllReady 상태 업데이트: ", isAllReady);
         }
       );
       console.log("Subscribed to /topic/state");
@@ -185,29 +183,42 @@ const Home: React.FC = () => {
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       for (const landmarks of results.multiHandLandmarks) {
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
-          lineWidth: 1,
-        });
-        drawLandmarks(canvasCtx, landmarks, {
-          color: "#FF0000",
-          lineWidth: 0.05,
-        });
-
-        const gesture = recognizeGesture(landmarks);
-        if (gestureRef.current) {
-          // gestureRef.current.innerText = `Gesture: ${gesture}`;
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i];
+          const classification = results.multiHandedness[i]; // handedness 정보 가져오기
+          // handedness 정보에서 손 종류 확인
+          const handType = classification.label; // 'Left' 또는 'Right' 값을 가짐
+      
+          // 손 종류에 따라 랜드마크 색상 변경
+          const landmarkColor = handType === 'Left' ? "#0000FF" : "#FF0000"; // 왼손 파란색, 오른손 빨간색
+          drawLandmarks(canvasCtx, landmarks, {
+            color: landmarkColor,
+            lineWidth: 0.1,
+          });
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+            color: "#00FF00",
+            lineWidth: 1,
+          });
+          
+          const gesture = recognizeGesture(landmarks);
+  
+          // 현재 제스쳐 출력
+          if (gestureRef.current) {
+            gestureRef.current.innerText = "Gesture : "+gesture;
+          }
+  
+          handleGesture(gesture,handType); // 제스처에 따라 블록 이동 처리
+          setLandmarks(results.multiHandLandmarks); // landmarks 업데이트
+          
         }
-
-        handleGesture(gesture); // 제스처에 따라 블록 이동 처리
+        if (borderRef.current) {
+          borderRef.current.style.boxShadow = "none";
+        }
       }
-      setLandmarks(results.multiHandLandmarks); // landmarks 업데이트
-      if (borderRef.current) {
-        borderRef.current.style.boxShadow = "none";
-      }
-    } else {
+    } 
+    else {
       if (gestureRef.current) {
-        // gestureRef.current.innerText = "Gesture: None";
+        gestureRef.current.innerText = "Gesture : None";
       }
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "0 0 20px 20px red";
@@ -216,60 +227,73 @@ const Home: React.FC = () => {
     canvasCtx.restore();
   }, []);
 
-  const handleGesture = (gesture: string) => {
+  const handleGesture = (gesture: string, handType: string) => {
     const now = Date.now();
 
-    if (gesture === "Palm") {
-      if (now - lastMoveTime.current.rotate < 800) {
-        return;
-      }
-      lastMoveTime.current.rotate = now;
-      tetrisGameRef.current?.p.rotate();
-      triggerGestureFeedback("Rotate");
-    } else if (gesture === "Pointing Right") {
-      if (now - lastMoveTime.current.right < 200) {
-        return;
-      }
-      lastMoveTime.current.right = now;
-      tetrisGameRef.current?.p.moveRight();
-      triggerGestureFeedback("Move Right");
-    } else if (gesture === "Pointing Left") {
-      if (now - lastMoveTime.current.left < 200) {
-        return;
-      }
-      lastMoveTime.current.left = now;
-      tetrisGameRef.current?.p.moveLeft();
-      triggerGestureFeedback("Move Left");
-    }
+    // 오른손일 경우
+    if(handType === "Right"){
+      if (gesture === "Pointing Right") {
+       if (now - lastMoveTime.current.right < 200) {
+         return;
+       }
+       lastMoveTime.current.right = now;
+       tetrisGameRef.current?.p.moveRight();
+       triggerGestureFeedback("Move Right");
+     } else if (gesture === "Pointing Left") {
+       if (now - lastMoveTime.current.left < 200) {
+         return;
+       }
+       lastMoveTime.current.left = now;
+       tetrisGameRef.current?.p.moveLeft();
+       triggerGestureFeedback("Move Left");
+     }
+   }
+   // 왼손일 경우
+   else{
+     if (gesture === "Palm") {
+       if (now - lastMoveTime.current.rotate < 600) {
+         return;
+       }
+       lastMoveTime.current.rotate = now;
+       tetrisGameRef.current?.p.rotate();
+       triggerGestureFeedback("Rotate");
+     }
+   }
   };
 
   const recognizeGesture = (landmarks: any[]): string => {
     const thumbTip = landmarks[4];
+    const handBase = landmarks[17]; // 주먹의 맨 밑
     const indexFingerTip = landmarks[8];
     const middleFingerTip = landmarks[12];
     const ringFingerTip = landmarks[16];
     const pinkyTip = landmarks[20];
     const palmBase = landmarks[0];
+
+    // 각도 계산 함수
+    const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
+      const deltaY = thumbTip.y - thumbBase.y;
+      const deltaX = thumbTip.x - thumbBase.x;
+      const radians = Math.atan2(deltaX, deltaY);
+      const degrees = radians * (180 / Math.PI);
+      return degrees;
+    };
+
+    // 엄지의 각도 계산
+    const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
+
+    // 일정 각도 이상이어야 제스처로 인식
+    const rightAngleThreshold = 25;
+    const leftAngleThreshold = 5;
     if (isHandOpen(landmarks)) {
       return "Palm";
-    } else if (
-      thumbTip.y < middleFingerTip.y &&
-      thumbTip.y < ringFingerTip.y &&
-      thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x < thumbTip.x&&
-      isFingerStraight(landmarks, 1)
-    ) {
-      return "Pointing Right";
-    } else if (
-      thumbTip.y < middleFingerTip.y &&
-      thumbTip.y < ringFingerTip.y &&
-      thumbTip.y < pinkyTip.y &&
-      indexFingerTip.x > thumbTip.x&&
-      isFingerStraight(landmarks, 1)
-    ) {
+    } 
+    if (thumbAngle < -leftAngleThreshold) {
       return "Pointing Left";
+    } 
+    else if (thumbAngle > rightAngleThreshold) {
+      return "Pointing Right";
     }
-
     return "Unknown";
   };
 
