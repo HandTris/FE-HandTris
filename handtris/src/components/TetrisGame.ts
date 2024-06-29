@@ -29,6 +29,8 @@ export class TetrisGame {
     hasSentEndMessage: boolean;
     wsManager: WebSocketManager;
     setGameResult: (result: string) => void;
+    flashRow: (row: number) => void;
+    clearRow: (row: number) => void;
 
     constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager, setGameResult: (result: string) => void) {
         this.isEnd = false;
@@ -44,8 +46,22 @@ export class TetrisGame {
         this.wsManager = wsManager;
         this.setGameResult = setGameResult;
 
+        this.flashRow = this.flashRowEffect;
+        this.clearRow = this.clearFullRow;
+
         this.drawBoard();
         this.drop();
+    }
+    clearFullRow(row) {
+        for (let y = row; y > 1; y--) {
+            for (let c = 0; c < this.COL; c++) {
+                this.board[y][c] = this.board[y - 1][c];
+            }
+        }
+        for (let c = 0; c < this.COL; c++) {
+            this.board[0][c] = this.VACANT;
+        }
+        this.drawBoard();
     }
 
     createBoard(): string[][] {
@@ -168,6 +184,23 @@ export class TetrisGame {
     showGameResult(result: string) {
         this.setGameResult(result);
     }
+    flashRowEffect(row) {
+        let flashCount = 6; // Flash 3 times
+        let flashInterval = 100; // Time between flashes in milliseconds
+        let isWhite = true;
+    
+        let flashIntervalId = setInterval(() => {
+            for (let c = 0; c < this.COL; c++) {
+                this.drawSquare(this.ctx, c, row, isWhite ? "GREY" : this.board[row][c]);
+            }
+            isWhite = !isWhite;
+            flashCount--;
+            if (flashCount === 0) {
+                clearInterval(flashIntervalId);
+                this.clearRow(row);
+            }
+        }, flashInterval);
+    }
 }
 
 class Piece {
@@ -266,7 +299,7 @@ class Piece {
             this.draw();
         }
     }
-
+    
     lock() {
         for (let r = 0; r < this.activeTetromino.length; r++) {
             for (let c = 0; c < this.activeTetromino[r].length; c++) {
@@ -292,13 +325,11 @@ class Piece {
             if (isRowFull) {
                 for (let y = r; y > 1; y--) {
                     for (let c = 0; c < this.game.COL; c++) {
-                        this.game.board[y][c] = this.game.board[y - 1][c];
+                        // this.game.board[y][c] = this.game.board[y - 1][c];
                         this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
                     }
                 }
-                for (let c = 0; c < this.game.COL; c++) {
-                    this.game.board[0][c] = this.game.VACANT;
-                }
+                this.game.flashRow(r);
                 playSound("/sounds/clear.wav");
             }
         }
