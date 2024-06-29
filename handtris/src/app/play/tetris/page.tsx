@@ -5,15 +5,11 @@ import { HAND_CONNECTIONS } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
 import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
-import {
-  playBackgroundMusic,
-  stopBackgroundMusic,
-} from "@/util/playBackgroundMusic";
 import { isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import { playSound } from "@/util/playSound";
 import ThreeScene from "@/components/ThreeScene";
 import { NAME_LABEL, NameLabel } from "@/styles";
+import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -140,8 +136,8 @@ const Home: React.FC = () => {
             tetrisGameRef.current?.drawBoard2(message.board);
             if (message.isEnd) {
               tetrisGameRef.current.gameEnd = true;
-              stopBackgroundMusic(audioRef.current!);
-              playSound("/sounds/winner.wav");
+              backgroundMusic.pause();
+              playSoundEffect("/sounds/winner.wav");
               setGameResult("you WIN!");
             }
           }
@@ -160,8 +156,7 @@ const Home: React.FC = () => {
     const handsManager = new HandGestureManager(onResults);
     handsManager.start(videoRef.current!);
 
-    const audio = playBackgroundMusic();
-    audioRef.current = audio;
+    backgroundMusic.play();
   };
 
   const onResults = useCallback((results: any) => {
@@ -188,9 +183,9 @@ const Home: React.FC = () => {
           const classification = results.multiHandedness[i]; // handedness 정보 가져오기
           // handedness 정보에서 손 종류 확인
           const handType = classification.label; // 'Left' 또는 'Right' 값을 가짐
-      
+
           // 손 종류에 따라 랜드마크 색상 변경
-          const landmarkColor = handType === 'Left' ? "#0000FF" : "#FF0000"; // 왼손 파란색, 오른손 빨간색
+          const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000"; // 왼손 파란색, 오른손 빨간색
           drawLandmarks(canvasCtx, landmarks, {
             color: landmarkColor,
             lineWidth: 0.1,
@@ -199,24 +194,22 @@ const Home: React.FC = () => {
             color: "#00FF00",
             lineWidth: 1,
           });
-          
+
           const gesture = recognizeGesture(landmarks);
-  
+
           // 현재 제스쳐 출력
           if (gestureRef.current) {
-            gestureRef.current.innerText = "Gesture : "+gesture;
+            gestureRef.current.innerText = "Gesture : " + gesture;
           }
-  
-          handleGesture(gesture,handType); // 제스처에 따라 블록 이동 처리
+
+          handleGesture(gesture, handType); // 제스처에 따라 블록 이동 처리
           setLandmarks(results.multiHandLandmarks); // landmarks 업데이트
-          
         }
         if (borderRef.current) {
           borderRef.current.style.boxShadow = "none";
         }
       }
-    } 
-    else {
+    } else {
       if (gestureRef.current) {
         gestureRef.current.innerText = "Gesture : None";
       }
@@ -231,34 +224,34 @@ const Home: React.FC = () => {
     const now = Date.now();
 
     // 오른손일 경우
-    if(handType === "Right"){
+    if (handType === "Right") {
       if (gesture === "Pointing Right") {
-       if (now - lastMoveTime.current.right < 200) {
-         return;
-       }
-       lastMoveTime.current.right = now;
-       tetrisGameRef.current?.p.moveRight();
-       triggerGestureFeedback("Move Right");
-     } else if (gesture === "Pointing Left") {
-       if (now - lastMoveTime.current.left < 200) {
-         return;
-       }
-       lastMoveTime.current.left = now;
-       tetrisGameRef.current?.p.moveLeft();
-       triggerGestureFeedback("Move Left");
-     }
-   }
-   // 왼손일 경우
-   else{
-     if (gesture === "Palm") {
-       if (now - lastMoveTime.current.rotate < 600) {
-         return;
-       }
-       lastMoveTime.current.rotate = now;
-       tetrisGameRef.current?.p.rotate();
-       triggerGestureFeedback("Rotate");
-     }
-   }
+        if (now - lastMoveTime.current.right < 200) {
+          return;
+        }
+        lastMoveTime.current.right = now;
+        tetrisGameRef.current?.p.moveRight();
+        triggerGestureFeedback("Move Right");
+      } else if (gesture === "Pointing Left") {
+        if (now - lastMoveTime.current.left < 200) {
+          return;
+        }
+        lastMoveTime.current.left = now;
+        tetrisGameRef.current?.p.moveLeft();
+        triggerGestureFeedback("Move Left");
+      }
+    }
+    // 왼손일 경우
+    else {
+      if (gesture === "Palm") {
+        if (now - lastMoveTime.current.rotate < 600) {
+          return;
+        }
+        lastMoveTime.current.rotate = now;
+        tetrisGameRef.current?.p.rotate();
+        triggerGestureFeedback("Rotate");
+      }
+    }
   };
 
   const recognizeGesture = (landmarks: any[]): string => {
@@ -287,12 +280,10 @@ const Home: React.FC = () => {
     const leftAngleThreshold = 5;
     if (isHandOpen(landmarks)) {
       return "Palm";
-    } 
+    }
     if (thumbAngle < -leftAngleThreshold) {
-
       return "Pointing Left";
-    } 
-    else if (thumbAngle > rightAngleThreshold) {
+    } else if (thumbAngle > rightAngleThreshold) {
       return "Pointing Right";
     }
     return "Unknown";
@@ -394,7 +385,7 @@ const Home: React.FC = () => {
             id="canvas"
             width="320"
             height="240"
-            className="hidden"
+            // className="hidden"
           />
           {gestureFeedback && (
             <div>
