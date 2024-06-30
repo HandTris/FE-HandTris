@@ -1,14 +1,15 @@
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
+
 const COLORS = {
-    cyan: { light: "#5BFFFF", main: "#00FFFF", dark: "#00CCCC" },
-    blue: { light: "#5B5BFF", main: "#0000FF", dark: "#0000CC" },
-    orange: { light: "#FFAD5B", main: "#FF8C00", dark: "#CC7000" },
-    yellow: { light: "#FFFF5B", main: "#FFFF00", dark: "#CCCC00" },
-    green: { light: "#5BFF5B", main: "#00FF00", dark: "#00CC00" },
-    purple: { light: "#AD5BFF", main: "#8C00FF", dark: "#7000CC" },
-    red: { light: "#FF5B5B", main: "#FF0000", dark: "#CC0000" }
+    cyan: { light: "#5BFFFF", main: "#00FFFF", dark: "#00CCCC", ghost: "#00CCCC" },
+    blue: { light: "#5B5BFF", main: "#0000FF", dark: "#0000CC", ghost: "#0000CC" },
+    orange: { light: "#FFAD5B", main: "#FF8C00", dark: "#CC7000", ghost: "#CC7000" },
+    yellow: { light: "#FFFF5B", main: "#FFFF00", dark: "#CCCC00", ghost: "#CCCC00" },
+    green: { light: "#5BFF5B", main: "#00FF00", dark: "#00CC00", ghost: "#00CC00" },
+    purple: { light: "#AD5BFF", main: "#8C00FF", dark: "#7000CC", ghost: "#7000CC" },
+    red: { light: "#FF5B5B", main: "#FF0000", dark: "#CC0000", ghost: "#CC0000" }
 };
 
 export class TetrisGame {
@@ -52,7 +53,8 @@ export class TetrisGame {
         this.drawBoard();
         this.drop();
     }
-    clearFullRow(row) {
+
+    clearFullRow(row: number) {
         for (let y = row; y > 1; y--) {
             for (let c = 0; c < this.COL; c++) {
                 this.board[y][c] = this.board[y - 1][c];
@@ -75,36 +77,41 @@ export class TetrisGame {
         return board;
     }
 
-    drawSquare(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
-        const colorSet = COLORS[color as keyof typeof COLORS] || { light: color, main: color, dark: color };
+    drawSquare(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, isGhost: boolean = false) {
+        const colorSet = COLORS[color as keyof typeof COLORS] || { light: color, main: color, dark: color, ghost: color };
 
-        // 메인 색상으로 사각형 그리기
-        ctx.fillStyle = colorSet.main;
-        ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+        ctx.clearRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-        // 밝은 부분 (좌측, 상단)
-        ctx.beginPath();
-        ctx.moveTo(x * this.SQ, y * this.SQ);
-        ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
-        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-        ctx.fillStyle = colorSet.light;
-        ctx.fill();
+        if (isGhost) {
+            ctx.strokeStyle = colorSet.ghost;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]);
+            ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+            ctx.setLineDash([]);
+        } else {
+            ctx.fillStyle = colorSet.main;
+            ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-        // 어두운 부분 (우측, 하단)
-        ctx.beginPath();
-        ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
-        ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
-        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-        ctx.fillStyle = colorSet.dark;
-        ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x * this.SQ, y * this.SQ);
+            ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
+            ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+            ctx.fillStyle = colorSet.light;
+            ctx.fill();
 
-        // 그리드 선
-        ctx.strokeStyle = this.GRID_COLOR;
-        ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+            ctx.beginPath();
+            ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
+            ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
+            ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+            ctx.fillStyle = colorSet.dark;
+            ctx.fill();
+
+            ctx.strokeStyle = this.GRID_COLOR;
+            ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+        }
     }
 
     drawBoard() {
-        // Draw the entire board background
         this.ctx.fillStyle = this.VACANT;
         this.ctx.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
 
@@ -116,7 +123,6 @@ export class TetrisGame {
     }
 
     drawBoard2(board2: string[][]) {
-        // Draw the entire board background
         this.ctx2.fillStyle = this.VACANT;
         this.ctx2.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
 
@@ -141,7 +147,7 @@ export class TetrisGame {
             this.p.moveDown();
             this.dropStart = Date.now();
             if (!this.gameEnd) {
-                this.wsManager.sendMessageOnGaming(this.board_forsend, this.isEnd);  // Send message after piece drops
+                this.wsManager.sendMessageOnGaming(this.board_forsend, this.isEnd);
             }
         }
 
@@ -184,9 +190,9 @@ export class TetrisGame {
     showGameResult(result: string) {
         this.setGameResult(result);
     }
-    flashRowEffect(row) {
-        let flashCount = 6; // Flash 3 times
-        let flashInterval = 100; // Time between flashes in milliseconds
+    flashRowEffect(row: number) {
+        let flashCount = 6;
+        let flashInterval = 100;
         let isWhite = true;
 
         let flashIntervalId = setInterval(() => {
@@ -211,6 +217,7 @@ class Piece {
     x: number;
     y: number;
     game: TetrisGame;
+    ghostY: number;
 
     constructor(tetromino: number[][][], color: string, game: TetrisGame) {
         this.tetromino = tetromino;
@@ -220,16 +227,14 @@ class Piece {
         this.x = 3;
         this.y = -2;
         this.game = game;
+        this.ghostY = this.calculateGhostY();
     }
 
-    fill(color: string) {
+    fill(color: string, isGhost: boolean = false) {
         for (let r = 0; r < this.activeTetromino.length; r++) {
             for (let c = 0; c < this.activeTetromino[r].length; c++) {
                 if (this.activeTetromino[r][c]) {
-                    if (this.y + r >= 0 && this.x + c >= 0) {
-                        this.game.board_forsend[this.y + r][this.x + c] = color;
-                    }
-                    this.game.drawSquare(this.game.ctx, this.x + c, this.y + r, color);
+                    this.game.drawSquare(this.game.ctx, this.x + c, this.y + r, color, isGhost);
                 }
             }
         }
@@ -243,47 +248,101 @@ class Piece {
         this.fill(this.game.VACANT);
     }
 
+    drawGhost() {
+        this.unDrawGhost(); // Ensure previous ghost is cleared
+        this.ghostY = this.calculateGhostY();
+        const ghostColor = COLORS[this.color as keyof typeof COLORS].ghost;
+        this.fillGhost(this.ghostY, ghostColor);
+    }
+
+    unDrawGhost() {
+        this.fillGhost(this.ghostY, this.game.VACANT);
+    }
+
+    fillGhost(ghostY: number, color: string) {
+        const ghostPositions: { x: number; y: number }[] = [];
+        for (let r = 0; r < this.activeTetromino.length; r++) {
+            for (let c = 0; c < this.activeTetromino[r].length; c++) {
+                if (this.activeTetromino[r][c]) {
+                    if (ghostY + r >= 0 && this.x + c >= 0) {
+                        ghostPositions.push({ x: this.x + c, y: ghostY + r });
+                    }
+                }
+            }
+        }
+
+        this.game.ctx.clearRect(0, 0, this.game.COL * this.game.SQ, this.game.ROW * this.game.SQ); // 현재 블록과 고스트 블록이 그려진 영역 전체 지우기
+        this.game.drawBoard();
+
+        ghostPositions.forEach(pos => {
+            if (color === this.game.VACANT) {
+                this.game.drawSquare(this.game.ctx, pos.x, pos.y, this.game.board[pos.y][pos.x], false);
+            } else {
+                this.game.drawSquare(this.game.ctx, pos.x, pos.y, color, true);
+            }
+        });
+
+        this.draw(); // 현재 블록 다시 그리기
+    }
+
+    calculateGhostY(): number {
+        let ghostY = this.y;
+        while (!this.collision(0, ghostY - this.y + 1)) {
+            ghostY++;
+        }
+        return ghostY;
+    }
+
     moveDown() {
         if (!this.collision(0, 1)) {
             this.unDraw();
+            this.unDrawGhost();
             this.y++;
+            this.ghostY = this.calculateGhostY();
+            this.drawGhost(); // 고스트 블록 그리기
             this.draw();
         } else {
             this.lock();
             this.game.p = this.game.randomPiece();
+            this.game.p.drawGhost(); // 새로운 블록의 고스트 블록 그리기
         }
     }
 
     moveRight() {
         if (!this.collision(1, 0)) {
             this.unDraw();
+            this.unDrawGhost();
             this.x++;
+            this.ghostY = this.calculateGhostY();
+            this.drawGhost();
             this.draw();
-            // playSoundEffect("/sound/move.ogg");
         }
     }
 
     moveLeft() {
         if (!this.collision(-1, 0)) {
             this.unDraw();
+            this.unDrawGhost();
             this.x--;
+            this.ghostY = this.calculateGhostY();
+            this.drawGhost();
             this.draw();
-
         }
-
     }
 
     moveTo(x: number) {
         if (!this.collision(x - this.x, 0)) {
             this.unDraw();
+            this.unDrawGhost();
             this.x = x;
+            this.ghostY = this.calculateGhostY();
+            this.drawGhost();
             this.draw();
         }
     }
 
     rotate() {
-        let nextPattern =
-            this.tetromino[(this.tetrominoN + 1) % this.tetromino.length];
+        let nextPattern = this.tetromino[(this.tetrominoN + 1) % this.tetromino.length];
         let kick = 0;
 
         if (this.collision(0, 0, nextPattern)) {
@@ -296,9 +355,12 @@ class Piece {
 
         if (!this.collision(kick, 0, nextPattern)) {
             this.unDraw();
+            this.unDrawGhost();
             this.x += kick;
             this.tetrominoN = (this.tetrominoN + 1) % this.tetromino.length;
             this.activeTetromino = nextPattern;
+            this.ghostY = this.calculateGhostY();
+            this.drawGhost();
             this.draw();
             playSoundEffect("/sound/move.ogg");
         }
@@ -330,7 +392,6 @@ class Piece {
             if (isRowFull) {
                 for (let y = r; y > 1; y--) {
                     for (let c = 0; c < this.game.COL; c++) {
-                        // this.game.board[y][c] = this.game.board[y - 1][c];
                         this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
                     }
                 }
@@ -340,7 +401,7 @@ class Piece {
         }
         playSoundEffect("/sound/placed.ogg");
         this.game.drawBoard();
-        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd); // Send message when a piece is locked
+        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd);
     }
 
     collision(x: number, y: number, piece: number[][] = this.activeTetromino) {
