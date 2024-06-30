@@ -248,8 +248,8 @@ const Home: React.FC = () => {
           return;
         }
         lastMoveTime.current.rotate = now;
-        tetrisGameRef.current?.p.rotate();
-        triggerGestureFeedback("Rotate");
+        tetrisGameRef.current?.moveToGhostPosition();
+        triggerGestureFeedback("Drop");
       }
     }
   };
