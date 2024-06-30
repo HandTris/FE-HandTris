@@ -54,7 +54,7 @@ export class TetrisGame {
         this.drop();
     }
 
-    clearFullRow(row) {
+    clearFullRow(row: number) {
         for (let y = row; y > 1; y--) {
             for (let c = 0; c < this.COL; c++) {
                 this.board[y][c] = this.board[y - 1][c];
@@ -80,8 +80,9 @@ export class TetrisGame {
     drawSquare(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, isGhost: boolean = false) {
         const colorSet = COLORS[color as keyof typeof COLORS] || { light: color, main: color, dark: color, ghost: color };
 
+        ctx.clearRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+
         if (isGhost) {
-            ctx.clearRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
             ctx.strokeStyle = colorSet.ghost;
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 3]);
@@ -189,7 +190,7 @@ export class TetrisGame {
     showGameResult(result: string) {
         this.setGameResult(result);
     }
-    flashRowEffect(row) {
+    flashRowEffect(row: number) {
         let flashCount = 6;
         let flashInterval = 100;
         let isWhite = true;
@@ -229,14 +230,11 @@ class Piece {
         this.ghostY = this.calculateGhostY();
     }
 
-    fill(color: string) {
+    fill(color: string, isGhost: boolean = false) {
         for (let r = 0; r < this.activeTetromino.length; r++) {
             for (let c = 0; c < this.activeTetromino[r].length; c++) {
                 if (this.activeTetromino[r][c]) {
-                    if (this.y + r >= 0 && this.x + c >= 0) {
-                        this.game.board_forsend[this.y + r][this.x + c] = color;
-                    }
-                    this.game.drawSquare(this.game.ctx, this.x + c, this.y + r, color);
+                    this.game.drawSquare(this.game.ctx, this.x + c, this.y + r, color, isGhost);
                 }
             }
         }
@@ -252,6 +250,7 @@ class Piece {
 
     drawGhost() {
         this.unDrawGhost(); // Ensure previous ghost is cleared
+        this.ghostY = this.calculateGhostY();
         const ghostColor = COLORS[this.color as keyof typeof COLORS].ghost;
         this.fillGhost(this.ghostY, ghostColor);
     }
@@ -261,15 +260,29 @@ class Piece {
     }
 
     fillGhost(ghostY: number, color: string) {
+        const ghostPositions: { x: number; y: number }[] = [];
         for (let r = 0; r < this.activeTetromino.length; r++) {
             for (let c = 0; c < this.activeTetromino[r].length; c++) {
                 if (this.activeTetromino[r][c]) {
                     if (ghostY + r >= 0 && this.x + c >= 0) {
-                        this.game.drawSquare(this.game.ctx, this.x + c, ghostY + r, color, true);
+                        ghostPositions.push({ x: this.x + c, y: ghostY + r });
                     }
                 }
             }
         }
+
+        this.game.ctx.clearRect(0, 0, this.game.COL * this.game.SQ, this.game.ROW * this.game.SQ); // 현재 블록과 고스트 블록이 그려진 영역 전체 지우기
+        this.game.drawBoard();
+
+        ghostPositions.forEach(pos => {
+            if (color === this.game.VACANT) {
+                this.game.drawSquare(this.game.ctx, pos.x, pos.y, this.game.board[pos.y][pos.x], false);
+            } else {
+                this.game.drawSquare(this.game.ctx, pos.x, pos.y, color, true);
+            }
+        });
+
+        this.draw(); // 현재 블록 다시 그리기
     }
 
     calculateGhostY(): number {
@@ -283,13 +296,15 @@ class Piece {
     moveDown() {
         if (!this.collision(0, 1)) {
             this.unDraw();
+            this.unDrawGhost();
             this.y++;
             this.ghostY = this.calculateGhostY();
-            this.drawGhost();
+            this.drawGhost(); // 고스트 블록 그리기
             this.draw();
         } else {
             this.lock();
             this.game.p = this.game.randomPiece();
+            this.game.p.drawGhost(); // 새로운 블록의 고스트 블록 그리기
         }
     }
 
