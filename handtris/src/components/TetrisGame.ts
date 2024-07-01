@@ -207,6 +207,23 @@ export class TetrisGame {
             }
         }, flashInterval);
     }
+
+    moveToGhostPosition() {
+        const ghostPosition = this.calculateGhostPosition();
+        this.p.moveTo(ghostPosition.x, ghostPosition.y);
+        this.drawBoard(); // 블록의 새로운 위치를 반영하도록 보드를 다시 그립니다.
+    }
+
+    calculateGhostPosition() {
+        const originalPosition = { x: this.p.x, y: this.p.y };
+        while (!this.p.collision(0, 1)) {
+            this.p.y++;
+        }
+        const ghostPosition = { x: this.p.x, y: this.p.y };
+        this.p.x = originalPosition.x;
+        this.p.y = originalPosition.y;
+        return ghostPosition;
+    }
 }
 
 class Piece {
@@ -321,11 +338,12 @@ class Piece {
         }
     }
 
-    moveTo(x: number) {
-        if (!this.collision(x - this.x, 0)) {
+    moveTo(x: number, y: number) {
+        if (!this.collision(x - this.x, y - this.y)) {
             this.unDraw();
             this.unDrawGhost();
             this.x = x;
+            this.y = y;
             this.ghostY = this.calculateGhostY();
             this.drawGhost();
             this.draw();

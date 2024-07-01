@@ -22,7 +22,7 @@ const ThreeScene = ({ handLandmarks }) => {
       0.1,
       1000
     );
-    const renderer = new THREE.WebGLRenderer({ antialias: true , alpha: true});
+    const renderer = new THREE.WebGLRenderer({ antialias: true , alpha: false});
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
 
@@ -30,7 +30,7 @@ const ThreeScene = ({ handLandmarks }) => {
     const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft white light
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(0, 250, 120).normalize();
+    directionalLight.position.set(0, 250,0).normalize();
     scene.add(directionalLight);
 
     // Axes Helper
@@ -49,8 +49,8 @@ const ThreeScene = ({ handLandmarks }) => {
         obj.traverse((node) => {
           if (node.isMesh) {
             node.material = new THREE.MeshPhongMaterial({
-              color: 0xff0000,
-              emissive: 0x333333, // Add emissive property for better visibility
+              color: 0x3c3c3c,
+              emissive: 0x111111, // Add emissive property for better visibility
             });
           }
         });
@@ -125,16 +125,15 @@ const ThreeScene = ({ handLandmarks }) => {
   }, []);
 
   useEffect(() => {
-    // console.log('Hand landmarks:', handLandmarks)
     if (handLandmarks.length > 0 && joystickRef.current) {
-      const landmark17 = handLandmarks[0][17];
+      const landmark0 = handLandmarks[0][0];
       const landmark3 = handLandmarks[0][3];
       const joystick = joystickRef.current;
 
       // Calculate the angle between the z coordinates of landmark0 and landmark3
-      const deltaY = landmark17.y - landmark3.y; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
-      const deltaX = landmark17.x - landmark3.x;
-      const angle = Math.atan2(deltaY, deltaX); // theta, 단위: rad
+      const deltaZ = landmark3.z - landmark0.z; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
+      const deltaX = landmark0.x - landmark3.x;
+      const angle = -Math.atan2(deltaZ, deltaX); // theta, 단위: rad
 
       // Rotate the joystick model based on the calculated angle
       if (angle > 1.05 && angle < 2.1){ // 60도 이상 120도 이하 움직임 제한
@@ -160,7 +159,7 @@ const ThreeScene = ({ handLandmarks }) => {
         setCameraAdjusted(true);
       }
     }
-  }, [handLandmarks]);
+  }, [handLandmarks, cameraAdjusted]);
 
   return <div ref={mountRef} style={{ width: '320px', height: '240px' }} />;
 };
