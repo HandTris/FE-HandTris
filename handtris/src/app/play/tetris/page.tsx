@@ -250,6 +250,17 @@ const Home: React.FC = () => {
         lastMoveTime.current.rotate = now;
         tetrisGameRef.current?.p.rotate();
         triggerGestureFeedback("Rotate");
+
+        // 캔버스에 흔들림 애니메이션 추가
+        const playTetrisElement = document.getElementById("play-tetris");
+        if (playTetrisElement) {
+          playTetrisElement.classList.add("shake");
+
+          // 애니메이션 종료 후 클래스 제거
+          setTimeout(() => {
+            playTetrisElement.classList.remove("shake");
+          }, 200);
+        }
       }
     }
   };
@@ -424,8 +435,8 @@ const Home: React.FC = () => {
             </div>
           )}
         </div>
-        <div id="play-container">
-          <div id="tetris-container" className="overflow-hidden">
+        <div id="play-tetris">
+          <div id="tetris-container" className="overflow-hidden play-container">
             <NameLabel name={"USER1"} />
             <canvas
               ref={canvasTetrisRef}
@@ -436,7 +447,7 @@ const Home: React.FC = () => {
             <div ref={borderRef} id="tetris-border" />
           </div>
         </div>
-        <div id="play-container">
+        <div className="play-container">
           <NameLabel name={"USER2"} />
           <canvas
             ref={canvasTetris2Ref}
