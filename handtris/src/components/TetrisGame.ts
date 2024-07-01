@@ -156,6 +156,13 @@ export class TetrisGame {
         }
     }
 
+    hardDrop() {
+        while (!this.p.collision(0, 1)) {
+            this.p.moveDown();
+        }
+        this.p.lock();
+    }
+
     sendMessageOnGaming(stompClient: any) {
         if (stompClient) {
             const socketUrl = stompClient.ws._transport.url;
@@ -190,6 +197,7 @@ export class TetrisGame {
     showGameResult(result: string) {
         this.setGameResult(result);
     }
+
     flashRowEffect(row: number) {
         let flashCount = 6;
         let flashInterval = 100;
