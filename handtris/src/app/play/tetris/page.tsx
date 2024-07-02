@@ -16,6 +16,7 @@ import ThreeScene from "@/components/ThreeScene";
 import { NAME_LABEL, NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
+import { BoardDesc } from "@/components/BoardDesc";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 const Home: React.FC = () => {
@@ -106,7 +107,7 @@ const Home: React.FC = () => {
     }
     try {
       await wsWaitingManagerRef.current.connect(
-        "https://api.checkmatejungle.shop/ws",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/ws`,
         "/topic/state",
         (message: any) => {
           console.log("대기 정보 message received: ", message);
@@ -154,7 +155,7 @@ const Home: React.FC = () => {
       wsPlayManagerRef.current = new WebSocketManager();
       try {
         await wsPlayManagerRef.current.connect(
-          "https://api.checkmatejungle.shop/ws",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/ws`,
           "/user/queue/tetris",
           (message: any) => {
             if (tetrisGameRef.current) {
@@ -551,9 +552,22 @@ const Home: React.FC = () => {
             </div>
             <NameLabel name={"USER2"} />
           </div>
-          <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
-            <div className="text-black bg-white press text-center text-2xl">
-              NEXT
+          <div className="flex flex-col justify-between items-center">
+            <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
+              <h1 className="text-black bg-white press text-center text-2xl">
+                IMAGE
+              </h1>
+              <Image
+                src="/image/profile-pic.jpeg"
+                width={250}
+                height={200}
+                alt="profile"
+                className="overflow-hidden object-cover w-full h-full"
+              />
+            </div>
+            <div className="text-white w-[50%]">
+              <BoardDesc type="Score" desc={1700} />
+              <BoardDesc type="Lines" desc={linesCleared} />
             </div>
           </div>
         </div>
@@ -643,3 +657,5 @@ export default Home;
 //      }}
 //    />
 //  </div>;
+
+//
