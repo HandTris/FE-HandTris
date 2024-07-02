@@ -5,7 +5,12 @@ import { HAND_CONNECTIONS } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
 import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
-import { isFingerStraight, isHandBent, isHandGood, isHandOpen } from "@/util/handLogic";
+import {
+  isFingerStraight,
+  isHandBent,
+  isHandGood,
+  isHandOpen,
+} from "@/util/handLogic";
 import Image from "next/image";
 import ThreeScene from "@/components/ThreeScene";
 import { NAME_LABEL, NameLabel } from "@/styles";
@@ -22,10 +27,13 @@ const Home: React.FC = () => {
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
-  const [landmarks, setLandmarks] = useState([]);
+
+  const [landmarks, setLandmarks] = useState();
+
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
   const [isGaugeFull, setIsGaugeFull] = useState(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -37,9 +45,9 @@ const Home: React.FC = () => {
   const wsPlayManagerRef = useRef<WebSocketManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0 ,drop:0 });
+  const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
-  const lastMiddleTipheight = useRef({ before: 0, now: 0});
+  const lastMiddleTipheight = useRef({ before: 0, now: 0 });
   const lastGestureRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -147,12 +155,14 @@ const Home: React.FC = () => {
           "https://api.checkmatejungle.shop/ws",
           "/user/queue/tetris",
           (message: any) => {
-            tetrisGameRef.current?.drawBoard2(message.board);
-            if (message.isEnd) {
-              tetrisGameRef.current.gameEnd = true;
-              backgroundMusic.pause();
-              playSoundEffect("/sounds/winner.wav");
-              setGameResult("you WIN!");
+            if (tetrisGameRef.current) {
+              tetrisGameRef.current.drawBoard2(message.board);
+              if (message.isEnd) {
+                tetrisGameRef.current.gameEnd = true;
+                backgroundMusic.pause();
+                playSoundEffect("/sounds/winner.wav");
+                setGameResult("you WIN!");
+              }
             }
           }
         );
@@ -203,100 +213,89 @@ const Home: React.FC = () => {
       const ringFingerTip = landmarks[16];
       const pinkyTip = landmarks[20];
       const palmBase = landmarks[0];
-      
+
       // 시작 ------------ (사람 기준)엄지 손가락 제스처 ------------ //
       if (handType === "Right") {
-      // 각도 계산 함수
-      const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
-        const deltaY = thumbTip.y - thumbBase.y;
-        const deltaX = thumbTip.x - thumbBase.x;
-        const radians = Math.atan2(deltaX, deltaY);
-        const degrees = radians * (180 / Math.PI);
-        return degrees;
-      };
-    
-      // 엄지의 각도 계산
-      const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
-    
-      // 일정 각도 이상이어야 제스처로 인식
-      const rightAngleThreshold = 30;
-      const leftAngleThreshold = 10;
-      if (isHandOpen(landmarks)) {
-        return "Palm";
-      }
-      if (thumbAngle < -leftAngleThreshold&&isHandGood(landmarks)) {
-        return "Pointing Left";
-      } else if (thumbAngle > rightAngleThreshold&&isHandGood(landmarks)) {
-        return "Pointing Right";
-      }
-      // 끝 ------------ (사람 기준) 왼손 엄지 손가락 제스처 ------------ //
-    }
-    else {
-      // 시작 ---------- (사람 기준)오른손 제스처 ------------ //
-      lastMiddleTipheight.current.now = middleFingerTip.y; // 현재 중지 끝의 높이 업데이트
-    
-      if (
-        wrist.y < indexFingerTip.y&&
-        wrist.y < middleFingerTip.y&&
-        wrist.y < ringFingerTip.y&&
-        wrist.y < pinkyTip.y&&
-        isFingerStraight(landmarks,1)&&
-        isFingerStraight(landmarks,2)&&
-        isFingerStraight(landmarks,3)&&
-        isFingerStraight(landmarks,4)
-      ) {
-        if(wrist.x> ringFingerTip.x){
-          return "오른쪽 손등 보자기";
+        // 각도 계산 함수
+        const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
+          const deltaY = thumbTip.y - thumbBase.y;
+          const deltaX = thumbTip.x - thumbBase.x;
+          const radians = Math.atan2(deltaX, deltaY);
+          const degrees = radians * (180 / Math.PI);
+          return degrees;
+        };
+
+        // 엄지의 각도 계산
+        const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
+
+        // 일정 각도 이상이어야 제스처로 인식
+        const rightAngleThreshold = 30;
+        const leftAngleThreshold = 10;
+        if (isHandOpen(landmarks)) {
+          return "Palm";
         }
-        if(wrist.x< pinkyTip.x){
-          return "왼쪽 손등 보자기";
+        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+          return "Pointing Left";
+        } else if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+          return "Pointing Right";
         }
-        return "손등"
-        
-      }    
-      lastMiddleTipheight.current.before=lastMiddleTipheight.current.now;
-      if (isHandBent(landmarks)){
-        
-        return "주먹 쥠"
+        // 끝 ------------ (사람 기준) 왼손 엄지 손가락 제스처 ------------ //
+      } else {
+        // 시작 ---------- (사람 기준)오른손 제스처 ------------ //
+        lastMiddleTipheight.current.now = middleFingerTip.y; // 현재 중지 끝의 높이 업데이트
+
+        if (
+          wrist.y < indexFingerTip.y &&
+          wrist.y < middleFingerTip.y &&
+          wrist.y < ringFingerTip.y &&
+          wrist.y < pinkyTip.y &&
+          isFingerStraight(landmarks, 1) &&
+          isFingerStraight(landmarks, 2) &&
+          isFingerStraight(landmarks, 3) &&
+          isFingerStraight(landmarks, 4)
+        ) {
+          if (wrist.x > ringFingerTip.x) {
+            return "오른쪽 손등 보자기";
+          }
+          if (wrist.x < pinkyTip.x) {
+            return "왼쪽 손등 보자기";
+          }
+          return "손등";
+        }
+        lastMiddleTipheight.current.before = lastMiddleTipheight.current.now;
+        if (isHandBent(landmarks)) {
+          return "주먹 쥠";
+        }
+        if (isHandGood(landmarks)) {
+          return "따봉";
+        } else if (isHandOpen(landmarks)) {
+          return "보자기";
+        } else if (
+          isFingerStraight(landmarks, 1) &&
+          isFingerStraight(landmarks, 2) &&
+          isFingerStraight(landmarks, 3) &&
+          isFingerStraight(landmarks, 4)
+        ) {
+          return " 엄지 빼고 다 핌";
+        } else if (
+          thumbTip.y < middleFingerTip.y &&
+          thumbTip.y < ringFingerTip.y &&
+          thumbTip.y < pinkyTip.y &&
+          indexFingerTip.x < thumbTip.x &&
+          isFingerStraight(landmarks, 1)
+        ) {
+          return "불필요 제스쳐1";
+        } else if (
+          thumbTip.y < middleFingerTip.y &&
+          thumbTip.y < ringFingerTip.y &&
+          thumbTip.y < pinkyTip.y &&
+          indexFingerTip.x > thumbTip.x &&
+          isFingerStraight(landmarks, 1)
+        ) {
+          return "불필요 제스쳐2";
+        }
       }
-      if(isHandGood(landmarks)){
-        
-        return "따봉"
-      }
-      else  if (isHandOpen(landmarks)) {
-        
-        return "보자기";
-      }
-      else if (
-        isFingerStraight(landmarks,1)&&
-        isFingerStraight(landmarks,2)&&
-        isFingerStraight(landmarks,3)&&
-        isFingerStraight(landmarks,4)
-      ){
-        
-        return " 엄지 빼고 다 핌"
-      }
-      else if (
-        thumbTip.y < middleFingerTip.y &&
-        thumbTip.y < ringFingerTip.y &&
-        thumbTip.y < pinkyTip.y &&
-        indexFingerTip.x < thumbTip.x&&
-        isFingerStraight(landmarks,1)
-      ) {
-        
-        return "불필요 제스쳐1";
-      } else if (
-        thumbTip.y < middleFingerTip.y &&
-        thumbTip.y < ringFingerTip.y &&
-        thumbTip.y < pinkyTip.y &&
-        indexFingerTip.x > thumbTip.x&&
-        isFingerStraight(landmarks,1)
-      ) {
-        
-        return "불필요 제스쳐2";
-      } 
       return "Unknown";
-    }
     };
 
     canvasCtx.save();
@@ -334,9 +333,10 @@ const Home: React.FC = () => {
           });
 
           const gesture = recognizeGesture(landmarks, handType);
-          console.log('제스쳐: ', gesture);
-          if(handType === "Left"){ //FIXME - 손동작 튜닝을 위한 임시 상태값
-            setGesture(gesture);   // 왼손의 상태만 나오도록 조건문 안에 넣음
+          console.log("제스쳐: ", gesture);
+          if (handType === "Left") {
+            //FIXME - 손동작 튜닝을 위한 임시 상태값
+            setGesture(gesture); // 왼손의 상태만 나오도록 조건문 안에 넣음
           }
 
           // 현재 제스쳐 출력
@@ -385,21 +385,20 @@ const Home: React.FC = () => {
     }
     // 왼손일 경우
     else {
-      if(gesture ===null){
-        lastMiddleTipheight.current.now = lastMiddleTipheight.current.before
+      if (gesture === null) {
+        lastMiddleTipheight.current.now = lastMiddleTipheight.current.before;
       }
       if (gesture === "보자기") {
-      } 
-      else if(gesture == "왼쪽 손등 보자기"&&
-        (lastMiddleTipheight.current.now - lastMiddleTipheight.current.before > 0.05)
-        
-      ){
+      } else if (
+        gesture == "왼쪽 손등 보자기" &&
+        lastMiddleTipheight.current.now - lastMiddleTipheight.current.before >
+          0.05
+      ) {
         console.log("왼쪽 손등 보자기");
         if (now - lastMoveTime.current.rotate < 200) {
           // 0.2초내에 같은게 들어오면 패스
-        }
-        else{
-          lastMoveTime.current.rotate=now;
+        } else {
+          lastMoveTime.current.rotate = now;
           tetrisGameRef.current?.p.rotate();
           triggerGestureFeedback("Rotate");
         }
@@ -417,22 +416,23 @@ const Home: React.FC = () => {
             playTetrisElement.classList.remove("shake");
           }, 200);
         }
-      }
-      else if(gesture == "오른쪽 손등 보자기"&&
-        lastMiddleTipheight.current.now - lastMiddleTipheight.current.before > 0.05){
+      } else if (
+        gesture == "오른쪽 손등 보자기" &&
+        lastMiddleTipheight.current.now - lastMiddleTipheight.current.before >
+          0.05
+      ) {
         // 0.2초내에 같은게 들어오면 패스
         console.log("오른쪽 손등 보자기");
         if (now - lastMoveTime.current.drop < 200) {
-        }
-        else{
-        lastMoveTime.current.drop=now;
-        tetrisGameRef.current?.moveToGhostPosition();
-        triggerGestureFeedback("Drop");
+        } else {
+          lastMoveTime.current.drop = now;
+          tetrisGameRef.current?.moveToGhostPosition();
+          triggerGestureFeedback("Drop");
         }
       }
       lastGestureRef.current = gesture;
+    }
   };
-}
   const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
@@ -608,7 +608,7 @@ const Home: React.FC = () => {
             <span className="text-2xl text-green-400">User2</span>
           )}
         </div>
-          <p className="text-2xl text-green-400">{gesture}</p>
+        <p className="text-2xl text-green-400">{gesture}</p>
       </div>
       <div className="grid grid-cols-3 gap-4 mt-3">
         <div></div>
@@ -640,10 +640,10 @@ const Home: React.FC = () => {
           {gameResult}
         </div>
       )}
-      <ThreeScene handLandmarks={landmarks} />
+      {landmarks && <ThreeScene handLandmarks={landmarks} />}
       <button
         type="button"
-        style={{ backgroundColor: "red", color: "white", opacity: 0 }}
+        className="bg-red text-white"
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear())
