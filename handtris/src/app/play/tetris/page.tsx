@@ -23,6 +23,7 @@ const Home: React.FC = () => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState([]);
+  const [linesCleared, setLinesCleared] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -159,6 +160,7 @@ const Home: React.FC = () => {
           wsPlayManagerRef.current,
           setGameResult
         );
+        setLinesCleared(tetrisGameRef.current.linesCleared);
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
       }
@@ -169,6 +171,16 @@ const Home: React.FC = () => {
 
     backgroundMusic.play();
   };
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (tetrisGameRef.current) {
+        setLinesCleared(tetrisGameRef.current.linesCleared);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const onResults = useCallback((results: any) => {
     const canvasCtx = canvasRef.current!.getContext("2d")!;
@@ -617,6 +629,9 @@ const Home: React.FC = () => {
       >
         임시버튼(눌러서 set.clear())
       </button>
+      <div>
+        <p className="text-2xl text-green-400">Lines Cleared: {linesCleared}</p>
+      </div>
     </>
   );
 };
