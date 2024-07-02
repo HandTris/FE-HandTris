@@ -40,6 +40,18 @@ const config: Config = {
                 win: 'winAnimation 1.5s forwards',
                 lose: 'loseAnimation 1.5s forwards',
             },
+            inset: {
+                '-50px': '-50px',
+            },
+            spacing: {
+                '30px': '30px',
+                '800px': '800px',
+            },
+        },
+        variants: {
+            extends: {
+                translate: ['hover', 'focus'],
+            }
         },
     },
     plugins: [],

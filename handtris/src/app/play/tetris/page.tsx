@@ -24,6 +24,8 @@ const Home: React.FC = () => {
   const [gameResult, setGameResult] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState([]);
   const [linesCleared, setLinesCleared] = useState(0);
+  const [gauge, setGauge] = useState(0);
+  const [isGaugeFull, setIsGaugeFull] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -171,11 +173,19 @@ const Home: React.FC = () => {
 
     backgroundMusic.play();
   };
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
+        setGauge(tetrisGameRef.current.linesCleared % 5);
+        if (tetrisGameRef.current.linesCleared % 5 === 4 && tetrisGameRef.current.linesCleared > 0) {
+          setIsGaugeFull(true);
+          setTimeout(() => {
+            setIsGaugeFull(false);
+            setGauge(0);
+          }, 2000);
+        }
       }
     }, 1000);
 
@@ -558,7 +568,16 @@ const Home: React.FC = () => {
             </div>
           )}
         </div>
-        <div id="play-tetris">
+        <div id="play-tetris" className="relative">
+          <div className="absolute top-0 left-[-50px] w-[30px] h-[850px] border border-gray-600 bg-gray-300 flex flex-col-reverse">
+            <div
+              className="w-full transition-all duration-700 ease-in-out"
+              style={{
+                height: `${(gauge / 4) * 100}%`,
+                background: 'linear-gradient(to top, green, lightgreen)',
+              }}
+            ></div>
+          </div>
           <div id="tetris-container" className="overflow-hidden play-container">
             <NameLabel name={"USER1"} />
             <canvas
