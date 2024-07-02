@@ -32,6 +32,7 @@ export class TetrisGame {
     setGameResult: (result: string) => void;
     flashRow: (row: number) => void;
     clearRow: (row: number) => void;
+    linesCleared: number;
 
     constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager, setGameResult: (result: string) => void) {
         this.isEnd = false;
@@ -49,6 +50,7 @@ export class TetrisGame {
 
         this.flashRow = this.flashRowEffect;
         this.clearRow = this.clearFullRow;
+        this.linesCleared = 0;
 
         this.drawBoard();
         this.drop();
@@ -64,6 +66,7 @@ export class TetrisGame {
             this.board[0][c] = this.VACANT;
         }
         this.drawBoard();
+        this.linesCleared++;
     }
 
     createBoard(): string[][] {
