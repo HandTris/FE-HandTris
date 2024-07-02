@@ -125,7 +125,7 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
   }, []);
 
   useEffect(() => {
-    if (handLandmarks.length > 0 && joystickRef.current) {
+    if (handLandmarks?.length > 0 && joystickRef.current) {
       const landmark0 = handLandmarks[0][0];
       const landmark3 = handLandmarks[0][3];
       const joystick = joystickRef.current;

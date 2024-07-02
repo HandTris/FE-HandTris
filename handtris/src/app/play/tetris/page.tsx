@@ -15,6 +15,7 @@ import Image from "next/image";
 import ThreeScene from "@/components/ThreeScene";
 import { NAME_LABEL, NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
+import GestureFeedback from "@/components/GestureFeedback";
 
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -189,7 +190,10 @@ const Home: React.FC = () => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
         setGauge(tetrisGameRef.current.linesCleared % 5);
-        if (tetrisGameRef.current.linesCleared % 5 === 4 && tetrisGameRef.current.linesCleared > 0) {
+        if (
+          tetrisGameRef.current.linesCleared % 5 === 4 &&
+          tetrisGameRef.current.linesCleared > 0
+        ) {
           setIsGaugeFull(true);
           setTimeout(() => {
             setIsGaugeFull(false);
@@ -513,105 +517,118 @@ const Home: React.FC = () => {
 
   return (
     <>
+      <style jsx global>{`
+        @keyframes shake {
+          0% {
+            transform: translate(1px, 1px) rotate(0deg);
+          }
+          10% {
+            transform: translate(-1px, -2px) rotate(-1deg);
+          }
+          20% {
+            transform: translate(-3px, 0px) rotate(1deg);
+          }
+          30% {
+            transform: translate(3px, 2px) rotate(0deg);
+          }
+          40% {
+            transform: translate(1px, -1px) rotate(1deg);
+          }
+          50% {
+            transform: translate(-1px, 2px) rotate(-1deg);
+          }
+          60% {
+            transform: translate(-3px, 1px) rotate(0deg);
+          }
+          70% {
+            transform: translate(3px, 1px) rotate(-1deg);
+          }
+          80% {
+            transform: translate(-1px, -1px) rotate(1deg);
+          }
+          90% {
+            transform: translate(1px, 2px) rotate(0deg);
+          }
+          100% {
+            transform: translate(1px, -2px) rotate(-1deg);
+          }
+        }
+
+        .shake {
+          animation: shake 0.5s;
+        }
+      `}</style>
+      <div className="fixed bottom-0 left-0">
+        <div ref={gestureRef} />
+        <video
+          ref={videoRef}
+          id="video"
+          width="320"
+          height="240"
+          autoPlay
+          className="hidden"
+        />
+        <canvas
+          ref={canvasRef}
+          id="canvas"
+          width="320"
+          height="240"
+          className=""
+        />
+        {gestureFeedback && (
+          <GestureFeedback gestureFeedback={gestureFeedback} />
+        )}
+      </div>
       <div className="grid-container">
-        <div id="webcam-container">
-          <div ref={gestureRef} />
-          <video
-            ref={videoRef}
-            id="video"
-            width="320"
-            height="240"
-            autoPlay
-            className="hidden"
-          />
-          <canvas
-            ref={canvasRef}
-            id="canvas"
-            width="320"
-            height="240"
-            // className="hidden"
-          />
-          {gestureFeedback && (
-            <div>
-              {gestureFeedback === "Move Right" && (
-                <Image
-                  src="/image/right.png"
-                  width={200}
-                  height={200}
-                  alt="right"
-                />
-              )}
-              {gestureFeedback === "Move Left" && (
-                <Image
-                  src="/image/left.png"
-                  width={200}
-                  height={200}
-                  alt="left"
-                />
-              )}
-              {gestureFeedback === "Rotate" && (
-                <Image
-                  src="/image/rotate.png"
-                  width={200}
-                  height={200}
-                  alt="rotate"
-                />
-              )}
-              {gestureFeedback === "Drop" && (
-                <Image
-                  src="/image/drop.png"
-                  width={200}
-                  height={200}
-                  alt="drop"
-                />
-              )}
-            </div>
-          )}
-        </div>
-        <div id="play-tetris" className="relative">
-          <div className="absolute top-0 left-[-50px] w-[30px] h-[850px] border border-gray-600 bg-gray-300 flex flex-col-reverse">
-            <div
-              className="w-full transition-all duration-700 ease-in-out"
-              style={{
-                height: `${(gauge / 4) * 100}%`,
-                background: 'linear-gradient(to top, green, lightgreen)',
-              }}
-            ></div>
-          </div>
+        <div className="tetris_player">
           <div id="tetris-container" className="overflow-hidden play-container">
             <NameLabel name={"USER1"} />
+            <div
+              id="play-tetris"
+              className="flex items-center justify-between w-full"
+            >
+              <canvas
+                ref={canvasTetrisRef}
+                id="tetris"
+                width="400"
+                height="800"
+              />
+              <div ref={borderRef} id="tetris-border" />
+              <div
+                id="gage_bar"
+                className=" w-[30px] h-[850px] border border-gray-600 bg-gray-300 flex flex-col-reverse z-40"
+              >
+                <div
+                  className="w-full transition-all duration-700 ease-in-out"
+                  style={{
+                    height: `${(gauge / 4) * 100}%`,
+                    background: "linear-gradient(to top, green, lightgreen)",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="tetris_opposer">
+          <div className="play-container">
+            <NameLabel name={"USER2"} />
             <canvas
-              ref={canvasTetrisRef}
-              id="tetris"
+              ref={canvasTetris2Ref}
+              id="tetrisCanvas2"
               width="400"
               height="800"
             />
-            <div ref={borderRef} id="tetris-border" />
           </div>
-        </div>
-        <div className="play-container">
-          <NameLabel name={"USER2"} />
-          <canvas
-            ref={canvasTetris2Ref}
-            id="tetrisCanvas2"
-            width="400"
-            height="800"
-          ></canvas>
-        </div>
-        <div id="webcam-container">
-          <div id="counter">
-            {imageSrc && (
-              <Image width={200} height={200} src={imageSrc} alt="profile" />
+          <div>
+            {imageSrc === "/image/guest_image.png" && (
+              <span className="text-2xl text-green-400">User2</span>
             )}
           </div>
-          {imageSrc === "/image/guest_image.png" && (
-            <span className="text-2xl text-green-400">User2</span>
-          )}
+          <p className="text-2xl text-green-400">{gesture}</p>
         </div>
-        <p className="text-2xl text-green-400">{gesture}</p>
       </div>
-      <div className="grid grid-cols-3 gap-4 mt-3">
-        <div></div>
+
+      <div>
         <button
           type="button"
           onClick={handleReadyStartClick}
@@ -621,7 +638,7 @@ const Home: React.FC = () => {
               : isOwner && !isAllReady
               ? "bg-gray-600 text-darkgray cursor-not-allowed"
               : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
-          } p-6 m-4 w-full mx-auto border rounded-lg transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+          } p-6 m-4 w-full mx-auto border transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
           disabled={(isOwner && !isAllReady) || false}
         >
           {isOwner
@@ -640,17 +657,14 @@ const Home: React.FC = () => {
           {gameResult}
         </div>
       )}
-      {landmarks && <ThreeScene handLandmarks={landmarks} />}
+      <ThreeScene handLandmarks={landmarks} />
       <button
         type="button"
-        className="bg-red text-white"
+        className="bg-red-400 text-white fixed top-5 left-0"
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear())
       </button>
-      <div>
-        <p className="text-2xl text-green-400">Lines Cleared: {linesCleared}</p>
-      </div>
     </>
   );
 };
