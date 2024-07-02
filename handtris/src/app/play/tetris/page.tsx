@@ -98,6 +98,18 @@ const Home: React.FC = () => {
       subscribeToState();
     }
   }, [isOwner]);
+  // Add useEffect to handle the timeout for hiding gameResult
+  useEffect(() => {
+    if (gameResult) {
+      const timeoutId = setTimeout(() => {
+        setGameResult(null);
+        setIsStart(false);
+        setIsAllReady(false);
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [gameResult]);
 
   const subscribeToState = async () => {
     if (!wsWaitingManagerRef.current) {
