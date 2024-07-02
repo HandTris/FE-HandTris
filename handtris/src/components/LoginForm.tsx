@@ -6,6 +6,7 @@ import loginValidation from "../yup/loginvalidation";
 import Link from "next/link";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 interface LoginFormValues {
   username: string;
@@ -15,6 +16,7 @@ interface LoginFormValues {
 
 const LoginForm = () => {
   const initialValues: LoginFormValues = { username: "", password: "" };
+  const router = useRouter();
 
   return (
     <motion.div
@@ -53,6 +55,9 @@ const LoginForm = () => {
 
               alert("Login successful!");
               setSubmitting(false);
+            })
+            .then(() => {
+              router.push("/lobby");
             })
             .catch((error) => {
               if (error.response) {

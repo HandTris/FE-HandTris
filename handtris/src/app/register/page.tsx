@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Formik, Form } from "formik";
 import CustomField from "../../components/CustomField";
 import registerValidation from "../../yup/registervalidation";
+import axios from "axios";
 
 const Signup = () => {
   return (
@@ -17,13 +18,18 @@ const Signup = () => {
         <h1 className="text-4xl mb-12 text-white font-bold">Sign Up</h1>
         <Formik
           initialValues={{
-            ID: "",
+            username: "",
             password: "",
             confirmPassword: "",
             nickname: "",
           }}
           validationSchema={registerValidation}
           onSubmit={(values, { setSubmitting }) => {
+            axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signup`, {
+              username: values.username,
+              password: values.password,
+              nickname: values.nickname,
+            });
             setTimeout(() => {
               alert(JSON.stringify(values, null, 2));
               setSubmitting(false);
@@ -37,7 +43,11 @@ const Signup = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
               >
-                <CustomField type="text" name="ID" placeholder="ID" />
+                <CustomField
+                  type="text"
+                  name="username"
+                  placeholder="username"
+                />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: -20 }}

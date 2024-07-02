@@ -1,7 +1,7 @@
 import * as Yup from "yup";
 
 const registerValidation = Yup.object({
-    ID: Yup.string()
+    username: Yup.string()
         .required("아이디는 필수 입력 값입니다.")
         .min(4, "아이디는 최소 4자 이상이어야 합니다.")
         .max(10, "아이디는 10자 이하여야 합니다.")
