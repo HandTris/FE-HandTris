@@ -103,6 +103,8 @@ const Home: React.FC = () => {
     if (gameResult) {
       const timeoutId = setTimeout(() => {
         setGameResult(null);
+        setIsStart(false);
+        setIsAllReady(false);
       }, 3000); // 3 seconds
 
       return () => clearTimeout(timeoutId);
