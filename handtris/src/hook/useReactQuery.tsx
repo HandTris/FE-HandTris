@@ -1,34 +1,20 @@
 "use client";
 
-import {
-  isServer,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 
 function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
         refetchOnMount: true,
         retry: 1,
+        staleTime: 0,
       },
     },
   });
-}
-
-let browserQueryClient: QueryClient | undefined = undefined;
-
-function getQueryClient() {
-  if (isServer) {
-    return makeQueryClient();
-  } else {
-    if (!browserQueryClient) browserQueryClient = makeQueryClient();
-    return browserQueryClient;
-  }
 }
 
 type ProvidersProps = {
@@ -36,12 +22,12 @@ type ProvidersProps = {
 };
 
 export default function Providers({ children }: ProvidersProps) {
-  const queryClient = getQueryClient();
+  const [queryClient] = useState(() => makeQueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ReactQueryDevtools initialIsOpen={true} />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }
