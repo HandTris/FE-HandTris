@@ -13,6 +13,8 @@
     "@mediapipe/drawing_utils": "^0.3.1675466124",
     "@mediapipe/hands": "^0.4.1675469240",
     "@stomp/stompjs": "^7.0.0",
+    "@tanstack/react-query": "^5.49.2",
+    "@tanstack/react-query-devtools": "^5.49.2",
     "@types/stompjs": "^2.3.9",
     "axios": "^1.7.2",
     "formik": "^2.4.6",

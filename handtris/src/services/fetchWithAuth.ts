@@ -1,10 +1,10 @@
-// util/fetchWithAuth.ts
 import { getAccessToken } from '@/util/getAccessToken';
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     const token = getAccessToken();
     const headers = {
         'Content-Type': 'application/json',
+        'cache-control': 'no-cache',
         ...(options.headers || {}),
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     };
