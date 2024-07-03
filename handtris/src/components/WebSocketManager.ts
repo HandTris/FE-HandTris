@@ -5,18 +5,21 @@ export class WebSocketManager {
     stompClient: any;
     connected: boolean;
     onMessage: (message: any) => void;
+    token: string | null;
 
     constructor() {
         this.connected = false;
         this.onMessage = () => { };
+        this.token = null;
     }
 
-    async connect(url: string, subscribeUrl: string, onMessage: (message: any) => void): Promise<void> {
+    async connect(url: string, subscribeUrl: string, onMessage: (message: any) => void, token: string | null): Promise<void> {
+        this.token = token;
         return new Promise((resolve, reject) => {
             const socket = new SockJS(url);
             this.stompClient = Stomp.over(socket);
             this.stompClient.connect(
-                {},
+                { Authorization: `Bearer ${this.token}` },
                 (frame: any) => {
                     console.log("Connected: " + frame);
                     this.connected = true;
@@ -54,7 +57,11 @@ export class WebSocketManager {
                     isEnd: isEnd,
                 };
                 if (this.connected) {
-                    this.stompClient.send(`/app/${roomCode}/tetris`, {}, JSON.stringify(message));
+                    this.stompClient.send(
+                        `/app/${roomCode}/tetris`, 
+                        { Authorization: `Bearer ${this.token}` }, 
+                        JSON.stringify(message)
+                    );
                     console.log("Message sent: ", message);
                 } else {
                     console.log("WebSocket connection is not established yet.");
@@ -73,7 +80,11 @@ export class WebSocketManager {
             const message = {
                 // 어떤 메시지도 보내지 않아도 됨
             };
-            this.stompClient.send(URL, {}, JSON.stringify(message));
+            this.stompClient.send(
+                URL, 
+                { Authorization: `Bearer ${this.token}` }, 
+                JSON.stringify(message)
+            );
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");
@@ -86,7 +97,11 @@ export class WebSocketManager {
                 isReady: waitingInfo.isAllReady,
                 isStart: waitingInfo.isStart,
             };
-            this.stompClient.send(URL, {}, JSON.stringify(message));
+            this.stompClient.send(
+                URL, 
+                { Authorization: `Bearer ${this.token}` }, 
+                JSON.stringify(message)
+            );
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");
@@ -99,7 +114,11 @@ export class WebSocketManager {
                 isReady: waitingInfo.isAllReady,
                 isStart: waitingInfo.isStart,
             };
-            this.stompClient.send(URL, {}, JSON.stringify(message));
+            this.stompClient.send(
+                URL, 
+                { Authorization: `Bearer ${this.token}` }, 
+                JSON.stringify(message)
+            );
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");

@@ -53,6 +53,8 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const roomCode = localStorage.getItem("uuid");
+    const token = localStorage.getItem("jwtToken");
+
     const connectWebSocket = async () => {
       wsEnteringManagerRef.current = new WebSocketManager();
       try {
@@ -73,7 +75,8 @@ const Home: React.FC = () => {
                 return newIsOwner;
               });
             }
-          }
+          },
+          token
         );
         if (roomCode) {
           wsEnteringManagerRef.current.sendMessageOnEntering({}, `/app/${roomCode}/owner/info`);
@@ -100,14 +103,32 @@ const Home: React.FC = () => {
       subscribeToState();
     }
   }, [isOwner]);
-  // Add useEffect to handle the timeout for hiding gameResult
+  
+  // 게임 종료 시 결과 표시 모달 지우고, 게임 시작 관련 상태 초기화
   useEffect(() => {
     if (gameResult) {
       const timeoutId = setTimeout(() => {
         setGameResult(null);
         setIsStart(false);
         setIsAllReady(false);
-      }, 3000); // 3 seconds
+        setLinesCleared(0);
+        setGauge(0);
+        if (tetrisGameRef.current) {
+          tetrisGameRef.current.linesCleared = 0;
+        }
+        if (canvasTetrisRef.current) {
+          const ctx = canvasTetrisRef.current.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvasTetrisRef.current.width, canvasTetrisRef.current.height);
+          }
+        }
+        if (canvasTetris2Ref.current) {
+          const ctx2 = canvasTetris2Ref.current.getContext("2d");
+          if (ctx2) {
+            ctx2.clearRect(0, 0, canvasTetris2Ref.current.width, canvasTetris2Ref.current.height);
+          }
+      }
+    }, 3000); // 3 seconds
 
       return () => clearTimeout(timeoutId);
     }
@@ -115,6 +136,7 @@ const Home: React.FC = () => {
 
   const subscribeToState = async () => {
     const roomCode = localStorage.getItem("uuid");
+    const token = localStorage.getItem("jwtToken");
     if (!wsWaitingManagerRef.current) {
       wsWaitingManagerRef.current = new WebSocketManager();
     }
@@ -129,7 +151,8 @@ const Home: React.FC = () => {
             setIsStart(true);
             startGame(); // 클라이언트 시작 로직
           }
-        }
+        },
+        token
       );
       console.log(`Subscribed to /topic/state/${roomCode}`);
     } catch (error) {
@@ -139,24 +162,26 @@ const Home: React.FC = () => {
 
   const handleReadyClick = async () => {
     const roomCode = localStorage.getItem("uuid");
+    const token = localStorage.getItem("jwtToken");
     try {
       await wsWaitingManagerRef.current?.sendMessageOnWaiting({
         isAllReady: true,
         isStart: false,
-      }, `app/${roomCode}/tetris/ready`);
+      }, `/app/${roomCode}/tetris/ready`);
       console.log(`Message sent to /app/${roomCode}/tetris/ready`);
     } catch (error) {
-      console.error(`Failed to send message to/app/${roomCode}/tetris/ready`, error);
+      console.error(`Failed to send message to /app/${roomCode}/tetris/ready`, error);
     }
   };
 
   const handleStartGameClick = async () => {
     const roomCode = localStorage.getItem("uuid");
+    const token = localStorage.getItem("jwtToken");
     try {
       await wsWaitingManagerRef.current?.sendMessageForStart({
         isAllReady: true,
         isStart: true,
-      }, `app/${roomCode}/tetris/start`);
+      }, `/app/${roomCode}/tetris/start`);
       console.log("Message sent to start the game");
     } catch (error) {
       console.error("Failed to send message to start the game", error);
@@ -165,6 +190,7 @@ const Home: React.FC = () => {
 
   const startGame = async () => {
     const roomCode = localStorage.getItem("uuid");
+    const token = localStorage.getItem("jwtToken");
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
@@ -183,7 +209,8 @@ const Home: React.FC = () => {
                 setGameResult("you WIN!");
               }
             }
-          }
+          },
+          token
         );
         tetrisGameRef.current = new TetrisGame(
           ctx,
@@ -192,7 +219,6 @@ const Home: React.FC = () => {
           setGameResult
         );
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        tetrisGameRef.current.roomCode = roomCode;        
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
       }
