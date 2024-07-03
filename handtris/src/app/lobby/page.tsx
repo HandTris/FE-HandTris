@@ -1,31 +1,25 @@
-import RoomGrid from "@/components/RoomGrid";
+import Rooms from "@/components/Rooms";
+import { fetchRooms } from "@/services/gameService";
+import {
+  HydrationBoundary,
+  QueryClient,
+  dehydrate,
+} from "@tanstack/react-query";
 
 type Props = {};
 
-function LobbyPage({}: Props) {
+async function LobbyPage({}: Props) {
+  const queryClient = new QueryClient();
+
+  await queryClient.fetchQuery({
+    queryKey: ["game_room"],
+    queryFn: fetchRooms,
+  });
+
   return (
-    <section>
-      <h1>게임 대기방</h1>
-      <RoomGrid
-        rooms={[
-          {
-            title: "방 1",
-            playing: true,
-            creator: "user1",
-          },
-          {
-            title: "방 2",
-            playing: false,
-            creator: "user2",
-          },
-          {
-            title: "방 3",
-            playing: true,
-            creator: "user3",
-          },
-        ]}
-      />
-    </section>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <Rooms />
+    </HydrationBoundary>
   );
 }
 

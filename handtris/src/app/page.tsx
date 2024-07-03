@@ -3,6 +3,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { QueryClient, useQuery } from "@tanstack/react-query";
+import { fetchRooms } from "@/services/gameService";
+import Games from "@/components/Games";
 
 export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
@@ -18,6 +21,7 @@ export default function HomePage() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-8">
       <div className="flex flex-col w-full max-w-2xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-xl p-8 shadow-2xl space-y-4">
+        {/* <Games /> */}
         <AnimatePresence>
           {selected === null && (
             <>
