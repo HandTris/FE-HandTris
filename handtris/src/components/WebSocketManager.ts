@@ -37,7 +37,7 @@ export class WebSocketManager {
         });
     }
 
-    sendMessageOnGaming(board: any, isEnd: boolean) {
+    sendMessageOnGaming(board: any, isEnd: boolean, roomCode: string | null) {
         if (
             this.stompClient &&
             this.stompClient.ws &&
@@ -54,7 +54,7 @@ export class WebSocketManager {
                     isEnd: isEnd,
                 };
                 if (this.connected) {
-                    this.stompClient.send("/app/tetris", {}, JSON.stringify(message));
+                    this.stompClient.send(`/app/${roomCode}/tetris`, {}, JSON.stringify(message));
                     console.log("Message sent: ", message);
                 } else {
                     console.log("WebSocket connection is not established yet.");
@@ -68,38 +68,38 @@ export class WebSocketManager {
         }
     }
 
-    sendMessageOnEntering(gameInfo: any) {
+    sendMessageOnEntering(gameInfo: any, URL: string) {
         if (this.stompClient && this.connected) {
             const message = {
                 // 어떤 메시지도 보내지 않아도 됨
             };
-            this.stompClient.send("/app/owner/info", {}, JSON.stringify(message));
+            this.stompClient.send(URL, {}, JSON.stringify(message));
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");
         }
     }
 
-    sendMessageOnWaiting(waitingInfo: { isAllReady: boolean; isStart: boolean }) {
+    sendMessageOnWaiting(waitingInfo: { isAllReady: boolean; isStart: boolean }, URL: string) {
         if (this.stompClient && this.connected) {
             const message = {
                 isReady: waitingInfo.isAllReady,
                 isStart: waitingInfo.isStart,
             };
-            this.stompClient.send("/app/tetris/ready", {}, JSON.stringify(message));
+            this.stompClient.send(URL, {}, JSON.stringify(message));
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");
         }
     }
 
-    sendMessageForStart(waitingInfo: { isAllReady: boolean; isStart: boolean }) {
+    sendMessageForStart(waitingInfo: { isAllReady: boolean; isStart: boolean }, URL: string) {
         if (this.stompClient && this.connected) {
             const message = {
                 isReady: waitingInfo.isAllReady,
                 isStart: waitingInfo.isStart,
             };
-            this.stompClient.send("/app/tetris/start", {}, JSON.stringify(message));
+            this.stompClient.send(URL, {}, JSON.stringify(message));
             console.log("Message sent: ", message);
         } else {
             console.log("WebSocket connection is not established yet.");

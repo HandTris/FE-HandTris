@@ -33,6 +33,7 @@ export class TetrisGame {
     flashRow: (row: number) => void;
     clearRow: (row: number) => void;
     linesCleared: number;
+    roomCode: string | null;
 
     constructor(ctx: CanvasRenderingContext2D, ctx2: CanvasRenderingContext2D, wsManager: WebSocketManager, setGameResult: (result: string) => void) {
         this.isEnd = false;
@@ -54,6 +55,7 @@ export class TetrisGame {
 
         this.drawBoard();
         this.drop();
+        this.roomCode = "";
     }
 
     clearFullRow(row: number) {
@@ -149,7 +151,7 @@ export class TetrisGame {
             this.p.moveDown();
             this.dropStart = Date.now();
             if (!this.gameEnd) {
-                this.wsManager.sendMessageOnGaming(this.board_forsend, this.isEnd);
+                this.wsManager.sendMessageOnGaming(this.board_forsend, this.isEnd, this.roomCode);
             }
         }
 
@@ -158,36 +160,36 @@ export class TetrisGame {
         }
     }
 
-    sendMessageOnGaming(stompClient: any) {
-        if (stompClient) {
-            const socketUrl = stompClient.ws._transport.url;
-            const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
+    // sendMessageOnGaming(stompClient: any) {
+    //     if (stompClient) {
+    //         const socketUrl = stompClient.ws._transport.url;
+    //         const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
 
-            if (match && match[1]) {
-                const sessionId = match[1];
-                const message = {
-                    board: this.board_forsend,
-                    sender: sessionId,
-                    isEnd: this.isEnd,
-                };
+    //         if (match && match[1]) {
+    //             const sessionId = match[1];
+    //             const message = {
+    //                 board: this.board_forsend,
+    //                 sender: sessionId,
+    //                 isEnd: this.isEnd,
+    //             };
 
-                if (stompClient.connected) {
-                    if (!this.isEnd && !this.hasSentEndMessage) {
-                        stompClient.send("/app/tetris", {}, JSON.stringify(message));
-                        this.hasSentEndMessage = true;
-                    } else if (!this.isEnd) {
-                        stompClient.send("/app/tetris", {}, JSON.stringify(message));
-                    }
-                } else {
-                    console.log("WebSocket connection is not established yet.");
-                }
-            } else {
-                console.error("Session ID could not be extracted from URL.");
-            }
-        } else {
-            console.error("WebSocket transport is not defined.");
-        }
-    }
+    //             if (stompClient.connected) {
+    //                 if (!this.isEnd && !this.hasSentEndMessage) {
+    //                     stompClient.send(`/app/${roomCode}/tetris`, {}, JSON.stringify(message));
+    //                     this.hasSentEndMessage = true;
+    //                 } else if (!this.isEnd) {
+    //                     stompClient.send("/app/tetris", {}, JSON.stringify(message));
+    //                 }
+    //             } else {
+    //                 console.log("WebSocket connection is not established yet.");
+    //             }
+    //         } else {
+    //             console.error("Session ID could not be extracted from URL.");
+    //         }
+    //     } else {
+    //         console.error("WebSocket transport is not defined.");
+    //     }
+    // }
 
     showGameResult(result: string) {
         this.setGameResult(result);
@@ -413,7 +415,7 @@ class Piece {
         }
         playSoundEffect("/sound/placed.ogg");
         this.game.drawBoard();
-        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd);
+        this.game.wsManager.sendMessageOnGaming(this.game.board_forsend, this.game.isEnd, this.game.roomCode);
     }
 
     collision(x: number, y: number, piece: number[][] = this.activeTetromino) {
