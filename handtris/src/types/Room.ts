@@ -1,8 +1,9 @@
 export type Room = {
     id: number;
-    gameCategory: string;
+    title: string;
+    creator: string;
     participantCount: number;
     participantLimit: number;
-    uuid: string;
+    roomCode: string;
     gameStatus: string;
 };

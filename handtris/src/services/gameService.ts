@@ -6,12 +6,11 @@ export const fetchRooms = async () => {
     return data;
 };
 
-export const createRoom = async () => {
+export const createRoom = async ({ title }: { title: string }) => {
     const data = await fetchWithAuth(`${BASE_URL}/games`, {
         method: 'POST',
         body: JSON.stringify({
-            gameCategory: "HANDTRIS",
-            participantLimit: 2
+            title,
         })
     });
     return data;
