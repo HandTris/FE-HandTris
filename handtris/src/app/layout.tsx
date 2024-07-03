@@ -7,6 +7,8 @@ import {
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ReactQueryProviders from "@/hook/useReactQuery";
+import React from "react";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -29,10 +31,11 @@ export default function RootLayout({
         id="game-container"
         className="flex flex-col w-full max-w-screen-2xl mx-auto"
       >
-        {/* <div id="overlay" /> */}
-        <Header />
-        <main className="grow">{children}</main>
-        <Footer />
+        <ReactQueryProviders>
+          <Header />
+          <main className="grow">{children}</main>
+          <Footer />
+        </ReactQueryProviders>
       </body>
     </html>
   );
