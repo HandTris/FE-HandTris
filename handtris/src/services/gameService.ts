@@ -3,7 +3,6 @@ import { fetchWithAuth } from "./fetchWithAuth";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 export const fetchRooms = async () => {
     const data = await fetchWithAuth(`${BASE_URL}/games`);
-    console.log(data);
     return data;
 };
 

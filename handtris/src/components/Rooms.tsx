@@ -11,7 +11,6 @@ function Rooms() {
     queryFn: fetchRooms,
   });
 
-  console.log(data);
   const createRoomMutation = useMutation({
     mutationFn: createRoom,
     onSuccess: () => {
@@ -27,7 +26,11 @@ function Rooms() {
     onSuccess: (data) => {
       sessionStorage.setItem("room_uuid", data.data.uuid);
       alert(`Entered room with UUID: ${data.data.uuid}`);
-      router.push(`/game/${data.data.uuid.split("-")[3]}`);
+      router.push(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/game/${
+          data.data.uuid.split("-")[3]
+        }`
+      );
     },
     onError: (error) => {
       console.error("Failed to enter room:", error);
