@@ -1,7 +1,5 @@
 "use client";
 import { useState } from "react";
-import RoomCard from "./RoomCard";
-import CreateRoomModal from "./CreateRoomModal";
 import { AnimatePresence } from "framer-motion";
 import { Room } from "@/types/Room";
 
@@ -47,19 +45,11 @@ function RoomGrid({ rooms = [] }: Props) {
       <ul className="w-full grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {rooms.map((room, index) => (
           <li key={index} className="w-full">
-            <RoomCard room={room} />
+            {/* <RoomCard room={room} /> */}
           </li>
         ))}
       </ul>
-      <AnimatePresence>
-        {isCreateModalOpen && (
-          <CreateRoomModal
-            isOpen={isCreateModalOpen}
-            onClose={handleCloseCreateModal}
-            onCreateRoom={handleCreateRoom}
-          />
-        )}
-      </AnimatePresence>
+      <AnimatePresence></AnimatePresence>
     </div>
   );
 }
