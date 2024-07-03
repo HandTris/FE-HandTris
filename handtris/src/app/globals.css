@@ -4,12 +4,26 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @font-face {
-    font-family: "Press Start 2P";
-    src: url('/fonts/PressStart2P-Regular.ttf');
+    font-family: 'MyGirlIsRetro';
+    src: url(
+            '/fonts/MyGirlIsRetro.ttf.ttf'
+        )
+        format('truetype');
+}
+
+@font-face {
+    font-family: 'Undertale';
+    src: url('/fonts/Undertale.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Pixel_font';
+    src: url('/fonts/Pixel_font.ttf') format('truetype');
 }
 .press {
-  font-family: "Press Start 2P", system-ui;
+  font-family: "Pixel_font", system-ui;
   font-weight: 400;
   font-style: normal;
 }
@@ -28,25 +42,6 @@ body {
     background-size: cover;
     background-color: #000;
     @apply overflow-y-auto;
-}
-
-@font-face {
-    font-family: 'Press Start 2P';
-    src: url(
-            '/fonts/PressStart2P-Regular.ttf'
-        )
-        format('truetype');
-}
-#game-container {
-    /* position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; */
-    /* background-image: url('/image/bg.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed; */
 }
 
 #overlay {
@@ -94,6 +89,9 @@ ul {
     margin: 0;
 }
 
+h1{
+    font-size: 22px;
+}
 ul {
     padding: 0;
     list-style: none;
@@ -111,13 +109,29 @@ button {
     /* padding: 20px; */
 }
 
-.tetris_player {
-    grid-column: 1 / 2;
-}
+ .custom-shape {
+            position: relative;
+            border-color: white;
+        }
 
-.tetris_opposer {
-    grid-column: 2 / 3;
-}
+        .custom-shape::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: white;
+        }
+        
+        .custom-shape .inner {
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 40px), calc(100% - 40px) 100%, 0 100%);
+            height: 100%;
+            width: 100%;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
 
 #webcam-container, .play-container {
     display: flex;
@@ -125,12 +139,9 @@ button {
     background: rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* -webkit-backdrop-filter: blur(10px); */
     flex-direction: column;
     align-items: center;
-    padding: 20px;
-    margin: 20px 0;
 }
 
 video,
@@ -149,7 +160,6 @@ canvas {
 .hidden {
     display: none;
 }
-
 
 
 #tetris-container {

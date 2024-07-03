@@ -16,7 +16,9 @@ import ThreeScene from "@/components/ThreeScene";
 import { NAME_LABEL, NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
+import { BoardDesc } from "@/components/BoardDesc";
 
+const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
@@ -135,7 +137,7 @@ const Home: React.FC = () => {
     }
     try {
       await wsWaitingManagerRef.current.connect(
-        "https://api.checkmatejungle.shop/ws",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/ws`,
         "/topic/state",
         (message: any) => {
           console.log("대기 정보 message received: ", message);
@@ -183,7 +185,7 @@ const Home: React.FC = () => {
       wsPlayManagerRef.current = new WebSocketManager();
       try {
         await wsPlayManagerRef.current.connect(
-          "https://api.checkmatejungle.shop/ws",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/ws`,
           "/user/queue/tetris",
           (message: any) => {
             if (tetrisGameRef.current) {
@@ -398,7 +400,6 @@ const Home: React.FC = () => {
 
   const handleGesture = (gesture: string, handType: string) => {
     const now = Date.now();
-
     // 화상 기준 오른손(사람 기준 왼손)일 경우
     if (handType === "Right") {
       if (gesture === "Pointing Right") {
@@ -547,47 +548,106 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <style jsx global>{`
-        @keyframes shake {
-          0% {
-            transform: translate(1px, 1px) rotate(0deg);
-          }
-          10% {
-            transform: translate(-1px, -2px) rotate(-1deg);
-          }
-          20% {
-            transform: translate(-3px, 0px) rotate(1deg);
-          }
-          30% {
-            transform: translate(3px, 2px) rotate(0deg);
-          }
-          40% {
-            transform: translate(1px, -1px) rotate(1deg);
-          }
-          50% {
-            transform: translate(-1px, 2px) rotate(-1deg);
-          }
-          60% {
-            transform: translate(-3px, 1px) rotate(0deg);
-          }
-          70% {
-            transform: translate(3px, 1px) rotate(-1deg);
-          }
-          80% {
-            transform: translate(-1px, -1px) rotate(1deg);
-          }
-          90% {
-            transform: translate(1px, 2px) rotate(0deg);
-          }
-          100% {
-            transform: translate(1px, -2px) rotate(-1deg);
-          }
-        }
+      <div className="flex items-center justify-around">
+        <div className="flex h-[802px]">
+          <div className="flex flex-col border-2 h-full w-[50px] p-4" />
+          <div id="tetris-container">
+            <div className={`${TETRIS_CANVAS}`}>
+              <canvas
+                ref={canvasTetrisRef}
+                id="tetris"
+                width="400"
+                height="800"
+              />
+              <div ref={borderRef} id="tetris-border" />
+            </div>
+            <NameLabel name={"USER1"} />
+          </div>
+          <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
+            <div className="text-black bg-white press text-center text-2xl">
+              NEXT
+            </div>
+          </div>
+        </div>
+        {/*  */}
+        <div className="flex h-[802px]">
+          <div className="tetris_opposer">
+            <div className={`${TETRIS_CANVAS}`}>
+              <canvas
+                ref={canvasTetris2Ref}
+                id="tetrisCanvas2"
+                width="400"
+                height="800"
+              />
+            </div>
+            <NameLabel name={"USER2"} />
+          </div>
+          <div className="flex flex-col justify-between items-center">
+            <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
+              <h1 className="text-black bg-white press text-center text-2xl">
+                IMAGE
+              </h1>
+              <Image
+                src="/image/profile-pic.jpeg"
+                width={250}
+                height={200}
+                alt="profile"
+                className="overflow-hidden object-cover w-full h-full"
+              />
+            </div>
+            <div className="text-white w-[50%]">
+              <BoardDesc type="Score" desc={1700} />
+              <BoardDesc type="Lines" desc={linesCleared} />
+            </div>
+          </div>
+        </div>
+      </div>
 
-        .shake {
-          animation: shake 0.5s;
-        }
-      `}</style>
+      <div>
+        <div>
+          {imageSrc === "/image/guest_image.png" && (
+            <span className="text-2xl text-green-400">User2</span>
+          )}
+        </div>
+        <p className="text-2xl text-green-400">{gesture}</p>
+        <button
+          type="button"
+          onClick={handleReadyStartClick}
+          className={`${
+            isStart
+              ? "hidden"
+              : isOwner && !isAllReady
+              ? "bg-gray-600 text-darkgray cursor-not-allowed"
+              : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
+          } p-3 w-[400px] mx-auto border transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+          disabled={(isOwner && !isAllReady) || false}
+        >
+          {isOwner
+            ? isAllReady
+              ? "Game Start"
+              : "Waiting for Ready"
+            : "Ready"}
+        </button>
+      </div>
+      {/* LOSE, WIN 표시 DIV */}
+      {gameResult && (
+        <div
+          id="gameResult"
+          className={`${gameResultStyle} ${resultClass} press text-2xl leading-15`}
+        >
+          {gameResult}
+        </div>
+      )}
+      <div className="fixed left-0 top-[50%]">
+        <ThreeScene handLandmarks={landmarks} />
+      </div>
+      <button
+        type="button"
+        className="bg-red-400 text-white fixed top-5 left-0"
+        onClick={handleClearButtonClick}
+      >
+        임시버튼(눌러서 set.clear())
+      </button>
       <div className="fixed bottom-0 left-0">
         <div ref={gestureRef} />
         <video
@@ -609,94 +669,23 @@ const Home: React.FC = () => {
           <GestureFeedback gestureFeedback={gestureFeedback} />
         )}
       </div>
-      <div className="grid-container">
-        <div className="tetris_player">
-          <div id="tetris-container" className="overflow-hidden play-container">
-            <NameLabel name={"USER1"} />
-            <div
-              id="play-tetris"
-              className="flex items-center justify-between w-full"
-            >
-              <canvas
-                ref={canvasTetrisRef}
-                id="tetris"
-                width="400"
-                height="800"
-              />
-              <div ref={borderRef} id="tetris-border" />
-              <div
-                id="gage_bar"
-                className=" w-[30px] h-[850px] border border-gray-600 bg-gray-300 flex flex-col-reverse z-40"
-              >
-                <div
-                  className="w-full transition-all duration-700 ease-in-out"
-                  style={{
-                    height: `${(gauge / 4) * 100}%`,
-                    background: "linear-gradient(to top, green, lightgreen)",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="tetris_opposer">
-          <div className="play-container">
-            <NameLabel name={"USER2"} />
-            <canvas
-              ref={canvasTetris2Ref}
-              id="tetrisCanvas2"
-              width="400"
-              height="800"
-            />
-          </div>
-          <div>
-            {imageSrc === "/image/guest_image.png" && (
-              <span className="text-2xl text-green-400">User2</span>
-            )}
-          </div>
-          <p className="text-2xl text-green-400">{gesture}</p>
-        </div>
-      </div>
-
-      <div>
-        <button
-          type="button"
-          onClick={handleReadyStartClick}
-          className={`${
-            isStart
-              ? "hidden"
-              : isOwner && !isAllReady
-              ? "bg-gray-600 text-darkgray cursor-not-allowed"
-              : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
-          } p-6 m-4 w-full mx-auto border transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
-          disabled={(isOwner && !isAllReady) || false}
-        >
-          {isOwner
-            ? isAllReady
-              ? "Game Start"
-              : "Waiting for Ready"
-            : "Ready"}
-        </button>
-      </div>
-      {/* LOSE, WIN 표시 DIV */}
-      {gameResult && (
-        <div
-          id="gameResult"
-          className={`${gameResultStyle} ${resultClass} press text-2xl leading-15`}
-        >
-          {gameResult}
-        </div>
-      )}
-      <ThreeScene handLandmarks={landmarks} />
-      <button
-        type="button"
-        className="bg-red-400 text-white fixed top-5 left-0"
-        onClick={handleClearButtonClick}
-      >
-        임시버튼(눌러서 set.clear())
-      </button>
     </>
   );
 };
 
 export default Home;
+
+//  <div
+//    id="gage_bar"
+//    className=" w-[30px] h-[800px] border border-gray-600 bg-gray-300 flex flex-col-reverse"
+//  >
+//    <div
+//      className="w-full transition-all duration-700 ease-in-out"
+//      style={{
+//        height: `${(gauge / 4) * 100}%`,
+//        background: "linear-gradient(to top, green, lightgreen)",
+//      }}
+//    />
+//  </div>;
+
+//
