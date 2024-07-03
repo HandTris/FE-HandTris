@@ -1,9 +1,9 @@
 "use client";
 import { useState } from "react";
-import { Room } from "@/types";
 import RoomCard from "./RoomCard";
 import CreateRoomModal from "./CreateRoomModal";
 import { AnimatePresence } from "framer-motion";
+import { Room } from "@/types/Room";
 
 type Props = {
   rooms: Room[];

@@ -13,6 +13,10 @@
         format('truetype');
 }
 
+@font-face{
+    font-family: 'pixeloid';
+    src: url('/fonts/PixeloidSans.ttf') format('truetype');
+}
 @font-face {
     font-family: 'Undertale';
     src: url('/fonts/Undertale.otf') format('opentype');
@@ -28,6 +32,9 @@
   font-style: normal;
 }
 
+.pixel{
+    font-family: 'pixeloid', sans-serif;
+}
 
 * {
     margin: 0;
