@@ -3,9 +3,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { QueryClient, useQuery } from "@tanstack/react-query";
-import { fetchRooms } from "@/services/gameService";
-import Games from "@/components/Games";
 
 export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
