@@ -17,6 +17,8 @@ import { NAME_LABEL, NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
+import { getRoomCode } from "@/util/getRoomCode";
+import { getAccessToken } from "@/util/getAccessToken";
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -53,8 +55,8 @@ const Home: React.FC = () => {
   const lastGestureRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const roomCode = localStorage.getItem("uuid");
-    const token = localStorage.getItem("jwtToken");
+    const roomCode = getRoomCode();
+    const token = getAccessToken();
 
     const connectWebSocket = async () => {
       wsEnteringManagerRef.current = new WebSocketManager();
@@ -149,8 +151,8 @@ const Home: React.FC = () => {
   }, [gameResult]);
 
   const subscribeToState = async () => {
-    const roomCode = localStorage.getItem("uuid");
-    const token = localStorage.getItem("jwtToken");
+    const roomCode = getRoomCode();
+    const token = getAccessToken();
     if (!wsWaitingManagerRef.current) {
       wsWaitingManagerRef.current = new WebSocketManager();
     }
@@ -175,8 +177,8 @@ const Home: React.FC = () => {
   };
 
   const handleReadyClick = async () => {
-    const roomCode = localStorage.getItem("uuid");
-    const token = localStorage.getItem("jwtToken");
+    const roomCode = getRoomCode();
+    const token = getAccessToken();
     try {
       await wsWaitingManagerRef.current?.sendMessageOnWaiting(
         {
@@ -195,8 +197,8 @@ const Home: React.FC = () => {
   };
 
   const handleStartGameClick = async () => {
-    const roomCode = localStorage.getItem("uuid");
-    const token = localStorage.getItem("jwtToken");
+    const roomCode = getRoomCode();
+    const token = getAccessToken();
     try {
       await wsWaitingManagerRef.current?.sendMessageForStart(
         {
