@@ -39,13 +39,20 @@
     box-sizing: border-box;
 }
 
+html {
+    background: url('/image/bg__t.png');
+    background-size: cover;
+    width: full;
+    margin: 0 auto;
+}
 html,
 body {
-    height: 100vh;
-    background: url('/image/bg__t.png') repeat;
-    background-size: cover;
+    margin: 0 auto;
+    width: full;
     background-color: #000;
-    @apply overflow-y-auto;
+}
+body{
+    background: inherit;
 }
 
 #overlay {
@@ -57,7 +64,6 @@ body {
     backdrop-filter: blur(1px) saturate(80%);
     z-index: 1;
 }
-
 .content {
     position: relative;
     z-index: 2;
@@ -112,6 +118,15 @@ button {
     grid-gap: 20px;
     /* padding: 20px; */
 }
+body.modal-open {
+  overflow: hidden;
+}
+
+body.modal-open #__next {
+  position: fixed;
+  width: 100%;
+}
+
 
  .custom-shape {
             position: relative;
@@ -294,11 +309,11 @@ canvas {
     }
   }
 
-  @layer base {
-    * {
-      @apply border-border;
+  @layer base{
+    *{
+        @apply border-border
     }
-    body {
-      @apply bg-background text-foreground;
+    body{
+        @apply bg-background text-foreground
     }
   }

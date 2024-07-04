@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import {
-  Nanum_Gothic,
-  Nanum_Gothic_Coding,
-  Press_Start_2P,
-} from "next/font/google";
+import { Nanum_Gothic_Coding } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
+import { Toaster } from "@/components/ui/toaster";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -27,15 +24,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={nanum.className}>
-      <body
-        id="game-container"
-        className="flex flex-col w-full max-w-screen-2xl mx-auto"
-      >
-        <ReactQueryProviders>
-          <Header />
-          <main className="grow">{children}</main>
-          <Footer />
-        </ReactQueryProviders>
+      <body className="">
+        <div className="flex flex-col max-w-[1400px] mx-auto w-full h-[100vh]">
+          <ReactQueryProviders>
+            <Header />
+            <main className="grow">
+              {children}
+              <Toaster />
+            </main>
+            <Footer />
+          </ReactQueryProviders>
+        </div>
       </body>
     </html>
   );
