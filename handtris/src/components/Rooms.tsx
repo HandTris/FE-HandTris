@@ -3,12 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Room } from "@/types/Room";
 import { createRoom, enterRoom, fetchRooms } from "@/services/gameService";
 import { useRouter } from "next/navigation";
+import CreateRoomModal from "./CreateRoomModal";
 
 function Rooms() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data, error, isLoading, isFetching } = useQuery({
+  const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["game_room"],
     queryFn: fetchRooms,
   });
@@ -28,7 +29,7 @@ function Rooms() {
   const enterRoomMutation = useMutation({
     mutationFn: enterRoom,
     onSuccess: (data) => {
-      sessionStorage.setItem("room_roomCode", data.data.roomCode);
+      sessionStorage.setItem("roomCode", data.data.roomCode);
       alert(`Entered room with UUID: ${data.data.roomCode}`);
       router.push(`/game/${data.data.roomCode.split("-")[3]}`);
     },
@@ -42,6 +43,8 @@ function Rooms() {
 
   return (
     <section className="text-white p-5 space-y-5">
+      <CreateRoomModal onSuccess={refetch} onClose={refetch} />
+
       <button
         onClick={() => {
           createRoomMutation.mutate({
@@ -52,6 +55,7 @@ function Rooms() {
       >
         생성 임시 버튼
       </button>
+
       <h1>게임 대기방</h1>
       <ul className="flex flex-col gap-4 pixel">
         {data?.data.map((room: Room) => (

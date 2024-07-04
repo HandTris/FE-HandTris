@@ -1,60 +1,80 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
-const config: Config = {
+const config = {
+    darkMode: ["class"],
     content: [
-        "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-        "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-        "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+        './pages/**/*.{ts,tsx}',
+        './components/**/*.{ts,tsx}',
+        './app/**/*.{ts,tsx}',
+        './src/**/*.{ts,tsx}',
     ],
+    prefix: "",
     theme: {
+        container: {
+            center: true,
+            padding: "2rem",
+            screens: {
+                "2xl": "1400px",
+            },
+        },
         extend: {
-            backdropFilter: {
-                'none': 'none',
-                'blur': 'blur(20px)',
-            },
-            backgroundColor: {
-                'glass': 'rgba(255, 255, 255, 0.3)',
-            },
-            fontSize: {
-                base: ['1rem', { lineHeight: '1.5', letterSpacing: '0' }],
-            },
             colors: {
-                'green400': '#1D3E2A',
-                'green300': "#4AA645",
-                'green200': "#51C063",
-                'green100': "#88FF99"
+                border: "hsl(var(--border))",
+                input: "hsl(var(--input))",
+                ring: "hsl(var(--ring))",
+                background: "hsl(var(--background))",
+                foreground: "hsl(var(--foreground))",
+                primary: {
+                    DEFAULT: "hsl(var(--primary))",
+                    foreground: "hsl(var(--primary-foreground))",
+                },
+                secondary: {
+                    DEFAULT: "hsl(var(--secondary))",
+                    foreground: "hsl(var(--secondary-foreground))",
+                },
+                destructive: {
+                    DEFAULT: "hsl(var(--destructive))",
+                    foreground: "hsl(var(--destructive-foreground))",
+                },
+                muted: {
+                    DEFAULT: "hsl(var(--muted))",
+                    foreground: "hsl(var(--muted-foreground))",
+                },
+                accent: {
+                    DEFAULT: "hsl(var(--accent))",
+                    foreground: "hsl(var(--accent-foreground))",
+                },
+                popover: {
+                    DEFAULT: "hsl(var(--popover))",
+                    foreground: "hsl(var(--popover-foreground))",
+                },
+                card: {
+                    DEFAULT: "hsl(var(--card))",
+                    foreground: "hsl(var(--card-foreground))",
+                },
+            },
+            borderRadius: {
+                lg: "var(--radius)",
+                md: "calc(var(--radius) - 2px)",
+                sm: "calc(var(--radius) - 4px)",
             },
             keyframes: {
-                winAnimation: {
-                    '0%': { opacity: '0', transform: 'translate(-50%, -50%) scale(0.5)' },
-                    '50%': { opacity: '1', transform: 'translate(-50%, -50%) scale(1.2)' },
-                    '100%': { opacity: '1', transform: 'translate(-50%, -50%) scale(1)' },
+                "accordion-down": {
+                    from: { height: "0" },
+                    to: { height: "var(--radix-accordion-content-height)" },
                 },
-                loseAnimation: {
-                    '0%': { opacity: '0', transform: 'translate(-50%, -50%) translateY(-20px)' },
-                    '50%': { opacity: '1', transform: 'translate(-50%, -50%) translateY(10px)' },
-                    '100%': { opacity: '1', transform: 'translate(-50%, -50%) translateY(0)' },
+                "accordion-up": {
+                    from: { height: "var(--radix-accordion-content-height)" },
+                    to: { height: "0" },
                 },
             },
             animation: {
-                win: 'winAnimation 1.5s forwards',
-                lose: 'loseAnimation 1.5s forwards',
+                "accordion-down": "accordion-down 0.2s ease-out",
+                "accordion-up": "accordion-up 0.2s ease-out",
             },
-            inset: {
-                '-50px': '-50px',
-            },
-            spacing: {
-                '30px': '30px',
-                '800px': '800px',
-            },
-        },
-        variants: {
-            extends: {
-                translate: ['hover', 'focus'],
-            }
         },
     },
-    plugins: [],
-};
+    plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
-export default config;
+export default config
