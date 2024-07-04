@@ -28,7 +28,7 @@ export function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
     mutationFn: createRoom,
     onSuccess: (data) => {
       onSuccess();
-      sessionStorage.setItem("roomCode", data.data.roomCode);
+      sessionStorage.setItem("roomCode", data.data);
       onClose();
       router.push(`/play/tetris`);
     },
