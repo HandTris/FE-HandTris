@@ -24,7 +24,8 @@ function Rooms() {
     onSuccess: data => {
       sessionStorage.setItem("roomCode", data.data.roomCode);
       alert(`Entered room with UUID: ${data.data.roomCode}`);
-      router.push(`/game/${data.data.roomCode.split("-")[3]}`);
+      // router.push(`/game/${data.data.roomCode.split("-")[3]}`);
+      router.push("/play/tetris");
     },
     onError: error => {
       console.error("Failed to enter room:", error);

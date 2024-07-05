@@ -210,37 +210,6 @@ export class TetrisGame {
     }
   }
 
-  // sendMessageOnGaming(stompClient: any) {
-  //     if (stompClient) {
-  //         const socketUrl = stompClient.ws._transport.url;
-  //         const match = /\/([^\/]+)\/(?:websocket)/.exec(socketUrl);
-
-  //         if (match && match[1]) {
-  //             const sessionId = match[1];
-  //             const message = {
-  //                 board: this.board_forsend,
-  //                 sender: sessionId,
-  //                 isEnd: this.isEnd,
-  //             };
-
-  //             if (stompClient.connected) {
-  //                 if (!this.isEnd && !this.hasSentEndMessage) {
-  //                     stompClient.send(`/app/${roomCode}/tetris`, {}, JSON.stringify(message));
-  //                     this.hasSentEndMessage = true;
-  //                 } else if (!this.isEnd) {
-  //                     stompClient.send("/app/tetris", {}, JSON.stringify(message));
-  //                 }
-  //             } else {
-  //                 console.log("WebSocket connection is not established yet.");
-  //             }
-  //         } else {
-  //             console.error("Session ID could not be extracted from URL.");
-  //         }
-  //     } else {
-  //         console.error("WebSocket transport is not defined.");
-  //     }
-  // }
-
   showGameResult(result: string) {
     this.setGameResult(result);
   }

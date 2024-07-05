@@ -35,6 +35,8 @@ const Home: React.FC = () => {
   const [gameResult, setGameResult] = useState<string | null>(null);
 
   const [landmarks, setLandmarks] = useState<any>();
+  const [leftHandLandmarks, setLeftHandLandmarks] = useState<any>();
+  const [rightHandLandmarks, setRightHandLandmarks] = useState<any>();
 
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
@@ -347,9 +349,12 @@ const Home: React.FC = () => {
           });
 
           const gesture = recognizeGesture(landmarks, handType);
-          console.log("제스쳐: ", gesture);
           if (handType === "Left") {
             setGesture(gesture);
+            setLeftHandLandmarks(landmarks);
+          }
+          else{
+            setRightHandLandmarks(landmarks);
           }
 
           if (gestureRef.current) {
@@ -577,7 +582,10 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
-
+      <div className="fixed left-0 top-[50%] columns-2">
+        <ThreeScene handLandmarks={rightHandLandmarks} />
+        <ThreeScene handLandmarks={leftHandLandmarks} />
+      </div>
       <div>
         <div>
           {imageSrc === "/image/guest_image.png" && (
@@ -612,9 +620,6 @@ const Home: React.FC = () => {
           {gameResult}
         </div>
       )}
-      <div className="fixed left-0 top-[50%]">
-        <ThreeScene handLandmarks={landmarks} />
-      </div>
       <button
         type="button"
         className="fixed left-0 top-5 bg-red-400 text-white"
