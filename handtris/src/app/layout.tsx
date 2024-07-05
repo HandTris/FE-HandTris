@@ -31,7 +31,7 @@ export default function RootLayout({
         />
       </head>
       <body className="">
-        <div className="mx-auto flex h-[100vh] w-full max-w-[1200px] flex-col">
+        <div className="mx-auto flex h-[100vh] w-full max-w-[1400px] flex-col">
           <ReactQueryProviders>
             <Header />
             <main className="grow flex flex-col flex-1 overflow-hidden">

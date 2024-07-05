@@ -57,14 +57,12 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
 
     const connectWebSocket = async () => {
       wsManagerRef.current = new WebSocketManager();
       try {
         await wsManagerRef.current.connect(
           "https://api.checkmatejungle.shop/ws",
-          token,
         );
         setIsConnected(true);
         subscribeToEntering(roomCode);
@@ -164,14 +162,14 @@ const Home: React.FC = () => {
   };
 
   const startGame = async () => {
-    const roomCode = localStorage.getItem("uuid");
-    const token = localStorage.getItem("jwtToken");
+    const roomCode = getRoomCode();
+    const token = getAccessToken();
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
       try {
         wsManagerRef.current?.subscribe(
-          "/user/queue/tetris",
+          `/user/queue/tetris/${roomCode}}`,
           (message: any) => {
             if (tetrisGameRef.current) {
               tetrisGameRef.current.drawBoard2(message.board);
@@ -203,13 +201,23 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    startGame();
+    let previousGauge = 0;
+    
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        setGauge(tetrisGameRef.current.linesCleared % 5);
+        const currentGauge = tetrisGameRef.current.linesCleared % 5;
+  
+        // 이전 gauge 값과 현재 gauge 값을 비교하여 4를 지나쳤다면 setGauge(4) 호출
+        if ((previousGauge < 4 && currentGauge < previousGauge) || (previousGauge < 4 && currentGauge >= 4)) {
+          setGauge(4);
+        }
+  
+        setGauge(currentGauge);
+        previousGauge = currentGauge;
+  
         if (
-          tetrisGameRef.current.linesCleared % 5 === 4 &&
+          currentGauge === 4 &&
           tetrisGameRef.current.linesCleared > 0
         ) {
           setIsGaugeFull(true);
@@ -220,7 +228,7 @@ const Home: React.FC = () => {
         }
       }
     }, 1000);
-
+  
     return () => clearInterval(interval);
   }, []);
 
@@ -484,7 +492,15 @@ const Home: React.FC = () => {
     <>
       <div className="flex items-center justify-around">
         <div className="flex h-[802px]">
-          <div className="flex h-full w-[50px] flex-col border-2 p-4" />
+          <div className="flex h-full w-[50px] flex-col-reverse border-2 p-4">
+          <div
+              className="w-full transition-all duration-700 ease-in-out"
+              style={{
+                height: `${(gauge / 4) * 100}%`,
+                background: 'linear-gradient(to top, green, lightgreen)',
+              }}
+            ></div>
+          </div>
           <div id="tetris-container">
             <div className={`${TETRIS_CANVAS}`}>
               <canvas
