@@ -102,6 +102,51 @@ const Home: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (isOwner != null) {
+      subscribeToState();
+    }
+  }, [isOwner]);
+  // 게임 종료 시 결과 표시 모달 지우고, 게임 시작 관련 상태 초기화
+  useEffect(() => {
+    if (gameResult) {
+      const timeoutId = setTimeout(() => {
+        setGameResult(null);
+        setIsStart(false);
+        setIsAllReady(false);
+        setLinesCleared(0);
+        setGauge(0);
+        if (tetrisGameRef.current) {
+          tetrisGameRef.current.linesCleared = 0;
+        }
+        if (canvasTetrisRef.current) {
+          const ctx = canvasTetrisRef.current.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(
+              0,
+              0,
+              canvasTetrisRef.current.width,
+              canvasTetrisRef.current.height
+            );
+          }
+        }
+        if (canvasTetris2Ref.current) {
+          const ctx2 = canvasTetris2Ref.current.getContext("2d");
+          if (ctx2) {
+            ctx2.clearRect(
+              0,
+              0,
+              canvasTetris2Ref.current.width,
+              canvasTetris2Ref.current.height
+            );
+          }
+        }
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [gameResult]);
+
   const subscribeToState = async () => {
     const roomCode = getRoomCode();
     if (wsManagerRef.current && isOwner != null) {
