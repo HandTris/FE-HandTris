@@ -127,13 +127,13 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
   useEffect(() => {
     if (handLandmarks?.length > 0 && joystickRef.current) {
       const landmark0 = handLandmarks[0];
-      const landmark3 = handLandmarks[3];
+      const landmark17 = handLandmarks[17];
       const joystick = joystickRef.current;
 
       // Calculate the angle between the z coordinates of landmark0 and landmark3
-      const deltaZ = landmark3.z - landmark0.z; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
-      const deltaX = landmark0.x - landmark3.x;
-      const angle = -Math.atan2(deltaZ, deltaX); // theta, 단위: rad
+      const deltaY = landmark0.y - landmark17.y; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
+      const deltaX = landmark0.x - landmark17.x;
+      const angle = -Math.atan2(deltaY, deltaX); // theta, 단위: rad
 
       // Rotate the joystick model based on the calculated angle
       if (angle > 1.05 && angle < 2.1) {
