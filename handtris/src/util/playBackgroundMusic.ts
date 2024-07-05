@@ -1,21 +1,21 @@
 export const playBackgroundMusic = () => {
-    const audio = new Audio("/sounds/tetris.mp3");
-    audio.loop = true;
-    audio.volume = 0.4;
+  const audio = new Audio("/sounds/tetris.mp3");
+  audio.loop = true;
+  audio.volume = 0.4;
 
-    audio
-        .play()
-        .then(() => {
-            console.log("Background music started playing");
-        })
-        .catch((error) => {
-            console.error("Error playing audio:", error);
-        });
+  audio
+    .play()
+    .then(() => {
+      console.log("Background music started playing");
+    })
+    .catch(error => {
+      console.error("Error playing audio:", error);
+    });
 
-    return audio;
+  return audio;
 };
 
 export const stopBackgroundMusic = (audio: HTMLAudioElement) => {
-    audio.pause();
-    console.log("Background music stopped");
+  audio.pause();
+  console.log("Background music stopped");
 };

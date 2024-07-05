@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={nanum.className}>
       <body className="">
-        <div className="flex flex-col max-w-[1400px] mx-auto w-full h-[100vh]">
+        <div className="mx-auto flex h-[100vh] w-full max-w-[1200px] flex-col">
           <ReactQueryProviders>
             <Header />
             <main className="grow">

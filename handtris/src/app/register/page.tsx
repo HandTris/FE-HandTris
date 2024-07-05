@@ -1,10 +1,11 @@
 "use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { Formik, Form } from "formik";
+import axios from "axios";
 import CustomField from "../../components/CustomField";
 import registerValidation from "../../yup/registervalidation";
-import axios from "axios";
 
 const Signup = () => {
   return (
@@ -13,9 +14,9 @@ const Signup = () => {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1, ease: "easeInOut" }}
-        className="bg-white bg-opacity-30 backdrop-filter backdrop-blur-xl p-12 rounded-3xl text-center shadow-xl border border-white border-opacity-50 max-w-md w-full"
+        className="w-full max-w-md rounded-3xl border border-white border-opacity-50 bg-white bg-opacity-30 p-12 text-center shadow-xl backdrop-blur-xl backdrop-filter"
       >
-        <h1 className="text-4xl mb-12 text-white font-bold">Sign Up</h1>
+        <h1 className="mb-12 text-4xl font-bold text-white">Sign Up</h1>
         <Formik
           initialValues={{
             username: "",
@@ -90,10 +91,10 @@ const Signup = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isValid}
-                  className={`w-full py-3 border-2 rounded-lg transition-colors duration-300 ${
+                  className={`w-full rounded-lg border-2 py-3 transition-colors duration-300 ${
                     isValid
                       ? "border-white text-white hover:bg-white hover:text-blue-500"
-                      : "border-gray-500 text-gray-500 cursor-not-allowed"
+                      : "cursor-not-allowed border-gray-500 text-gray-500"
                   }`}
                 >
                   Sign Up

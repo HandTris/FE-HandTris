@@ -1,3 +1,3 @@
 export const getRoomCode = () => {
-    return sessionStorage.getItem("roomCode") || localStorage.getItem("roomCode");
+  return sessionStorage.getItem("roomCode") || localStorage.getItem("roomCode");
 };

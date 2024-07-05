@@ -1,4 +1,5 @@
 "use client";
+
 function NotFound() {
   return (
     <div>

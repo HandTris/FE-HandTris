@@ -5,35 +5,36 @@ import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { HAND_CONNECTIONS, Hands } from "@mediapipe/hands";
 
 export class HandGestureManager {
-    hands: any;
-    onResultsCallback: (results: any) => void;
+  hands: any;
 
-    constructor(onResults: (results: any) => void) {
-        this.onResultsCallback = onResults;
-        this.hands = new Hands({
-            locateFile: (file: string) =>
-                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-        });
+  onResultsCallback: (results: any) => void;
 
-        this.hands.setOptions({
-            maxNumHands: 2,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.9,
-            minTrackingConfidence: 0.7,
-        });
+  constructor(onResults: (results: any) => void) {
+    this.onResultsCallback = onResults;
+    this.hands = new Hands({
+      locateFile: (file: string) =>
+        `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
+    });
 
-        this.hands.onResults(this.onResultsCallback);
-    }
+    this.hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.9,
+      minTrackingConfidence: 0.7,
+    });
 
-    start(videoElement: HTMLVideoElement) {
-        const camera = new Camera(videoElement, {
-            onFrame: async () => {
-                await this.hands.send({ image: videoElement });
-            },
-            width: 320,
-            height: 240,
-        });
+    this.hands.onResults(this.onResultsCallback);
+  }
 
-        camera.start();
-    }
+  start(videoElement: HTMLVideoElement) {
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await this.hands.send({ image: videoElement });
+      },
+      width: 320,
+      height: 240,
+    });
+
+    camera.start();
+  }
 }

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -16,8 +17,8 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-8">
-      <div className="flex flex-col w-full max-w-2xl bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-white border-opacity-20 rounded-xl p-8 shadow-2xl space-y-4">
+    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+      <div className="flex w-full max-w-2xl flex-col space-y-4 rounded-xl border border-white border-opacity-20 bg-white bg-opacity-10 p-8 shadow-2xl backdrop-blur-lg backdrop-filter">
         {/* <Games /> */}
         <AnimatePresence>
           {selected === null && (
@@ -30,7 +31,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
                 <button
-                  className="w-full bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border border-pink-500 border-opacity-40 text-pink-500 font-bold py-4 px-8 rounded-lg shadow-lg transform transition hover:scale-105"
+                  className="w-full transform rounded-lg border border-pink-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-pink-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("lobby", "/lobby")}
                 >
                   <div className="flex items-center justify-between">
@@ -57,7 +58,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
               >
                 <button
-                  className="w-full bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border border-green-500 border-opacity-40 text-green-500 font-bold py-4 px-8 rounded-lg shadow-lg transform transition hover:scale-105"
+                  className="w-full transform rounded-lg border border-green-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-green-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("config", "/config")}
                 >
                   <div className="flex items-center justify-between">
@@ -82,7 +83,7 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <button
-                  className="w-full bg-white bg-opacity-30 backdrop-filter backdrop-blur-sm border border-blue-500 border-opacity-40 text-blue-500 font-bold py-4 px-8 rounded-lg shadow-lg transform transition hover:scale-105"
+                  className="w-full transform rounded-lg border border-blue-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-blue-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("about", "/play/tetris")}
                 >
                   <div className="flex items-center justify-between">

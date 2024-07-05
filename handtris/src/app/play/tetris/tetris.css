@@ -1,26 +1,26 @@
- .ready-state {
-     animation: readyBlink 1s infinite;
- }
+.ready-state {
+  animation: readyBlink 1s infinite;
+}
 
- @keyframes readyBlink {
-     0% {
-         border-color: green;
-     }
+@keyframes readyBlink {
+  0% {
+    border-color: green;
+  }
 
-     50% {
-         border-color: yellow;
-     }
+  50% {
+    border-color: yellow;
+  }
 
-     100% {
-         border-color: green;
-     }
- }
+  100% {
+    border-color: green;
+  }
+}
 
- .not-ready-state {
-     border-color: red;
- }
+.not-ready-state {
+  border-color: red;
+}
 
- .no-animation {
-     border-color: green !important;
-     animation: none !important;
- }
+.no-animation {
+  border-color: green !important;
+  animation: none !important;
+}
