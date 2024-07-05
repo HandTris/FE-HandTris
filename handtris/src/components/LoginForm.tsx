@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, FormikHelpers } from "formik";
-import CustomField from "./CustomField";
-import loginValidation from "../yup/loginvalidation";
 import Link from "next/link";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import loginValidation from "../yup/loginvalidation";
+import CustomField from "./CustomField";
 
 interface LoginFormValues {
   username: string;
@@ -23,9 +23,9 @@ const LoginForm = () => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 1, ease: "easeInOut" }}
-      className="bg-white bg-opacity-30 backdrop-filter backdrop-blur-xl p-12 rounded-3xl text-center shadow-xl border border-white border-opacity-50 max-w-lg w-full"
+      className="w-full max-w-lg rounded-3xl border border-white border-opacity-50 bg-white bg-opacity-30 p-12 text-center shadow-xl backdrop-blur-xl backdrop-filter"
     >
-      <h1 className="text-4xl mb-12 text-white font-bold">Login</h1>
+      <h1 className="mb-12 text-4xl font-bold text-white">Login</h1>
       <Formik
         initialValues={initialValues}
         validationSchema={loginValidation}
@@ -35,11 +35,11 @@ const LoginForm = () => {
             setSubmitting,
             setErrors,
             setFieldError,
-          }: FormikHelpers<LoginFormValues>
+          }: FormikHelpers<LoginFormValues>,
         ) => {
           axios
             .post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signin`, values)
-            .then((response) => {
+            .then(response => {
               const { accessToken, refreshToken } = response.data.data;
 
               Cookies.set("accessToken", accessToken, {
@@ -59,18 +59,18 @@ const LoginForm = () => {
             .then(() => {
               router.push("/lobby");
             })
-            .catch((error) => {
+            .catch(error => {
               if (error.response) {
                 setFieldError(
                   "api",
-                  error.response.data.message || "Login failed"
+                  error.response.data.message || "Login failed",
                 );
               } else if (error.request) {
                 setFieldError("api", "Network error. Please try again.");
               } else {
                 setFieldError(
                   "api",
-                  "Something went wrong. Please try again later."
+                  "Something went wrong. Please try again later.",
                 );
               }
               setSubmitting(false);
@@ -107,16 +107,16 @@ const LoginForm = () => {
                 disabled={
                   isSubmitting || !(isValid && Object.keys(touched).length > 0)
                 }
-                className={`w-full py-3 border-2 rounded-lg transition-colors duration-300 ${
+                className={`w-full rounded-lg border-2 py-3 transition-colors duration-300 ${
                   isValid && Object.keys(touched).length > 0
                     ? "border-white text-white hover:bg-white hover:text-blue-500"
-                    : "border-gray-500 text-gray-500 cursor-not-allowed"
+                    : "cursor-not-allowed border-gray-500 text-gray-500"
                 }`}
               >
                 Login
               </button>
               {errors.api && (
-                <div className="text-red-500 mt-2">{errors.api}</div>
+                <div className="mt-2 text-red-500">{errors.api}</div>
               )}
             </motion.div>
           </Form>
@@ -127,7 +127,7 @@ const LoginForm = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
       >
-        <p className="text-white mt-4">
+        <p className="mt-4 text-white">
           {"Don't have an account?"}
           <Link href="/register" className="text-green-400">
             Sign Up

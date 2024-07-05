@@ -2,7 +2,7 @@ import Link from "next/link";
 
 async function Header() {
   return (
-    <header className="flex justify-between items-center text-green-400 w-full p-4">
+    <header className="flex w-full items-center justify-between p-4 text-green-400">
       <Link href="/" className="hover:text-green-500">
         HANDTRIS
       </Link>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Room } from "@/types/Room";
@@ -33,16 +34,16 @@ function RoomGrid({ rooms = [] }: Props) {
 
   return (
     <div className="w-full px-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-green-400">Rooms</h1>
         <button
           onClick={handleOpenCreateModal}
-          className="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600"
+          className="rounded bg-green-500 px-4 py-2 font-bold text-white hover:bg-green-600"
         >
           방 만들기
         </button>
       </div>
-      <ul className="w-full grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <ul className="grid w-full gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {rooms.map((room, index) => (
           <li key={index} className="w-full">
             {/* <RoomCard room={room} /> */}

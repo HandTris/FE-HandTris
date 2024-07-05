@@ -1,5 +1,4 @@
 import { Minus, Plus } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -15,17 +14,23 @@ import { useState } from "react";
 
 export function DrawerDemo() {
   const [goal, setGoal] = useState(350);
+  const [isOpen, setIsOpen] = useState(false);
 
   function onClick(adjustment: number) {
     setGoal(Math.max(200, Math.min(400, goal + adjustment)));
   }
 
+  const openDrawer = () => setIsOpen(true);
+  const closeDrawer = () => setIsOpen(false);
+
   return (
-    <Drawer>
+    <Drawer open={isOpen} onOpenChange={setIsOpen}>
       <DrawerTrigger asChild>
-        <Button variant="outline">Open Drawer</Button>
+        <Button variant="outline" onClick={openDrawer}>
+          Open Drawer
+        </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-[90vh] top-[10vh]">
+      <DrawerContent className="top-[10vh] h-[90vh]">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle>Move Goal</DrawerTitle>
@@ -64,9 +69,11 @@ export function DrawerDemo() {
             </div>
           </div>
           <DrawerFooter>
-            <Button>Submit</Button>
+            <Button onClick={closeDrawer}>Submit</Button>
             <DrawerClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={closeDrawer}>
+                Cancel
+              </Button>
             </DrawerClose>
           </DrawerFooter>
         </div>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useCallback, useState } from "react";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { HAND_CONNECTIONS } from "@mediapipe/hands";
@@ -19,6 +20,7 @@ import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
 import { getRoomCode } from "@/util/getRoomCode";
 import { getAccessToken } from "@/util/getAccessToken";
+
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -26,13 +28,13 @@ const Home: React.FC = () => {
   const [isAllReady, setIsAllReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
-  const [gesture, setGesture] = useState<string>("디폴트"); //FIXME -  손동작 튜닝을 위한 임시 상태값
+  const [gesture, setGesture] = useState<string>("디폴트");
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
 
-  const [landmarks, setLandmarks] = useState();
+  const [landmarks, setLandmarks] = useState<any>();
 
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
@@ -44,11 +46,8 @@ const Home: React.FC = () => {
   const canvasTetris2Ref = useRef<HTMLCanvasElement>(null);
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
-  const wsEnteringManagerRef = useRef<WebSocketManager | null>(null);
-  const wsWaitingManagerRef = useRef<WebSocketManager | null>(null);
-  const wsPlayManagerRef = useRef<WebSocketManager | null>(null);
+  const wsManagerRef = useRef<WebSocketManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastMiddleTipheight = useRef({ before: 0, now: 0 });
@@ -59,35 +58,14 @@ const Home: React.FC = () => {
     const token = getAccessToken();
 
     const connectWebSocket = async () => {
-      wsEnteringManagerRef.current = new WebSocketManager();
+      wsManagerRef.current = new WebSocketManager();
       try {
-        await wsEnteringManagerRef.current.connect(
+        await wsManagerRef.current.connect(
           "https://api.checkmatejungle.shop/ws",
-          `/topic/owner/${roomCode}`,
-          (message: any) => {
-            console.log("대기방에서 받는 메시지: ", message);
-            if (message.isOwner !== undefined) {
-              setIsOwner((prevIsOwner) => {
-                const newIsOwner =
-                  prevIsOwner === null ? message.isOwner : prevIsOwner;
-                if (message.isOwner === false && prevIsOwner === true) {
-                  setImageSrc("/image/guest_image.png");
-                } else if (message.isOwner === false && prevIsOwner === null) {
-                  setImageSrc("/image/guest_image2.png");
-                }
-                return newIsOwner;
-              });
-            }
-          },
-          token
+          token,
         );
-        if (roomCode) {
-          wsEnteringManagerRef.current.sendMessageOnEntering(
-            {},
-            `/app/${roomCode}/owner/info`
-          );
-          setIsConnected(true);
-        }
+        setIsConnected(true);
+        subscribeToEntering(roomCode);
       } catch (error) {
         console.error("Failed to connect to WebSocket", error);
       }
@@ -96,69 +74,38 @@ const Home: React.FC = () => {
     connectWebSocket();
   }, []);
 
-  //0.075초 전 높이 갱신
-  useEffect(() => {
-    const interval = setInterval(() => {
-      lastMiddleTipheight.current.before = lastMiddleTipheight.current.now;
-    }, 50);
+  const subscribeToEntering = (roomCode: string) => {
+    wsManagerRef.current?.subscribe(
+      `/topic/owner/${roomCode}`,
+      (message: any) => {
+        console.log("대기방에서 받는 메시지: ", message);
+        if (message.isOwner !== undefined) {
+          setIsOwner((prevIsOwner) => {
+            const newIsOwner =
+              prevIsOwner === null ? message.isOwner : prevIsOwner;
+            if (message.isOwner === false && prevIsOwner === true) {
+              setImageSrc("/image/guest_image.png");
+            } else if (message.isOwner === false && prevIsOwner === null) {
+              setImageSrc("/image/guest_image2.png");
+            }
+            return newIsOwner;
+          });
+        }
+      },
+    );
 
-    return () => clearInterval(interval);
-  }, []);
-  useEffect(() => {
-    if (isOwner != null) {
-      subscribeToState();
+    if (roomCode) {
+      wsManagerRef.current?.sendMessageOnEntering(
+        {},
+        `/app/${roomCode}/owner/info`,
+      );
     }
-  }, [isOwner]);
-
-  // 게임 종료 시 결과 표시 모달 지우고, 게임 시작 관련 상태 초기화
-  useEffect(() => {
-    if (gameResult) {
-      const timeoutId = setTimeout(() => {
-        setGameResult(null);
-        setIsStart(false);
-        setIsAllReady(false);
-        setLinesCleared(0);
-        setGauge(0);
-        if (tetrisGameRef.current) {
-          tetrisGameRef.current.linesCleared = 0;
-        }
-        if (canvasTetrisRef.current) {
-          const ctx = canvasTetrisRef.current.getContext("2d");
-          if (ctx) {
-            ctx.clearRect(
-              0,
-              0,
-              canvasTetrisRef.current.width,
-              canvasTetrisRef.current.height
-            );
-          }
-        }
-        if (canvasTetris2Ref.current) {
-          const ctx2 = canvasTetris2Ref.current.getContext("2d");
-          if (ctx2) {
-            ctx2.clearRect(
-              0,
-              0,
-              canvasTetris2Ref.current.width,
-              canvasTetris2Ref.current.height
-            );
-          }
-        }
-      }, 3000); // 3 seconds
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [gameResult]);
+  };
 
   const subscribeToState = async () => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
-    if (!wsWaitingManagerRef.current) {
-      wsWaitingManagerRef.current = new WebSocketManager();
-    }
-    try {
-      await wsWaitingManagerRef.current.connect(
-        "https://api.checkmatejungle.shop/ws",
+    if (wsManagerRef.current && isOwner != null) {
+      wsManagerRef.current.subscribe(
         `/topic/state/${roomCode}`,
         (message: any) => {
           console.log("대기 정보 message received: ", message);
@@ -168,44 +115,45 @@ const Home: React.FC = () => {
             startGame(); // 클라이언트 시작 로직
           }
         },
-        token
       );
       console.log(`Subscribed to /topic/state/${roomCode}`);
-    } catch (error) {
-      console.error("Failed to subscribe to /topic/state", error);
     }
   };
 
+  useEffect(() => {
+    if (isOwner != null) {
+      subscribeToState();
+    }
+  }, [isOwner]);
+
   const handleReadyClick = async () => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
     try {
-      await wsWaitingManagerRef.current?.sendMessageOnWaiting(
+      wsManagerRef.current?.sendMessageOnWaiting(
         {
           isAllReady: true,
           isStart: false,
         },
-        `/app/${roomCode}/tetris/ready`
+        `/app/${roomCode}/tetris/ready`,
       );
       console.log(`Message sent to /app/${roomCode}/tetris/ready`);
     } catch (error) {
       console.error(
         `Failed to send message to /app/${roomCode}/tetris/ready`,
-        error
+        error,
       );
     }
   };
 
   const handleStartGameClick = async () => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
     try {
-      await wsWaitingManagerRef.current?.sendMessageForStart(
+      wsManagerRef.current?.sendMessageForStart(
         {
           isAllReady: true,
           isStart: true,
         },
-        `/app/${roomCode}/tetris/start`
+        `/app/${roomCode}/tetris/start`,
       );
       console.log("Message sent to start the game");
     } catch (error) {
@@ -219,10 +167,8 @@ const Home: React.FC = () => {
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
-      wsPlayManagerRef.current = new WebSocketManager();
       try {
-        await wsPlayManagerRef.current.connect(
-          "https://api.checkmatejungle.shop/ws",
+        wsManagerRef.current?.subscribe(
           "/user/queue/tetris",
           (message: any) => {
             if (tetrisGameRef.current) {
@@ -235,13 +181,12 @@ const Home: React.FC = () => {
               }
             }
           },
-          token
         );
         tetrisGameRef.current = new TetrisGame(
           ctx,
           ctx2,
-          wsPlayManagerRef.current,
-          setGameResult
+          wsManagerRef.current!,
+          setGameResult,
         );
         setLinesCleared(tetrisGameRef.current.linesCleared);
       } catch (error) {
@@ -281,16 +226,13 @@ const Home: React.FC = () => {
     const recognizeGesture = (landmarks: any[], handType: string): string => {
       const wrist = landmarks[0];
       const thumbTip = landmarks[4];
-      const handBase = landmarks[17]; // 주먹의 맨 밑
+      const handBase = landmarks[17];
       const indexFingerTip = landmarks[8];
       const middleFingerTip = landmarks[12];
       const ringFingerTip = landmarks[16];
       const pinkyTip = landmarks[20];
-      const palmBase = landmarks[0];
 
-      // 시작 ------------ (사람 기준)엄지 손가락 제스처 ------------ //
       if (handType === "Right") {
-        // 각도 계산 함수
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
@@ -299,10 +241,7 @@ const Home: React.FC = () => {
           return degrees;
         };
 
-        // 엄지의 각도 계산
         const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
-
-        // 일정 각도 이상이어야 제스처로 인식
         const rightAngleThreshold = 30;
         const leftAngleThreshold = 10;
         if (isHandOpen(landmarks)) {
@@ -310,13 +249,12 @@ const Home: React.FC = () => {
         }
         if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Left";
-        } else if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+        }
+        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-        // 끝 ------------ (사람 기준) 왼손 엄지 손가락 제스처 ------------ //
       } else {
-        // 시작 ---------- (사람 기준)오른손 제스처 ------------ //
-        lastMiddleTipheight.current.now = middleFingerTip.y; // 현재 중지 끝의 높이 업데이트
+        lastMiddleTipheight.current.now = middleFingerTip.y;
 
         if (
           wrist.y < indexFingerTip.y &&
@@ -342,16 +280,19 @@ const Home: React.FC = () => {
         }
         if (isHandGood(landmarks)) {
           return "따봉";
-        } else if (isHandOpen(landmarks)) {
+        }
+        if (isHandOpen(landmarks)) {
           return "보자기";
-        } else if (
+        }
+        if (
           isFingerStraight(landmarks, 1) &&
           isFingerStraight(landmarks, 2) &&
           isFingerStraight(landmarks, 3) &&
           isFingerStraight(landmarks, 4)
         ) {
           return " 엄지 빼고 다 핌";
-        } else if (
+        }
+        if (
           thumbTip.y < middleFingerTip.y &&
           thumbTip.y < ringFingerTip.y &&
           thumbTip.y < pinkyTip.y &&
@@ -359,7 +300,8 @@ const Home: React.FC = () => {
           isFingerStraight(landmarks, 1)
         ) {
           return "불필요 제스쳐1";
-        } else if (
+        }
+        if (
           thumbTip.y < middleFingerTip.y &&
           thumbTip.y < ringFingerTip.y &&
           thumbTip.y < pinkyTip.y &&
@@ -377,26 +319,24 @@ const Home: React.FC = () => {
       0,
       0,
       canvasRef.current!.width,
-      canvasRef.current!.height
+      canvasRef.current!.height,
     );
     canvasCtx.drawImage(
       results.image,
       0,
       0,
       canvasRef.current!.width,
-      canvasRef.current!.height
+      canvasRef.current!.height,
     );
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       for (const landmarks of results.multiHandLandmarks) {
         for (let i = 0; i < results.multiHandLandmarks.length; i++) {
           const landmarks = results.multiHandLandmarks[i];
-          const classification = results.multiHandedness[i]; // handedness 정보 가져오기
-          // handedness 정보에서 손 종류 확인
-          const handType = classification.label; // 'Left' 또는 'Right' 값을 가짐
+          const classification = results.multiHandedness[i];
+          const handType = classification.label;
 
-          // 손 종류에 따라 랜드마크 색상 변경
-          const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000"; // 왼손 파란색, 오른손 빨간색
+          const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000";
           drawLandmarks(canvasCtx, landmarks, {
             color: landmarkColor,
             lineWidth: 0.1,
@@ -409,17 +349,15 @@ const Home: React.FC = () => {
           const gesture = recognizeGesture(landmarks, handType);
           console.log("제스쳐: ", gesture);
           if (handType === "Left") {
-            //FIXME - 손동작 튜닝을 위한 임시 상태값
-            setGesture(gesture); // 왼손의 상태만 나오도록 조건문 안에 넣음
+            setGesture(gesture);
           }
 
-          // 현재 제스쳐 출력
           if (gestureRef.current) {
-            gestureRef.current.innerText = "Gesture : " + gesture;
+            gestureRef.current.innerText = `Gesture : ${gesture}`;
           }
 
-          handleGesture(gesture, handType); // 제스처에 따라 블록 이동 처리
-          setLandmarks(results.multiHandLandmarks); // landmarks 업데이트
+          handleGesture(gesture, handType);
+          setLandmarks(results.multiHandLandmarks);
         }
         if (borderRef.current) {
           borderRef.current.style.boxShadow = "none";
@@ -439,7 +377,6 @@ const Home: React.FC = () => {
   const handleGesture = (gesture: string, handType: string) => {
     const now = Date.now();
 
-    // 화상 기준 오른손(사람 기준 왼손)일 경우
     if (handType === "Right") {
       if (gesture === "Pointing Right") {
         if (now - lastMoveTime.current.right < 200) {
@@ -456,9 +393,7 @@ const Home: React.FC = () => {
         tetrisGameRef.current?.p.moveLeft();
         triggerGestureFeedback("Move Left");
       }
-    }
-    // 왼손일 경우
-    else {
+    } else {
       if (gesture === null) {
         lastMiddleTipheight.current.now = lastMiddleTipheight.current.before;
       }
@@ -470,7 +405,6 @@ const Home: React.FC = () => {
       ) {
         console.log("왼쪽 손등 보자기");
         if (now - lastMoveTime.current.rotate < 200) {
-          // 0.2초내에 같은게 들어오면 패스
         } else {
           lastMoveTime.current.rotate = now;
           tetrisGameRef.current?.p.rotate();
@@ -480,12 +414,10 @@ const Home: React.FC = () => {
         tetrisGameRef.current?.p.rotate();
         triggerGestureFeedback("Rotate");
 
-        // 캔버스에 흔들림 애니메이션 추가
         const playTetrisElement = document.getElementById("play-tetris");
         if (playTetrisElement) {
           playTetrisElement.classList.add("shake");
 
-          // 애니메이션 종료 후 클래스 제거
           setTimeout(() => {
             playTetrisElement.classList.remove("shake");
           }, 200);
@@ -495,7 +427,6 @@ const Home: React.FC = () => {
         lastMiddleTipheight.current.now - lastMiddleTipheight.current.before >
           0.05
       ) {
-        // 0.2초내에 같은게 들어오면 패스
         console.log("오른쪽 손등 보자기");
         if (now - lastMoveTime.current.drop < 200) {
         } else {
@@ -542,7 +473,7 @@ const Home: React.FC = () => {
         {
           method: "GET",
           headers: {},
-        }
+        },
       );
 
       if (!response.ok) {
@@ -584,12 +515,18 @@ const Home: React.FC = () => {
         });
     }
   }, []);
-
+  //   const [count, setCount] = useState(0);
+  //   useEffect(() => {
+  //     if (count === 0) {
+  //       startGame();
+  //       setCount(1);
+  //     }
+  //   }, [count]);
   return (
     <>
       <div className="flex items-center justify-around">
         <div className="flex h-[802px]">
-          <div className="flex flex-col border-2 h-full w-[50px] p-4" />
+          <div className="flex h-full w-[50px] flex-col border-2 p-4" />
           <div id="tetris-container">
             <div className={`${TETRIS_CANVAS}`}>
               <canvas
@@ -602,13 +539,12 @@ const Home: React.FC = () => {
             </div>
             <NameLabel name={"USER1"} />
           </div>
-          <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
-            <div className="text-black bg-white press text-center text-2xl">
+          <div className="flex h-[250px] w-[250px] flex-col border-4 border-l-0 border-t-0">
+            <div className="press bg-white text-center text-2xl text-black">
               NEXT
             </div>
           </div>
         </div>
-        {/*  */}
         <div className="flex h-[802px]">
           <div className="tetris_opposer">
             <div className={`${TETRIS_CANVAS}`}>
@@ -621,9 +557,9 @@ const Home: React.FC = () => {
             </div>
             <NameLabel name={"USER2"} />
           </div>
-          <div className="flex flex-col justify-between items-center">
-            <div className="flex flex-col border-4 h-[250px] w-[250px] border-l-0 border-t-0">
-              <h1 className="text-black bg-white press text-center text-2xl">
+          <div className="flex flex-col items-center justify-between">
+            <div className="flex h-[250px] w-[250px] flex-col border-4 border-l-0 border-t-0">
+              <h1 className="press bg-white text-center text-2xl text-black">
                 IMAGE
               </h1>
               <Image
@@ -631,10 +567,10 @@ const Home: React.FC = () => {
                 width={250}
                 height={200}
                 alt="profile"
-                className="overflow-hidden object-cover w-full h-full"
+                className="h-full w-full overflow-hidden object-cover"
               />
             </div>
-            <div className="text-white w-[50%]">
+            <div className="w-[50%] text-white">
               <BoardDesc type="Score" desc={1700} />
               <BoardDesc type="Lines" desc={linesCleared} />
             </div>
@@ -656,9 +592,9 @@ const Home: React.FC = () => {
             isStart
               ? "hidden"
               : isOwner && !isAllReady
-              ? "bg-gray-600 text-darkgray cursor-not-allowed"
-              : "bg-gray-800 text-white border border-green-600 cursor-pointer hover:bg-gray-700 active:bg-gray-600"
-          } p-3 w-[400px] mx-auto border transition-transform transform hover:scale-105 hover:brightness-125 hover:shadow-xl`}
+                ? "text-darkgray cursor-not-allowed bg-gray-600"
+                : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
+          } mx-auto w-[400px] transform border p-3 transition-transform hover:scale-105 hover:shadow-xl hover:brightness-125`}
           disabled={(isOwner && !isAllReady) || false}
         >
           {isOwner
@@ -668,11 +604,10 @@ const Home: React.FC = () => {
             : "Ready"}
         </button>
       </div>
-      {/* LOSE, WIN 표시 DIV */}
       {gameResult && (
         <div
           id="gameResult"
-          className={`${gameResultStyle} ${resultClass} press text-2xl leading-15`}
+          className={`${gameResultStyle} ${resultClass} press leading-15 text-2xl`}
         >
           {gameResult}
         </div>
@@ -682,7 +617,7 @@ const Home: React.FC = () => {
       </div>
       <button
         type="button"
-        className="bg-red-400 text-white fixed top-5 left-0"
+        className="fixed left-0 top-5 bg-red-400 text-white"
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear())

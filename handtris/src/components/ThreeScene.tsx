@@ -20,7 +20,7 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
       75,
       mount.clientWidth / mount.clientHeight,
       0.1,
-      1000
+      1000,
     );
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
@@ -45,8 +45,8 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
     // 판
     loader.load(
       objUrlPlate,
-      (obj) => {
-        obj.traverse((node) => {
+      obj => {
+        obj.traverse(node => {
           if ((node as THREE.Mesh).isMesh) {
             (node as THREE.Mesh).material = new THREE.MeshPhongMaterial({
               color: 0x3c3c3c,
@@ -61,16 +61,16 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
         console.log("Joystick model loaded:", obj);
       },
       undefined,
-      (error) => {
+      error => {
         console.error("An error occurred while loading the model", error);
-      }
+      },
     );
 
     // 대+Ball
     loader.load(
       objUrlBall,
-      (obj) => {
-        obj.traverse((node) => {
+      obj => {
+        obj.traverse(node => {
           if ((node as THREE.Mesh).isMesh) {
             (node as THREE.Mesh).material = new THREE.MeshPhongMaterial({
               color: 0xff0000,
@@ -102,9 +102,9 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
         setCameraAdjusted(true);
       },
       undefined,
-      (error) => {
+      error => {
         console.error("An error occurred while loading the model", error);
-      }
+      },
     );
 
     sceneRef.current = scene;

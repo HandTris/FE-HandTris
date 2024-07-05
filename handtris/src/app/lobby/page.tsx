@@ -1,14 +1,11 @@
 import Rooms from "@/components/Rooms";
-import { fetchRooms } from "@/services/gameService";
 import {
   HydrationBoundary,
   QueryClient,
   dehydrate,
 } from "@tanstack/react-query";
 
-type Props = {};
-
-async function LobbyPage({}: Props) {
+async function LobbyPage() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
