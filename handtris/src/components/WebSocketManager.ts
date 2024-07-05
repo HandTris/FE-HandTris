@@ -39,10 +39,13 @@ export class WebSocketManager {
 
   subscribe(subscribeUrl: string, onMessage: (message: any) => void) {
     if (this.connected) {
+      const headers = {
+        Authorization: `Bearer ${this.token}`,
+      };
       this.stompClient.subscribe(subscribeUrl, (message: any) => {
         console.log("Message received: ", message);
         onMessage(JSON.parse(message.body));
-      });
+      }, headers);
     } else {
       console.log("WebSocket connection is not established yet.");
     }

@@ -203,6 +203,7 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
+    startGame();
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
@@ -234,7 +235,7 @@ const Home: React.FC = () => {
       const ringFingerTip = landmarks[16];
       const pinkyTip = landmarks[20];
 
-      if (handType === "Right") {
+      if (handType === "Right") { // 플레이어 기준 왼손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
@@ -255,62 +256,27 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-      } else {
-        lastMiddleTipheight.current.now = middleFingerTip.y;
+      }
+      else { // 플레이어 기준 오른손
+        const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
+          const deltaY = thumbTip.y - thumbBase.y;
+          const deltaX = thumbTip.x - thumbBase.x;
+          const radians = Math.atan2(deltaX, deltaY);
+          const degrees = radians * (180 / Math.PI);
+          return degrees;
+        };
 
-        if (
-          wrist.y < indexFingerTip.y &&
-          wrist.y < middleFingerTip.y &&
-          wrist.y < ringFingerTip.y &&
-          wrist.y < pinkyTip.y &&
-          isFingerStraight(landmarks, 1) &&
-          isFingerStraight(landmarks, 2) &&
-          isFingerStraight(landmarks, 3) &&
-          isFingerStraight(landmarks, 4)
-        ) {
-          if (wrist.x > ringFingerTip.x) {
-            return "오른쪽 손등 보자기";
-          }
-          if (wrist.x < pinkyTip.x) {
-            return "왼쪽 손등 보자기";
-          }
-          return "손등";
-        }
-        lastMiddleTipheight.current.before = lastMiddleTipheight.current.now;
-        if (isHandBent(landmarks)) {
-          return "주먹 쥠";
-        }
-        if (isHandGood(landmarks)) {
-          return "따봉";
-        }
+        const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
+        const rightAngleThreshold = 10;
+        const leftAngleThreshold = 30;
         if (isHandOpen(landmarks)) {
-          return "보자기";
+          return "Palm";
         }
-        if (
-          isFingerStraight(landmarks, 1) &&
-          isFingerStraight(landmarks, 2) &&
-          isFingerStraight(landmarks, 3) &&
-          isFingerStraight(landmarks, 4)
-        ) {
-          return " 엄지 빼고 다 핌";
+        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+          return "Pointing Left";
         }
-        if (
-          thumbTip.y < middleFingerTip.y &&
-          thumbTip.y < ringFingerTip.y &&
-          thumbTip.y < pinkyTip.y &&
-          indexFingerTip.x < thumbTip.x &&
-          isFingerStraight(landmarks, 1)
-        ) {
-          return "불필요 제스쳐1";
-        }
-        if (
-          thumbTip.y < middleFingerTip.y &&
-          thumbTip.y < ringFingerTip.y &&
-          thumbTip.y < pinkyTip.y &&
-          indexFingerTip.x > thumbTip.x &&
-          isFingerStraight(landmarks, 1)
-        ) {
-          return "불필요 제스쳐2";
+        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+          return "Pointing Right";
         }
       }
       return "Unknown";
@@ -398,26 +364,15 @@ const Home: React.FC = () => {
         tetrisGameRef.current?.p.moveLeft();
         triggerGestureFeedback("Move Left");
       }
-    } else {
-      if (gesture === null) {
-        lastMiddleTipheight.current.now = lastMiddleTipheight.current.before;
-      }
-      if (gesture === "보자기") {
-      } else if (
-        gesture == "왼쪽 손등 보자기" &&
-        lastMiddleTipheight.current.now - lastMiddleTipheight.current.before >
-          0.05
-      ) {
-        console.log("왼쪽 손등 보자기");
-        if (now - lastMoveTime.current.rotate < 200) {
+    } else { // handType이 "left"이면
+      if (gesture == "Pointing Left") {
+        console.log("Pointing Left");
+        if (now - lastMoveTime.current.rotate < 1000) {
         } else {
           lastMoveTime.current.rotate = now;
           tetrisGameRef.current?.p.rotate();
           triggerGestureFeedback("Rotate");
         }
-        lastMoveTime.current.rotate = now;
-        tetrisGameRef.current?.p.rotate();
-        triggerGestureFeedback("Rotate");
 
         const playTetrisElement = document.getElementById("play-tetris");
         if (playTetrisElement) {
@@ -427,13 +382,10 @@ const Home: React.FC = () => {
             playTetrisElement.classList.remove("shake");
           }, 200);
         }
-      } else if (
-        gesture == "오른쪽 손등 보자기" &&
-        lastMiddleTipheight.current.now - lastMiddleTipheight.current.before >
-          0.05
-      ) {
-        console.log("오른쪽 손등 보자기");
-        if (now - lastMoveTime.current.drop < 200) {
+      }
+      else if (gesture == "Pointing Right") {
+        console.log("Pointing Right");
+        if (now - lastMoveTime.current.drop < 1000) {
         } else {
           lastMoveTime.current.drop = now;
           tetrisGameRef.current?.moveToGhostPosition();
@@ -443,6 +395,7 @@ const Home: React.FC = () => {
       lastGestureRef.current = gesture;
     }
   };
+
   const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
