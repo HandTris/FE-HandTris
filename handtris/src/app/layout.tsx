@@ -24,11 +24,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={nanum.className}>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"
+        />
+      </head>
       <body className="">
         <div className="mx-auto flex h-[100vh] w-full max-w-[1200px] flex-col">
           <ReactQueryProviders>
             <Header />
-            <main className="grow">
+            <main className="grow flex flex-col flex-1 overflow-hidden">
               {children}
               <Toaster />
             </main>

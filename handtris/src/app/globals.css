@@ -43,10 +43,13 @@ html {
   /* x스크롤 막기 */
   overflow-x: hidden;
 }
+
 html,
 body {
-  margin: 0 auto;
-  background-color: #000;
+    overflow: hidden;
+    touch-action: none;
+    margin: 0 auto;
+    background-color: #000;
 }
 body {
   background: inherit;
