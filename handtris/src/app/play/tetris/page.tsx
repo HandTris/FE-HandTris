@@ -88,7 +88,7 @@ const Home: React.FC = () => {
       (message: any) => {
         console.log("대기방에서 받는 메시지: ", message);
         if (message.isOwner !== undefined) {
-          setIsOwner((prevIsOwner) => {
+          setIsOwner(prevIsOwner => {
             const newIsOwner =
               prevIsOwner === null ? message.isOwner : prevIsOwner;
             if (message.isOwner === false && prevIsOwner === true) {
@@ -134,7 +134,7 @@ const Home: React.FC = () => {
               0,
               0,
               canvasTetrisRef.current.width,
-              canvasTetrisRef.current.height
+              canvasTetrisRef.current.height,
             );
           }
         }
@@ -145,7 +145,7 @@ const Home: React.FC = () => {
               0,
               0,
               canvasTetris2Ref.current.width,
-              canvasTetris2Ref.current.height
+              canvasTetris2Ref.current.height,
             );
           }
         }
@@ -289,7 +289,8 @@ const Home: React.FC = () => {
       // const ringFingerTip = landmarks[16];
       // const pinkyTip = landmarks[20];
 
-      if (handType === "Right") { // 플레이어 기준 왼손
+      if (handType === "Right") {
+        // 플레이어 기준 왼손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
@@ -310,6 +311,7 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
+
       } else { // 플레이어 기준 오른손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
@@ -416,7 +418,8 @@ const Home: React.FC = () => {
         tetrisGameRef.current?.p.moveLeft();
         triggerGestureFeedback("Move Left");
       }
-    } else { // handType이 "left"이면
+    } else {
+      // handType이 "left"이면
       if (gesture == "Pointing Left") {
         console.log("Pointing Left");
         if (now - lastMoveTime.current.rotate < 1000) {
@@ -515,11 +518,11 @@ const Home: React.FC = () => {
     if (videoRef.current) {
       navigator.mediaDevices
         .getUserMedia({ video: true })
-        .then((stream) => {
+        .then(stream => {
           videoRef.current!.srcObject = stream;
           videoRef.current!.play();
         })
-        .catch((err) => {
+        .catch(err => {
           console.error("Error accessing webcam: ", err);
         });
     }
