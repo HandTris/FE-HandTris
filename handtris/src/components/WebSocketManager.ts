@@ -52,13 +52,13 @@ export class WebSocketManager {
     }
   }
 
-  sendMessageOnGaming(board: any, isEnd: boolean, roomCode: string | null) {
+  sendMessageOnGaming(board: any, isEnd: boolean, isAttack:boolean, roomCode: string | null) {
     if (
       this.stompClient &&
       this.stompClient.ws &&
       this.stompClient.ws._transport
     ) {
-      const message = { board, isEnd, isAttack:false };
+      const message = { board, isEnd, isAttack };
       if (this.connected) {
         this.stompClient.send(
           `/app/${roomCode}/tetris`,
