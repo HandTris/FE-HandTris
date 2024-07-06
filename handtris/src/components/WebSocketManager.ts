@@ -1,3 +1,4 @@
+import { getAccessToken } from "@/util/getAccessToken";
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 
@@ -16,8 +17,8 @@ export class WebSocketManager {
     this.token = null;
   }
 
-  async connect(url: string, token: string | null): Promise<void> {
-    this.token = token;
+  async connect(url: string): Promise<void> {
+    this.token = getAccessToken();
     return new Promise((resolve, reject) => {
       const socket = new SockJS(url);
       this.stompClient = Stomp.over(socket);
