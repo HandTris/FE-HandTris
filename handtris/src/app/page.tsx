@@ -1,23 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { menuClickSound, menuHoverSound } from "@/hook/howl";
+import { useMusic } from "@/components/MusicProvider";
 
 export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
   const router = useRouter();
+  const mainRef = useRef<HTMLElement>(null);
+  const { isMusicPlaying, toggleMusic } = useMusic();
 
   const handleSelect = (option: string, path: string) => {
     setSelected(option);
+    menuClickSound();
     setTimeout(() => {
       router.push(path);
     }, 1000);
   };
 
+  const handleHover = () => {
+    menuHoverSound();
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
+    <main
+      tabIndex={-1}
+      ref={mainRef}
+      className="flex min-h-screen flex-col items-center justify-center p-8"
+    >
+      <button
+        onClick={toggleMusic}
+        className="absolute top-4 right-4 bg-white bg-opacity-20 p-2 rounded-full"
+      >
+        {isMusicPlaying ? "🔇" : "🔊"}
+      </button>
       <div className="flex w-full max-w-2xl flex-col space-y-4 rounded-xl border border-white border-opacity-20 bg-white bg-opacity-10 p-8 shadow-2xl backdrop-blur-lg backdrop-filter">
         {/* <Games /> */}
         <AnimatePresence>
@@ -33,6 +52,7 @@ export default function HomePage() {
                 <button
                   className="w-full transform rounded-lg border border-pink-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-pink-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("lobby", "/lobby")}
+                  onMouseEnter={handleHover}
                 >
                   <div className="flex items-center justify-between">
                     <Image
@@ -60,6 +80,7 @@ export default function HomePage() {
                 <button
                   className="w-full transform rounded-lg border border-green-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-green-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("config", "/config")}
+                  onMouseEnter={handleHover}
                 >
                   <div className="flex items-center justify-between">
                     <Image
@@ -85,6 +106,7 @@ export default function HomePage() {
                 <button
                   className="w-full transform rounded-lg border border-blue-500 border-opacity-40 bg-white bg-opacity-30 px-8 py-4 font-bold text-blue-500 shadow-lg backdrop-blur-sm backdrop-filter transition hover:scale-105"
                   onClick={() => handleSelect("about", "/play/tetris")}
+                  onMouseEnter={handleHover}
                 >
                   <div className="flex items-center justify-between">
                     <Image
