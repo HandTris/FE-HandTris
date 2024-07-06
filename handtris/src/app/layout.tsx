@@ -6,6 +6,7 @@ import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import ClientWrapper from "@/components/ClientWrapper";
+import { MusicProvider } from "@/components/MusicProvider";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -33,14 +34,16 @@ export default function RootLayout({
       <body className="">
         <div className="mx-auto flex h-[100vh] w-full max-w-[1400px] flex-col">
           <ReactQueryProviders>
-            <ClientWrapper>
-              <Header />
-              <main className="grow flex flex-col flex-1 overflow-hidden">
-                {children}
-                <Toaster />
-              </main>
-              <Footer />
-            </ClientWrapper>
+            <MusicProvider>
+              <ClientWrapper>
+                <Header />
+                <main className="grow flex flex-col flex-1 overflow-hidden">
+                  {children}
+                  <Toaster />
+                </main>
+                <Footer />
+              </ClientWrapper>
+            </MusicProvider>
           </ReactQueryProviders>
         </div>
       </body>
