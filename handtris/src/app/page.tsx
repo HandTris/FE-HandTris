@@ -1,14 +1,15 @@
 "use client";
-
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { menuClickSound, menuHoverSound } from "@/hook/howl";
 import { useMusic } from "@/components/MusicProvider";
+import SplashScreen from "@/components/SplashScreen";
 
 export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
+  const [showSplash, setShowSplash] = useState(true);
   const router = useRouter();
   const mainRef = useRef<HTMLElement>(null);
   const { isMusicPlaying, toggleMusic } = useMusic();
@@ -24,6 +25,21 @@ export default function HomePage() {
   const handleHover = () => {
     menuHoverSound();
   };
+  useEffect(() => {
+    const hasSeenSplash = localStorage.getItem("hasSeenSplash");
+    if (hasSeenSplash) {
+      setShowSplash(false);
+    }
+  }, []);
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    localStorage.setItem("hasSeenSplash", "true");
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={handleSplashFinish} />;
+  }
 
   return (
     <main
@@ -38,7 +54,6 @@ export default function HomePage() {
         {isMusicPlaying ? "🔇" : "🔊"}
       </button>
       <div className="flex w-full max-w-2xl flex-col space-y-4 rounded-xl border border-white border-opacity-20 bg-white bg-opacity-10 p-8 shadow-2xl backdrop-blur-lg backdrop-filter">
-        {/* <Games /> */}
         <AnimatePresence>
           {selected === null && (
             <>
