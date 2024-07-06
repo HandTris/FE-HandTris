@@ -40,7 +40,6 @@ html {
   background: url("/image/bg__t.png");
   background-size: cover;
   margin: 0 auto;
-  /* x스크롤 막기 */
   overflow-x: hidden;
 }
 
@@ -49,10 +48,9 @@ body {
     overflow: hidden;
     touch-action: none;
     margin: 0 auto;
-    background-color: #000;
 }
 body {
-  background: inherit;
+  background: transparent;
 }
 
 #overlay {
