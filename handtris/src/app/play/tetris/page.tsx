@@ -54,7 +54,13 @@ const Home: React.FC = () => {
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastMiddleTipheight = useRef({ before: 0, now: 0 });
   const lastGestureRef = useRef<string | null>(null);
-
+  
+  useEffect(() => {
+    const roomCode = getRoomCode();
+    if (tetrisGameRef.current) {
+    tetrisGameRef.current.roomCode = roomCode; //NOTE - 게임 끝나고도 roomCode 잘 적용되는지 확인
+    }
+    });
   useEffect(() => {
     const roomCode = getRoomCode();
 
@@ -234,6 +240,7 @@ const Home: React.FC = () => {
           setGameResult,
         );
         setLinesCleared(tetrisGameRef.current.linesCleared);
+        tetrisGameRef.current.roomCode = getRoomCode();
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
       }
@@ -247,24 +254,20 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     let previousGauge = 0;
-    
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
         const currentGauge = tetrisGameRef.current.linesCleared % 5;
-  
         // 이전 gauge 값과 현재 gauge 값을 비교하여 4를 지나쳤다면 setGauge(4) 호출
-        if ((previousGauge < 4 && currentGauge < previousGauge) || (previousGauge < 4 && currentGauge >= 4)) {
+        if (
+          (previousGauge < 4 && currentGauge < previousGauge) ||
+          (previousGauge < 4 && currentGauge >= 4)
+        ) {
           setGauge(4);
         }
-  
         setGauge(currentGauge);
         previousGauge = currentGauge;
-  
-        if (
-          currentGauge === 4 &&
-          tetrisGameRef.current.linesCleared > 0
-        ) {
+        if (currentGauge === 4 && tetrisGameRef.current.linesCleared > 0) {
           setIsGaugeFull(true);
           setTimeout(() => {
             setIsGaugeFull(false);
@@ -273,7 +276,6 @@ const Home: React.FC = () => {
         }
       }
     }, 1000);
-  
     return () => clearInterval(interval);
   }, []);
 
@@ -371,8 +373,7 @@ const Home: React.FC = () => {
           if (handType === "Left") {
             setGesture(gesture);
             setLeftHandLandmarks(landmarks);
-          }
-          else{
+          } else {
             setRightHandLandmarks(landmarks);
           }
 
