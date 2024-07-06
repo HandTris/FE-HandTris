@@ -63,12 +63,14 @@ const Home: React.FC = () => {
     });
   useEffect(() => {
     const roomCode = getRoomCode();
+    const token = getAccessToken();
 
     const connectWebSocket = async () => {
       wsManagerRef.current = new WebSocketManager();
       try {
         await wsManagerRef.current.connect(
           "https://api.checkmatejungle.shop/ws",
+          token,
         );
         setIsConnected(true);
         subscribeToEntering(roomCode);
@@ -220,7 +222,7 @@ const Home: React.FC = () => {
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
       try {
         wsManagerRef.current?.subscribe(
-          `/user/queue/tetris/${roomCode}}`,
+          `/user/queue/tetris/${roomCode}`,
           (message: any) => {
             if (tetrisGameRef.current) {
               tetrisGameRef.current.drawBoard2(message.board);
