@@ -58,30 +58,22 @@ export class WebSocketManager {
       this.stompClient.ws &&
       this.stompClient.ws._transport
     ) {
-      const sessionId = this.getSessionId();
-      if (sessionId) {
-        const message = {
-          board,
-          sender: sessionId,
-          isEnd,
-        };
-        if (this.connected) {
-          this.stompClient.send(
-            `/app/${roomCode}/tetris`,
-            { Authorization: `Bearer ${this.token}` },
-            JSON.stringify(message),
-          );
-          console.log("Message sent: ", message);
-        } else {
-          console.log("WebSocket connection is not established yet.");
-        }
+      const message = { board, isEnd, isAttack:false };
+      if (this.connected) {
+        this.stompClient.send(
+          `/app/${roomCode}/tetris`,
+          { Authorization: `Bearer ${this.token}` },
+          JSON.stringify(message),
+        );
+        console.log("Message sent: ", message);
       } else {
-        console.error("Session ID could not be extracted from URL.");
+        console.log("WebSocket connection is not established yet.");
       }
     } else {
-      console.log("WebSocket connection is not established yet.");
+      console.error("stompClient ws에 연결되지 않음.");
     }
   }
+
 
   sendMessageOnEntering(gameInfo: any, URL: string) {
     if (this.stompClient && this.connected) {
@@ -135,11 +127,5 @@ export class WebSocketManager {
     } else {
       console.log("WebSocket connection is not established yet.");
     }
-  }
-
-  private getSessionId(): string | null {
-    const { url } = this.stompClient.ws._transport;
-    const match = /\/([^\/]+)\/websocket/.exec(url);
-    return match ? match[1] : null;
   }
 }
