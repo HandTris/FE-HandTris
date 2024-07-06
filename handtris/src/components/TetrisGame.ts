@@ -65,6 +65,8 @@ export class TetrisGame {
   linesCleared: number;
   roomCode: string | null;
   isGameStart: boolean;
+  isRowFull: boolean;
+  isAttack: boolean;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -89,6 +91,8 @@ export class TetrisGame {
     this.flashRow = this.flashRowEffect;
     this.clearRow = this.clearFullRow;
     this.linesCleared = 0;
+    this.isRowFull = false;
+    this.isAttack = false;
 
     this.drawBoard();
     this.drop();
@@ -202,6 +206,7 @@ export class TetrisGame {
         this.wsManager.sendMessageOnGaming(
           this.board_forsend,
           this.isEnd,
+          this.isAttack,
           this.roomCode,
         );
       }
@@ -255,6 +260,17 @@ export class TetrisGame {
     this.p.y = originalPosition.y;
     return ghostPosition;
   }
+  addBlockRow = () => {
+    const newRow = new Array(this.COL).fill("grey");
+    const randomIndex = Math.floor(Math.random() * this.COL);
+    newRow[randomIndex] = this.VACANT;
+
+    this.board.push(newRow);
+    this.board.shift();
+    this.drawBoard();
+    this.board_forsend.push(newRow);
+    this.board_forsend.shift();
+  };
 }
 
 class Piece {
@@ -443,6 +459,7 @@ class Piece {
         isRowFull = isRowFull && this.game.board[r][c] !== this.game.VACANT;
       }
       if (isRowFull) {
+        this.game.isRowFull = true;
         for (let y = r; y > 1; y--) {
           for (let c = 0; c < this.game.COL; c++) {
             this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
@@ -457,8 +474,10 @@ class Piece {
     this.game.wsManager.sendMessageOnGaming(
       this.game.board_forsend,
       this.game.isEnd,
+      this.game.isRowFull,
       this.game.roomCode,
     );
+    this.game.isRowFull = false;
   }
 
   collision(x: number, y: number, piece: number[][] = this.activeTetromino) {

@@ -54,13 +54,13 @@ const Home: React.FC = () => {
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastMiddleTipheight = useRef({ before: 0, now: 0 });
   const lastGestureRef = useRef<string | null>(null);
-  
+
   useEffect(() => {
     const roomCode = getRoomCode();
     if (tetrisGameRef.current) {
-    tetrisGameRef.current.roomCode = roomCode; //NOTE - 게임 끝나고도 roomCode 잘 적용되는지 확인
+      tetrisGameRef.current.roomCode = roomCode;
     }
-    });
+  });
   useEffect(() => {
     const roomCode = getRoomCode();
     const token = getAccessToken();
@@ -211,7 +211,6 @@ const Home: React.FC = () => {
 
   const startGame = async () => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
@@ -226,6 +225,9 @@ const Home: React.FC = () => {
                 backgroundMusic.pause();
                 playSoundEffect("/sounds/winner.wav");
                 setGameResult("you WIN!");
+              }
+              if (message.isAttack) {
+                tetrisGameRef.current.addBlockRow();
               }
             }
           },
@@ -279,13 +281,13 @@ const Home: React.FC = () => {
   const onResults = useCallback((results: any) => {
     const canvasCtx = canvasRef.current!.getContext("2d")!;
     const recognizeGesture = (landmarks: any[], handType: string): string => {
-      const wrist = landmarks[0];
       const thumbTip = landmarks[4];
       const handBase = landmarks[17];
-      const indexFingerTip = landmarks[8];
-      const middleFingerTip = landmarks[12];
-      const ringFingerTip = landmarks[16];
-      const pinkyTip = landmarks[20];
+      // const wrist = landmarks[0];
+      // const indexFingerTip = landmarks[8];
+      // const middleFingerTip = landmarks[12];
+      // const ringFingerTip = landmarks[16];
+      // const pinkyTip = landmarks[20];
 
       if (handType === "Right") { // 플레이어 기준 왼손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
@@ -308,8 +310,7 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-      }
-      else { // 플레이어 기준 오른손
+      } else { // 플레이어 기준 오른손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
@@ -433,8 +434,7 @@ const Home: React.FC = () => {
             playTetrisElement.classList.remove("shake");
           }, 200);
         }
-      }
-      else if (gesture == "Pointing Right") {
+      } else if (gesture == "Pointing Right") {
         console.log("Pointing Right");
         if (now - lastMoveTime.current.drop < 1000) {
         } else {
@@ -524,23 +524,16 @@ const Home: React.FC = () => {
         });
     }
   }, []);
-  //   const [count, setCount] = useState(0);
-  //   useEffect(() => {
-  //     if (count === 0) {
-  //       startGame();
-  //       setCount(1);
-  //     }
-  //   }, [count]);
   return (
     <>
       <div className="flex items-center justify-around">
         <div className="flex h-[802px]">
           <div className="flex h-full w-[50px] flex-col-reverse border-2 p-4">
-          <div
+            <div
               className="w-full transition-all duration-700 ease-in-out"
               style={{
                 height: `${(gauge / 4) * 100}%`,
-                background: 'linear-gradient(to top, green, lightgreen)',
+                background: "linear-gradient(to top, green, lightgreen)",
               }}
             ></div>
           </div>
