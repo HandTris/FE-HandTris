@@ -64,6 +64,7 @@ export class TetrisGame {
   clearRow: (row: number) => void;
   linesCleared: number;
   roomCode: string | null;
+  isGameStart: boolean;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -83,6 +84,7 @@ export class TetrisGame {
     this.gameOver = false;
     this.wsManager = wsManager;
     this.setGameResult = setGameResult;
+    this.isGameStart = false;
 
     this.flashRow = this.flashRowEffect;
     this.clearRow = this.clearFullRow;

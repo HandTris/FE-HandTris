@@ -163,21 +163,16 @@ const Home: React.FC = () => {
         (message: any) => {
           console.log("대기 정보 message received: ", message);
           setIsAllReady(message.isReady);
-          if (message.isStart) {
+          if (message.isStart && !isStart) {
             setIsStart(true);
             startGame(); // 클라이언트 시작 로직
+            console.log("게임 시작됨");
           }
         },
       );
       console.log(`Subscribed to /topic/state/${roomCode}`);
     }
   };
-
-  useEffect(() => {
-    if (isOwner != null) {
-      subscribeToState();
-    }
-  }, [isOwner]);
 
   const handleReadyClick = async () => {
     const roomCode = getRoomCode();
