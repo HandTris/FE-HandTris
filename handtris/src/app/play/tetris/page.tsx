@@ -31,7 +31,6 @@ const Home: React.FC = () => {
   const [gesture, setGesture] = useState<string>("디폴트");
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
 
   const [landmarks, setLandmarks] = useState<any>();
@@ -607,11 +606,6 @@ const Home: React.FC = () => {
         <ThreeScene handLandmarks={leftHandLandmarks} />
       </div>
       <div>
-        <div>
-          {imageSrc === "/image/guest_image.png" && (
-            <span className="text-2xl text-green-400">User2</span>
-          )}
-        </div>
         <p className="text-2xl text-green-400">{gesture}</p>
         <button
           type="button"
