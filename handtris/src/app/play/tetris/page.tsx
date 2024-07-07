@@ -54,6 +54,7 @@ const Home: React.FC = () => {
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastMiddleTipheight = useRef({ before: 0, now: 0 });
   const lastGestureRef = useRef<string | null>(null);
+  const [showCountdown, setShowCountdown] = useState(true);
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -91,11 +92,6 @@ const Home: React.FC = () => {
           setIsOwner(prevIsOwner => {
             const newIsOwner =
               prevIsOwner === null ? message.isOwner : prevIsOwner;
-            if (message.isOwner === false && prevIsOwner === true) {
-              setImageSrc("/image/guest_image.png");
-            } else if (message.isOwner === false && prevIsOwner === null) {
-              setImageSrc("/image/guest_image2.png");
-            }
             return newIsOwner;
           });
         }
@@ -166,7 +162,6 @@ const Home: React.FC = () => {
           if (message.isStart && !isStart) {
             setIsStart(true);
             startGame(); // 클라이언트 시작 로직
-            console.log("게임 시작됨");
           }
         },
       );
@@ -211,6 +206,31 @@ const Home: React.FC = () => {
 
   const startGame = async () => {
     const roomCode = getRoomCode();
+    const showCountdown = () => {
+      return new Promise((resolve) => {
+        let count = 3;
+        const modal = document.createElement("div");
+        modal.style.position = "fixed";
+        modal.style.top = "50%";
+        modal.style.left = "50%";
+        modal.style.transform = "translate(-50%, -50%)";
+        modal.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+        modal.style.color = "white";
+        modal.style.fontSize = "48px";
+        modal.style.padding = "20px";
+        modal.style.textAlign = "center";
+        document.body.appendChild(modal);
+        const countdownInterval = setInterval(() => {
+          modal.innerHTML = count > 0 ? count.toString() : "Go!";
+          count--;
+          if (count < 0) {
+            clearInterval(countdownInterval);
+            document.body.removeChild(modal);
+            resolve();
+          }
+        }, 1000);
+      });
+    };
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
@@ -232,6 +252,7 @@ const Home: React.FC = () => {
             }
           },
         );
+        await showCountdown();
         tetrisGameRef.current = new TetrisGame(
           ctx,
           ctx2,
@@ -244,10 +265,8 @@ const Home: React.FC = () => {
         console.error("Failed to connect to WebSocket for game", error);
       }
     }
-
     const handsManager = new HandGestureManager(onResults);
     handsManager.start(videoRef.current!);
-
     backgroundMusic.play();
   };
 
@@ -291,7 +310,7 @@ const Home: React.FC = () => {
 
       if (handType === "Right") {
         // 플레이어 기준 왼손
-        const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
+        const thumbCalculateAngleRight = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
           const radians = Math.atan2(deltaX, deltaY);
@@ -299,7 +318,7 @@ const Home: React.FC = () => {
           return degrees;
         };
 
-        const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
+        const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
         const rightAngleThreshold = 30;
         const leftAngleThreshold = 10;
         if (isHandOpen(landmarks)) {
@@ -311,9 +330,8 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-
       } else { // 플레이어 기준 오른손
-        const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
+        const thumbCalculateAngleLeft = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
           const radians = Math.atan2(deltaX, deltaY);
@@ -321,7 +339,7 @@ const Home: React.FC = () => {
           return degrees;
         };
 
-        const thumbAngle = thumbCalculateAngle(handBase, thumbTip);
+        const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
         const rightAngleThreshold = 10;
         const leftAngleThreshold = 30;
         if (isHandOpen(landmarks)) {
@@ -353,40 +371,34 @@ const Home: React.FC = () => {
     );
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      for (const landmarks of results.multiHandLandmarks) {
-        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-          const landmarks = results.multiHandLandmarks[i];
-          const classification = results.multiHandedness[i];
-          const handType = classification.label;
-
-          const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000";
-          drawLandmarks(canvasCtx, landmarks, {
-            color: landmarkColor,
-            lineWidth: 0.1,
-          });
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-            color: "#00FF00",
-            lineWidth: 1,
-          });
-
-          const gesture = recognizeGesture(landmarks, handType);
-          if (handType === "Left") {
-            setGesture(gesture);
-            setLeftHandLandmarks(landmarks);
-          } else {
-            setRightHandLandmarks(landmarks);
-          }
-
-          if (gestureRef.current) {
-            gestureRef.current.innerText = `Gesture : ${gesture}`;
-          }
-
-          handleGesture(gesture, handType);
-          setLandmarks(results.multiHandLandmarks);
+      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+        const landmarks = results.multiHandLandmarks[i];
+        const classification = results.multiHandedness[i];
+        const handType = classification.label;
+        const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000";
+        drawLandmarks(canvasCtx, landmarks, {
+          color: landmarkColor,
+          lineWidth: 0.1,
+        });
+        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+          color: "#00FF00",
+          lineWidth: 1,
+        });
+        const gesture = recognizeGesture(landmarks, handType);
+        if (handType === "Left") {
+          setGesture(gesture);
+          setLeftHandLandmarks(landmarks);
+        } else {
+          setRightHandLandmarks(landmarks);
         }
-        if (borderRef.current) {
-          borderRef.current.style.boxShadow = "none";
+        if (gestureRef.current) {
+          gestureRef.current.innerText = `Gesture : ${gesture}`;
         }
+        handleGesture(gesture, handType);
+        setLandmarks(results.multiHandLandmarks);
+      }
+      if (borderRef.current) {
+        borderRef.current.style.boxShadow = "none";
       }
     } else {
       if (gestureRef.current) {
