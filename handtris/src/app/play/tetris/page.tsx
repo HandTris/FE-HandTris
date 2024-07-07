@@ -24,6 +24,7 @@ import { motion } from "framer-motion";
 import { containerVariants, itemVariants } from "@/util/animation";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
+
 const Home: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
@@ -59,12 +60,46 @@ const Home: React.FC = () => {
   const lastGestureRef = useRef<string | null>(null);
   const [showCountdown, setShowCountdown] = useState(true);
 
+  const drawNextBlock = (nextBlock: Piece) => {
+    const canvas = nextBlockRef.current;
+
+    if (canvas && nextBlock) {
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        nextBlock.activeTetromino.forEach((row, y) => {
+          row.forEach((value, x) => {
+            if (value && tetrisGameRef.current) {
+              if(nextBlock.color === 'orange' ) {
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.9, y+1, nextBlock.color, false);
+              } else if(nextBlock.color === 'yellow') { 
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.65, nextBlock.color, false);
+              } else if(nextBlock.color === 'red') { 
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.7, nextBlock.color, false);
+              } else if(nextBlock.color === 'cyan') { 
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.1, y+1, nextBlock.color, false);
+              } else if(nextBlock.color === 'green') { 
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.6, nextBlock.color, false);
+              } else if(nextBlock.color === 'purple') { 
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.25, y+1, nextBlock.color, false);
+              }
+               else { // blue 처리
+                tetrisGameRef.current.drawSquareCanvas(context, x+1.2, y+0.5, nextBlock.color, false);
+              }
+            }
+          });
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     const roomCode = getRoomCode();
     if (tetrisGameRef.current) {
       tetrisGameRef.current.roomCode = roomCode;
     }
   });
+
   useEffect(() => {
     const roomCode = getRoomCode();
     const token = getAccessToken();
@@ -114,6 +149,7 @@ const Home: React.FC = () => {
       subscribeToState();
     }
   }, [isOwner]);
+
   // 게임 종료 시 결과 표시 모달 지우고, 게임 시작 관련 상태 초기화
   useEffect(() => {
     if (gameResult) {
@@ -234,6 +270,7 @@ const Home: React.FC = () => {
         }, 1000);
       });
     };
+
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
@@ -525,6 +562,7 @@ const Home: React.FC = () => {
       handleReadyClick();
     }
   };
+
   const gameResultStyle =
     "block absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-20 bg-white bg-opacity-20 text-white text-6xl rounded-3xl text-center backdrop-blur-xl border-xl border-white border-opacity-20";
   const resultText = gameResult;
@@ -544,6 +582,7 @@ const Home: React.FC = () => {
         });
     }
   }, []);
+
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <div className="flex items-center justify-around">
@@ -565,7 +604,7 @@ const Home: React.FC = () => {
                 width="400"
                 height="800"
               />
-              <div ref={borderRef} id="tetris-border" />
+              {/* <div ref={borderRef} id="tetris-border" /> */}
             </div>
             <NameLabel name={"USER1"} />
           </div>
