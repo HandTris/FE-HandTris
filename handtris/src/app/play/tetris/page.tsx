@@ -20,6 +20,8 @@ import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
 import { getRoomCode } from "@/util/getRoomCode";
 import { getAccessToken } from "@/util/getAccessToken";
+import { motion } from "framer-motion";
+import { containerVariants, itemVariants } from "@/util/animation";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 const Home: React.FC = () => {
@@ -311,8 +313,8 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-
-      } else { // 플레이어 기준 오른손
+      } else {
+        // 플레이어 기준 오른손
         const thumbCalculateAngle = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
@@ -428,15 +430,6 @@ const Home: React.FC = () => {
           tetrisGameRef.current?.p.rotate();
           triggerGestureFeedback("Rotate");
         }
-
-        const playTetrisElement = document.getElementById("play-tetris");
-        if (playTetrisElement) {
-          playTetrisElement.classList.add("shake");
-
-          setTimeout(() => {
-            playTetrisElement.classList.remove("shake");
-          }, 200);
-        }
       } else if (gesture == "Pointing Right") {
         console.log("Pointing Right");
         if (now - lastMoveTime.current.drop < 1000) {
@@ -444,6 +437,14 @@ const Home: React.FC = () => {
           lastMoveTime.current.drop = now;
           tetrisGameRef.current?.moveToGhostPosition();
           triggerGestureFeedback("Drop");
+          const playTetrisElement = document.getElementById("tetris-container");
+          if (playTetrisElement) {
+            playTetrisElement.classList.add("shake");
+
+            setTimeout(() => {
+              playTetrisElement.classList.remove("shake");
+            }, 200);
+          }
         }
       }
       lastGestureRef.current = gesture;
@@ -528,7 +529,7 @@ const Home: React.FC = () => {
     }
   }, []);
   return (
-    <>
+    <motion.div variants={containerVariants} initial="hidden" animate="visible">
       <div className="flex items-center justify-around">
         <div className="flex h-[802px]">
           <div className="flex h-full w-[50px] flex-col-reverse border-2 p-4">
@@ -656,7 +657,7 @@ const Home: React.FC = () => {
           <GestureFeedback gestureFeedback={gestureFeedback} />
         )}
       </div>
-    </>
+    </motion.div>
   );
 };
 
