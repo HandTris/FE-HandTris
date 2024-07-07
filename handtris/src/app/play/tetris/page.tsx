@@ -42,11 +42,13 @@ const Home: React.FC = () => {
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
   const [isGaugeFull, setIsGaugeFull] = useState(false);
+  const [nextBlock, setNextBlock] = useState<Piece | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
   const canvasTetris2Ref = useRef<HTMLCanvasElement>(null);
+  const nextBlockRef = useRef<HTMLCanvasElement>(null);
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
   const wsManagerRef = useRef<WebSocketManager | null>(null);
@@ -262,6 +264,7 @@ const Home: React.FC = () => {
         );
         setLinesCleared(tetrisGameRef.current.linesCleared);
         tetrisGameRef.current.roomCode = getRoomCode();
+        setNextBlock(tetrisGameRef.current.getNextBlock());
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
       }
@@ -293,6 +296,8 @@ const Home: React.FC = () => {
             setGauge(0);
           }, 2000);
         }
+        setNextBlock(tetrisGameRef.current.getNextBlock());
+        drawNextBlock(tetrisGameRef.current.getNextBlock());
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -568,6 +573,12 @@ const Home: React.FC = () => {
             <div className="press bg-white text-center text-2xl text-black">
               NEXT
             </div>
+            <canvas
+              ref={nextBlockRef}
+              width="250"
+              height="250"
+              className="w-full h-full"
+            />
           </div>
         </div>
         <div className="flex h-[802px]">
