@@ -22,6 +22,10 @@ export function menuClickSound() {
   soundEffect.play();
 }
 
+export const handleHover = () => {
+  menuHoverSound();
+};
+
 export function playSoundEffect(soundUrl: string) {
   const soundEffect = new Howl({ src: [soundUrl] });
 

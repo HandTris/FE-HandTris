@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { menuClickSound, menuHoverSound } from "@/hook/howl";
+import { handleHover, menuClickSound } from "@/hook/howl";
 
 export default function HomePage() {
   const [selected, setSelected] = useState<string | null>(null);
@@ -16,10 +16,6 @@ export default function HomePage() {
     setTimeout(() => {
       router.push(path);
     }, 1000);
-  };
-
-  const handleHover = () => {
-    menuHoverSound();
   };
 
   return (
