@@ -45,7 +45,9 @@ function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
       <DialogTrigger asChild>
         <Button
           variant="secondary"
-          className="bg-gray-800 text-xl text-white hover:bg-gray-700"
+          className="bg-gray-800 p-6 border-2 border-white text-xl text-white hover:border-green-500 hover:text-green-500 hover:bg-gray-800 hover:scale-105 transition-all duration-200 ease-in-out
+          shadow-lg hover:shadow-md hover:shadow-green-500/50
+          "
         >
           방 만들기
         </Button>
