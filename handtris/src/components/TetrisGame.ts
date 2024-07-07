@@ -67,6 +67,14 @@ export class TetrisGame {
   isGameStart: boolean;
   isRowFull: boolean;
   isAttack: boolean;
+  nextBlock: Piece;
+  drawSquareCanvas: (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    color: string,
+    isGhost: boolean,
+  ) => void;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -82,6 +90,7 @@ export class TetrisGame {
     this.ctx = ctx;
     this.ctx2 = ctx2;
     this.p = this.randomPiece();
+    this.nextBlock = this.randomPiece(); // 다음 블럭 초기화
     this.dropStart = Date.now();
     this.gameOver = false;
     this.wsManager = wsManager;
@@ -95,6 +104,7 @@ export class TetrisGame {
     this.isAttack = false;
 
     this.drawBoard();
+    this.drawSquareCanvas = this.drawSquare;
     this.drop();
     this.roomCode = "";
   }
@@ -195,6 +205,10 @@ export class TetrisGame {
     return new Piece(piece.shape, piece.color, this);
   }
 
+  getNextBlock(): Piece {
+    return this.nextBlock;
+  }
+
   drop() {
     const now = Date.now();
     const delta = now - this.dropStart;
@@ -260,6 +274,7 @@ export class TetrisGame {
     this.p.y = originalPosition.y;
     return ghostPosition;
   }
+
   addBlockRow = () => {
     const newRow = new Array(this.COL).fill("grey");
     const randomIndex = Math.floor(Math.random() * this.COL);
@@ -370,7 +385,8 @@ class Piece {
       this.draw();
     } else {
       this.lock();
-      this.game.p = this.game.randomPiece();
+      this.game.p = this.game.nextBlock;
+      this.game.nextBlock = this.game.randomPiece();
       this.game.p.drawGhost();
     }
   }
