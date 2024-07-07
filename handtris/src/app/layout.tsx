@@ -4,9 +4,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
-import { Toaster } from "@/components/ui/toaster";
 import ClientWrapper from "@/components/ClientWrapper";
 import { MusicProvider } from "@/components/MusicProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -31,7 +31,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no"
         />
       </head>
-      <body className="">
+      <body className="select-none">
         <div className="mx-auto flex h-[100vh] w-full max-w-[1400px] flex-col">
           <ReactQueryProviders>
             <MusicProvider>

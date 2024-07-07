@@ -7,6 +7,8 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import loginValidation from "../yup/loginvalidation";
 import CustomField from "./CustomField";
+import { useToast } from "./ui/use-toast";
+import { showLoginSuccessToast } from "@/util/showLoginSuccessToast";
 
 interface LoginFormValues {
   username: string;
@@ -17,6 +19,7 @@ interface LoginFormValues {
 const LoginForm = () => {
   const initialValues: LoginFormValues = { username: "", password: "" };
   const router = useRouter();
+  const { toast } = useToast();
 
   return (
     <motion.div
@@ -52,12 +55,11 @@ const LoginForm = () => {
                 path: "/",
                 sameSite: "strict",
               });
-
-              alert("Login successful!");
               setSubmitting(false);
             })
             .then(() => {
-              router.push("/lobby");
+              router.push("/main");
+              setTimeout(() => showLoginSuccessToast(toast), 100);
             })
             .catch(error => {
               if (error.response) {
