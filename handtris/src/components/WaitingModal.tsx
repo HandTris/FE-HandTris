@@ -10,7 +10,7 @@ interface WaitingModalProps {
   isLoading: boolean;
 }
 
-const WaitingModal = ({ isOpen, onClose, isLoading }) => {
+const WaitingModal = ({ isOpen, onClose, isLoading }: WaitingModalProps) => {
   const user1 = {
     image: "/image/profile_1.jpeg",
     name: "USER1",
@@ -29,6 +29,7 @@ const WaitingModal = ({ isOpen, onClose, isLoading }) => {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <button onClick={onClose} className="hidden"></button>
       <div
         id="modal"
         className="relative rounded-lg border-4 border-green-600 bg-gradient-to-b from-gray-900 to-black shadow-2xl"

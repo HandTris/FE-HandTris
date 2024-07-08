@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { PacmanLoader } from "react-spinners";
-import { createPortal } from "react-dom";
 
+type UserCardProps = {
+  isLoading: boolean;
+  bgColorFrom: string;
+  bgColorTo: string;
+  borderColor: string;
+  user: {
+    image: string;
+    name: string;
+    winrate: string;
+    stats: string;
+  };
+};
 export const UserCard = ({
   isLoading,
   bgColorFrom,
   bgColorTo,
   borderColor,
   user,
-}) => {
+}: UserCardProps) => {
   return (
     <div
       className={`flex flex-col items-center justify-center gap-6 bg-gradient-to-tl p-8 ${bgColorFrom} ${bgColorTo} w-5/12 rounded-2xl border-4 shadow-lg ${borderColor} transform transition-transform duration-300`}

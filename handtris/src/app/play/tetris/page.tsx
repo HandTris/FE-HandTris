@@ -2,49 +2,43 @@
 
 import { useEffect, useRef, useCallback, useState } from "react";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { HAND_CONNECTIONS } from "@mediapipe/hands";
+import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
-import { TetrisGame } from "@/components/TetrisGame";
+import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
-import {
-  isFingerStraight,
-  isHandBent,
-  isHandGood,
-  isHandOpen,
-} from "@/util/handLogic";
+import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
 import ThreeScene from "@/components/ThreeScene";
-import { NAME_LABEL, NameLabel } from "@/styles";
+import { NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
 import { getRoomCode } from "@/util/getRoomCode";
-import { getAccessToken } from "@/util/getAccessToken";
 import { motion } from "framer-motion";
-import { containerVariants, itemVariants } from "@/util/animation";
+import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
+import { HandLandmarkResults, TetrisBoard } from "@/types";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
 const Home: React.FC = () => {
-  const [isConnected, setIsConnected] = useState(false);
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
   const [gesture, setGesture] = useState<string>("디폴트");
-  const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
   const { toast } = useToast();
-  const [landmarks, setLandmarks] = useState<any>();
-  const [leftHandLandmarks, setLeftHandLandmarks] = useState<any>();
-  const [rightHandLandmarks, setRightHandLandmarks] = useState<any>();
+  const [leftHandLandmarks, setLeftHandLandmarks] = useState<
+    LandmarkList | undefined
+  >();
+  const [rightHandLandmarks, setRightHandLandmarks] = useState<
+    LandmarkList | undefined
+  >();
 
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
-  const [isGaugeFull, setIsGaugeFull] = useState(false);
-  const [nextBlock, setNextBlock] = useState<Piece | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,35 +51,75 @@ const Home: React.FC = () => {
   const tetrisGameRef = useRef<TetrisGame | null>(null);
   const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
-  const lastMiddleTipheight = useRef({ before: 0, now: 0 });
   const lastGestureRef = useRef<string | null>(null);
-  const [showCountdown, setShowCountdown] = useState(true);
 
   const drawNextBlock = (nextBlock: Piece) => {
     const canvas = nextBlockRef.current;
 
     if (canvas && nextBlock) {
-      const context = canvas.getContext('2d');
+      const context = canvas.getContext("2d");
       if (context) {
         context.clearRect(0, 0, canvas.width, canvas.height);
         nextBlock.activeTetromino.forEach((row, y) => {
           row.forEach((value, x) => {
             if (value && tetrisGameRef.current) {
-              if(nextBlock.color === 'orange' ) {
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.9, y+1, nextBlock.color, false);
-              } else if(nextBlock.color === 'yellow') { 
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.65, nextBlock.color, false);
-              } else if(nextBlock.color === 'red') { 
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.7, nextBlock.color, false);
-              } else if(nextBlock.color === 'cyan') { 
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.1, y+1, nextBlock.color, false);
-              } else if(nextBlock.color === 'green') { 
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.7, y+1.6, nextBlock.color, false);
-              } else if(nextBlock.color === 'purple') { 
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.25, y+1, nextBlock.color, false);
-              }
-               else { // blue 처리
-                tetrisGameRef.current.drawSquareCanvas(context, x+1.2, y+0.5, nextBlock.color, false);
+              if (nextBlock.color === "orange") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.9,
+                  y + 1,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "yellow") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.7,
+                  y + 1.65,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "red") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.7,
+                  y + 1.7,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "cyan") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.1,
+                  y + 1,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "green") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.7,
+                  y + 1.6,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "purple") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.25,
+                  y + 1,
+                  nextBlock.color,
+                  false,
+                );
+              } else {
+                // blue 처리
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.2,
+                  y + 0.5,
+                  nextBlock.color,
+                  false,
+                );
               }
             }
           });
@@ -102,16 +136,13 @@ const Home: React.FC = () => {
   });
   useEffect(() => {
     const roomCode = getRoomCode();
-    const token = getAccessToken();
 
     const connectWebSocket = async () => {
       wsManagerRef.current = new WebSocketManager();
       try {
         await wsManagerRef.current.connect(
           "https://api.checkmatejungle.shop/ws",
-          token,
         );
-        setIsConnected(true);
         subscribeToEntering(roomCode);
       } catch (error) {
         console.error("Failed to connect to WebSocket", error);
@@ -157,16 +188,17 @@ const Home: React.FC = () => {
     };
   }, [toast]);
 
-  const subscribeToEntering = (roomCode: string) => {
+  const subscribeToEntering = (roomCode: string | null) => {
     wsManagerRef.current?.subscribe(
       `/topic/owner/${roomCode}`,
-      (message: any) => {
-        console.log("대기방에서 받는 메시지: ", message);
-        if (message.isOwner !== undefined) {
+      (message: unknown) => {
+        const parsedMessage = message as { isOwner?: boolean };
+        console.log("대기방에서 받는 메시지: ", parsedMessage);
+        if (parsedMessage.isOwner !== undefined) {
           setIsOwner(prevIsOwner => {
-            const newIsOwner =
-              prevIsOwner === null ? message.isOwner : prevIsOwner;
-            return newIsOwner;
+            return (
+              prevIsOwner === null ? parsedMessage.isOwner : prevIsOwner
+            ) as boolean | null;
           });
         }
       },
@@ -179,7 +211,6 @@ const Home: React.FC = () => {
       );
     }
   };
-
   useEffect(() => {
     if (isOwner != null) {
       subscribeToState();
@@ -231,7 +262,7 @@ const Home: React.FC = () => {
     if (wsManagerRef.current && isOwner != null) {
       wsManagerRef.current.subscribe(
         `/topic/state/${roomCode}`,
-        (message: any) => {
+        (message: { isReady: boolean; isStart: boolean }) => {
           console.log("대기 정보 message received: ", message);
           setIsAllReady(message.isReady);
           if (message.isStart && !isStart) {
@@ -282,7 +313,7 @@ const Home: React.FC = () => {
   const startGame = async () => {
     const roomCode = getRoomCode();
     const showCountdown = () => {
-      return new Promise(resolve => {
+      return new Promise<void>(resolve => {
         let count = 3;
         const modal = document.createElement("div");
         modal.style.position = "fixed";
@@ -313,7 +344,11 @@ const Home: React.FC = () => {
       try {
         wsManagerRef.current?.subscribe(
           `/user/queue/tetris/${roomCode}`,
-          (message: any) => {
+          (message: {
+            board: TetrisBoard;
+            isEnd: boolean;
+            isAttack: boolean;
+          }) => {
             if (tetrisGameRef.current) {
               tetrisGameRef.current.drawBoard2(message.board);
               if (message.isEnd) {
@@ -337,7 +372,6 @@ const Home: React.FC = () => {
         );
         setLinesCleared(tetrisGameRef.current.linesCleared);
         tetrisGameRef.current.roomCode = getRoomCode();
-        setNextBlock(tetrisGameRef.current.getNextBlock());
       } catch (error) {
         console.error("Failed to connect to WebSocket for game", error);
       }
@@ -363,33 +397,31 @@ const Home: React.FC = () => {
         setGauge(currentGauge);
         previousGauge = currentGauge;
         if (currentGauge === 4 && tetrisGameRef.current.linesCleared > 0) {
-          setIsGaugeFull(true);
           setTimeout(() => {
-            setIsGaugeFull(false);
             setGauge(0);
           }, 2000);
         }
-        setNextBlock(tetrisGameRef.current.getNextBlock());
         drawNextBlock(tetrisGameRef.current.getNextBlock());
       }
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
-  const onResults = useCallback((results: any) => {
+  const onResults = useCallback((results: HandLandmarkResults) => {
     const canvasCtx = canvasRef.current!.getContext("2d")!;
-    const recognizeGesture = (landmarks: any[], handType: string): string => {
+    const recognizeGesture = (
+      landmarks: LandmarkList,
+      handType: string,
+    ): string => {
       const thumbTip = landmarks[4];
       const handBase = landmarks[17];
-      // const wrist = landmarks[0];
-      // const indexFingerTip = landmarks[8];
-      // const middleFingerTip = landmarks[12];
-      // const ringFingerTip = landmarks[16];
-      // const pinkyTip = landmarks[20];
 
       if (handType === "Right") {
         // 플레이어 기준 왼손
-        const thumbCalculateAngleRight = (thumbTip: any, thumbBase: any) => {
+        const thumbCalculateAngleRight = (
+          thumbTip: LandmarkList[number],
+          thumbBase: LandmarkList[number],
+        ) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
           const radians = Math.atan2(deltaX, deltaY);
@@ -411,7 +443,10 @@ const Home: React.FC = () => {
         }
       } else {
         // 플레이어 기준 오른손
-        const thumbCalculateAngleLeft = (thumbTip: any, thumbBase: any) => {
+        const thumbCalculateAngleLeft = (
+          thumbTip: LandmarkList[number],
+          thumbBase: LandmarkList[number],
+        ) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
           const radians = Math.atan2(deltaX, deltaY);
@@ -452,7 +487,7 @@ const Home: React.FC = () => {
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-        const landmarks = results.multiHandLandmarks[i];
+        const landmarks = results.multiHandLandmarks[i] as LandmarkList;
         const classification = results.multiHandedness[i];
         const handType = classification.label;
         const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000";
@@ -475,7 +510,6 @@ const Home: React.FC = () => {
           gestureRef.current.innerText = `Gesture : ${gesture}`;
         }
         handleGesture(gesture, handType);
-        setLandmarks(results.multiHandLandmarks);
       }
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "none";
@@ -548,13 +582,11 @@ const Home: React.FC = () => {
       }
       feedbackTimeoutRef.current = window.setTimeout(() => {
         setGestureFeedback(null);
-        setIsAnimating(false);
         setLastGesture(null);
       }, 1000);
       return;
     }
 
-    setIsAnimating(true);
     setGestureFeedback(feedback);
     setLastGesture(feedback);
 
@@ -564,7 +596,6 @@ const Home: React.FC = () => {
 
     feedbackTimeoutRef.current = window.setTimeout(() => {
       setGestureFeedback(null);
-      setIsAnimating(false);
       setLastGesture(null);
     }, 1000);
   };
