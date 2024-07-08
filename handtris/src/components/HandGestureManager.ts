@@ -1,15 +1,13 @@
 // src/components/HandGestureManager.ts
 
 import { Camera } from "@mediapipe/camera_utils";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { HAND_CONNECTIONS, Hands } from "@mediapipe/hands";
+import { Hands, Results } from "@mediapipe/hands";
 
 export class HandGestureManager {
-  hands: any;
+  hands: Hands;
+  onResultsCallback: (results: Results) => void;
 
-  onResultsCallback: (results: any) => void;
-
-  constructor(onResults: (results: any) => void) {
+  constructor(onResults: (results: Results) => void) {
     this.onResultsCallback = onResults;
     this.hands = new Hands({
       locateFile: (file: string) =>

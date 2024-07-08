@@ -1,8 +1,11 @@
 import * as THREE from "three";
 import { useRef, useEffect, useState } from "react";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
-
-const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
+import { Landmark } from "@/types";
+interface ThreeSceneProps {
+  handLandmarks: Landmark[] | undefined;
+}
+const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -34,7 +37,7 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
     scene.add(directionalLight);
 
     // Axes Helper
-    const axesHelper = new THREE.AxesHelper(500);
+    // const axesHelper = new THREE.AxesHelper(500);
     // scene.add(axesHelper);
 
     // Load joystick model
@@ -86,7 +89,7 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
         console.log("Joystick model loaded:", obj);
 
         // Adjust camera to fit the model
-        const box = new THREE.Box3().setFromObject(obj);
+        // const box = new THREE.Box3().setFromObject(obj);
 
         const radius = 30; // Distance from the center
         const angleInRadians = THREE.MathUtils.degToRad(30); // Convert 30 degrees to radians
@@ -125,7 +128,7 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
   }, []);
 
   useEffect(() => {
-    if (handLandmarks?.length > 0 && joystickRef.current) {
+    if (handLandmarks && handLandmarks.length > 0 && joystickRef.current) {
       const landmark0 = handLandmarks[0];
       const landmark17 = handLandmarks[17];
       const joystick = joystickRef.current;
@@ -143,8 +146,8 @@ const ThreeScene = ({ handLandmarks }: { handLandmarks: any }) => {
 
       // Adjust camera only if it hasn't been adjusted yet
       if (!cameraAdjusted && cameraRef.current) {
-        const box = new THREE.Box3().setFromObject(joystick);
-        const boxCenter = box.getCenter(new THREE.Vector3());
+        // const box = new THREE.Box3().setFromObject(joystick);
+        // const boxCenter = box.getCenter(new THREE.Vector3());
 
         const radius = 30; // Distance from the center
         const angleInRadians = THREE.MathUtils.degToRad(30); // Convert 30 degrees to radians

@@ -288,7 +288,7 @@ export class TetrisGame {
   };
 }
 
-class Piece {
+export class Piece {
   tetromino: number[][][];
   color: string;
   tetrominoN: number;

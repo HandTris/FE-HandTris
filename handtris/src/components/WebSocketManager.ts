@@ -1,17 +1,21 @@
+import { TetrisBoard } from "@/types";
 import { getAccessToken } from "@/util/getAccessToken";
 import SockJS from "sockjs-client";
-import Stomp from "stompjs";
+import Stomp, { Client, Frame, Message } from "stompjs";
+
+interface WaitingInfo {
+  isAllReady: boolean;
+  isStart: boolean;
+}
 
 export class WebSocketManager {
-  stompClient: any;
-
+  stompClient: Client | null;
   connected: boolean;
-
-  onMessage: (message: any) => void;
-
+  onMessage: (message: unknown) => void;
   token: string | null;
 
   constructor() {
+    this.stompClient = null;
     this.connected = false;
     this.onMessage = () => {};
     this.token = null;
@@ -22,14 +26,21 @@ export class WebSocketManager {
     return new Promise((resolve, reject) => {
       const socket = new SockJS(url);
       this.stompClient = Stomp.over(socket);
+
+      // Stomp 클라이언트의 connect 메서드를 직접 호출하는 대신
+      // 커스텀 헤더를 설정할 수 있는 방법을 사용합니다.
+      const headers: { [key: string]: string } = {
+        Authorization: `Bearer ${this.token}`,
+      };
+
       this.stompClient.connect(
-        { Authorization: `Bearer ${this.token}` },
-        (frame: any) => {
+        headers,
+        (frame?: Frame) => {
           console.log(`Connected: ${frame}`);
           this.connected = true;
           resolve();
         },
-        (error: any) => {
+        (error: string | Frame) => {
           console.error(`Connection error: ${error}`);
           alert(`Failed to connect to WebSocket: ${error}`);
           reject(error);
@@ -38,26 +49,31 @@ export class WebSocketManager {
     });
   }
 
-  subscribe(subscribeUrl: string, onMessage: (message: any) => void) {
-    if (this.connected) {
+  subscribe<T>(subscribeUrl: string, onMessage: (message: T) => void) {
+    if (this.connected && this.stompClient) {
       const headers = {
         Authorization: `Bearer ${this.token}`,
       };
-      this.stompClient.subscribe(subscribeUrl, (message: any) => {
-        console.log("Message received: ", message);
-        onMessage(JSON.parse(message.body));
-      }, headers);
+      this.stompClient.subscribe(
+        subscribeUrl,
+        (message: Message) => {
+          console.log("Message received: ", message);
+          onMessage(JSON.parse(message.body) as T);
+        },
+        headers,
+      );
     } else {
       console.log("WebSocket connection is not established yet.");
     }
   }
 
-  sendMessageOnGaming(board: any, isEnd: boolean, isAttack:boolean, roomCode: string | null) {
-    if (
-      this.stompClient &&
-      this.stompClient.ws &&
-      this.stompClient.ws._transport
-    ) {
+  sendMessageOnGaming(
+    board: TetrisBoard,
+    isEnd: boolean,
+    isAttack: boolean,
+    roomCode: string | null,
+  ) {
+    if (this.stompClient && this.stompClient.connected) {
       const message = { board, isEnd, isAttack };
       if (this.connected) {
         this.stompClient.send(
@@ -74,8 +90,7 @@ export class WebSocketManager {
     }
   }
 
-
-  sendMessageOnEntering(gameInfo: any, URL: string) {
+  sendMessageOnEntering(gameInfo: unknown, URL: string) {
     if (this.stompClient && this.connected) {
       const message = {};
       this.stompClient.send(
@@ -89,10 +104,7 @@ export class WebSocketManager {
     }
   }
 
-  sendMessageOnWaiting(
-    waitingInfo: { isAllReady: boolean; isStart: boolean },
-    URL: string,
-  ) {
+  sendMessageOnWaiting(waitingInfo: WaitingInfo, URL: string) {
     if (this.stompClient && this.connected) {
       const message = {
         isReady: waitingInfo.isAllReady,
@@ -109,10 +121,7 @@ export class WebSocketManager {
     }
   }
 
-  sendMessageForStart(
-    waitingInfo: { isAllReady: boolean; isStart: boolean },
-    URL: string,
-  ) {
+  sendMessageForStart(waitingInfo: WaitingInfo, URL: string) {
     if (this.stompClient && this.connected) {
       const message = {
         isReady: waitingInfo.isAllReady,

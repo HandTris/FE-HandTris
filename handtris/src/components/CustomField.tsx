@@ -3,7 +3,7 @@ import { useField, ErrorMessage } from "formik";
 
 interface CustomFieldProps {
   name: string;
-  [x: string]: any;
+  [x: string]: string | number | boolean;
 }
 
 const CustomField: React.FC<CustomFieldProps> = ({ ...props }) => {

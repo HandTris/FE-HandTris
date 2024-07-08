@@ -23,6 +23,7 @@ type DialogDemoProps = {
 function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
   const [title, setTitle] = useState("");
   const router = useRouter();
+  console.log(onSuccess);
 
   const createRoomMutation = useMutation({
     mutationFn: createRoom,

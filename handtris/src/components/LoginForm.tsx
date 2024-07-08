@@ -34,11 +34,7 @@ const LoginForm = () => {
         validationSchema={loginValidation}
         onSubmit={(
           values,
-          {
-            setSubmitting,
-            setErrors,
-            setFieldError,
-          }: FormikHelpers<LoginFormValues>,
+          { setSubmitting, setFieldError }: FormikHelpers<LoginFormValues>,
         ) => {
           axios
             .post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signin`, values)

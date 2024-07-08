@@ -1,5 +1,7 @@
+import { Landmark } from "@/types";
+
 // 마디 사이의 각도 확인 함수 ----------------------------------------------------------------------
-export function calculateAngle(a: any, b: any, c: any): number {
+export function calculateAngle(a: Landmark, b: Landmark, c: Landmark): number {
   const ab = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z };
   const bc = { x: c.x - b.x, y: c.y - b.y, z: c.z - b.z };
 
@@ -13,7 +15,7 @@ export function calculateAngle(a: any, b: any, c: any): number {
 }
 // 손가락 펴짐 확인 함수 ----------------------------------------------------------------------
 export function isFingerStraight(
-  landmarks: any[],
+  landmarks: Landmark[],
   fingerIndex: number,
 ): boolean {
   const baseIndex = fingerIndex * 4 + 1; // 손가락 시작 인덱스 계산
@@ -39,7 +41,10 @@ export function isFingerStraight(
   return angle1 < firstAngle && angle2 < secondAngle && angle3 < thirdAngle;
 }
 // 손가락 굽힘 확인 함수 ----------------------------------------------------------------------
-export function isFingerBent(landmarks: any[], fingerIndex: number): boolean {
+export function isFingerBent(
+  landmarks: Landmark[],
+  fingerIndex: number,
+): boolean {
   const baseIndex = fingerIndex * 4 + 1; // 손가락 시작 인덱스 계산
   const wrist = landmarks[0];
   const tip = landmarks[baseIndex + 3];
@@ -78,7 +83,7 @@ export function isFingerBent(landmarks: any[], fingerIndex: number): boolean {
 }
 
 // 엄지와 다른 손가락 사이의 거리 확인 함수 ----------------------------------------------------------------------
-export function isThumbAwayFromOtherFingers(landmarks: any[]): boolean {
+export function isThumbAwayFromOtherFingers(landmarks: Landmark[]): boolean {
   const thumbTip = landmarks[4];
   const tapDistance = 0.075;
 
@@ -98,9 +103,9 @@ export function isThumbAwayFromOtherFingers(landmarks: any[]): boolean {
 
 // 점과 직선 사이의 수직 거리를 계산하는 함수 (별도로 구현해야 함)
 function pointToLinePerpendicularDistance(
-  point: any,
-  lineStart: any,
-  lineEnd: any,
+  point: Landmark,
+  lineStart: Landmark,
+  lineEnd: Landmark,
 ) {
   const dx = lineEnd.x - lineStart.x;
   const dy = lineEnd.y - lineStart.y;
@@ -117,7 +122,7 @@ function pointToLinePerpendicularDistance(
 }
 
 // 엄지 손가락 펴짐 확인 함수 (5개 랜드마크 사용) ----------------------------------------------------------------------
-export function thumbFingerStraight(landmarks: any[]): boolean {
+export function thumbFingerStraight(landmarks: Landmark[]): boolean {
   const wrist = landmarks[0];
   const cmc = landmarks[1];
   const mcp = landmarks[2];
@@ -191,7 +196,7 @@ export function thumbFingerStraight(landmarks: any[]): boolean {
 }
 
 // 엄지 손가락 굽힘 확인 함수 ----------------------------------------------------------------------
-export function thumbFingerBent(landmarks: any[]): boolean {
+export function thumbFingerBent(landmarks: Landmark[]): boolean {
   const baseIndex = 1; // 손가락 시작 인덱스 계산
   const wrist = landmarks[0];
   const tip = landmarks[baseIndex + 3];
@@ -221,7 +226,7 @@ export function thumbFingerBent(landmarks: any[]): boolean {
 }
 
 // 보자기 ----------------------------------------------------------------------
-export function isHandOpen(landmarks: any[]): boolean {
+export function isHandOpen(landmarks: Landmark[]): boolean {
   const thumbIsStraight = thumbFingerStraight(landmarks); // 엄지
   const indexIsStraight = isFingerStraight(landmarks, 1); // 검지
   const middleIsStraight = isFingerStraight(landmarks, 2); // 중지
@@ -236,7 +241,7 @@ export function isHandOpen(landmarks: any[]): boolean {
   );
 }
 // 주먹 ----------------------------------------------------------------------
-export function isHandBent(landmarks: any[]): boolean {
+export function isHandBent(landmarks: Landmark[]): boolean {
   const thumbIsBent = !thumbFingerStraight(landmarks); // 엄지
   const indexIsBent = isFingerBent(landmarks, 1); // 검지
   const middleIsBent = isFingerBent(landmarks, 2); // 중지
@@ -248,7 +253,7 @@ export function isHandBent(landmarks: any[]): boolean {
   );
 }
 // 따봉 ----------------------------------------------------------------------
-export function isHandGood(landmarks: any[]): boolean {
+export function isHandGood(landmarks: Landmark[]): boolean {
   const thumbIsBent = thumbFingerStraight(landmarks); // 엄지
   const indexIsBent = isFingerBent(landmarks, 1); // 검지
   const middleIsBent = isFingerBent(landmarks, 2); // 중지

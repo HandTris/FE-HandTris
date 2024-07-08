@@ -8,7 +8,7 @@ export function usePreventBackNavigation() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const preventBackNavigation = (event: PopStateEvent) => {
+    const preventBackNavigation = () => {
       window.history.pushState(null, "", window.location.href);
     };
 
