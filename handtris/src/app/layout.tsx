@@ -4,7 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
-// import ClientWrapper from "@/components/ClientWrapper";
+import ClientWrapper from "@/components/ClientWrapper";
 import { MusicProvider } from "@/components/MusicProvider";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -35,14 +35,12 @@ export default function RootLayout({
         <div className="mx-auto flex h-[100vh] w-full max-w-[1400px] flex-col">
           <ReactQueryProviders>
             <MusicProvider>
-              {/* <ClientWrapper> */}
               <Header />
               <main className="grow flex flex-col flex-1 overflow-hidden">
-                {children}
+                <ClientWrapper>{children}</ClientWrapper>
                 <Toaster />
               </main>
               <Footer />
-              {/* </ClientWrapper> */}
             </MusicProvider>
           </ReactQueryProviders>
         </div>
