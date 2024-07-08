@@ -4,9 +4,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
-import ClientWrapper from "@/components/ClientWrapper";
 import { MusicProvider } from "@/components/MusicProvider";
 import { Toaster } from "@/components/ui/toaster";
+import { BackNavigationBlocker } from "@/components/BackNavigationBlocker";
 
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
@@ -37,7 +37,8 @@ export default function RootLayout({
             <MusicProvider>
               <Header />
               <main className="grow flex flex-col flex-1 overflow-hidden">
-                <ClientWrapper>{children}</ClientWrapper>
+                <BackNavigationBlocker />
+                {children}
                 <Toaster />
               </main>
               <Footer />
