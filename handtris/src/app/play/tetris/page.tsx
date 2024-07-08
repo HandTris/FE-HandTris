@@ -315,24 +315,54 @@ const Home: React.FC = () => {
     const showCountdown = () => {
       return new Promise<void>(resolve => {
         let count = 3;
-        const modal = document.createElement("div");
-        modal.style.position = "fixed";
-        modal.style.top = "50%";
-        modal.style.left = "50%";
-        modal.style.transform = "translate(-50%, -50%)";
-        modal.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-        modal.style.color = "white";
-        modal.style.fontSize = "48px";
-        modal.style.padding = "20px";
-        modal.style.textAlign = "center";
-        document.body.appendChild(modal);
-        const countdownInterval = setInterval(() => {
+        const modals: HTMLElement[] = [];
+
+        const createModal = (): HTMLElement => {
+          const modal = document.createElement("div");
+          modal.classList.add(
+            "absolute",
+            "top-1/2",
+            "left-1/2",
+            "transform",
+            "-translate-x-1/2",
+            "-translate-y-1/2",
+            "text-white",
+            "text-center",
+            "transition-all",
+            "duration-700",
+          );
+          return modal;
+        };
+
+        for (let i = 0; i < 4; i++) {
+          const modal = createModal();
+          modals.push(modal);
+          document.querySelector(".modal-container")?.appendChild(modal);
+        }
+
+        const updateCountdown = () => {
+          const modal = modals[3 - count];
           modal.innerHTML = count > 0 ? count.toString() : "Go!";
+          modal.style.opacity = "1";
+          modal.style.fontSize = "0rem";
+
+          setTimeout(() => {
+            modal.style.opacity = "0";
+            modal.style.fontSize = "40rem";
+          }, 100);
+        };
+
+        const countdownInterval = setInterval(() => {
+          updateCountdown();
           count--;
           if (count < 0) {
             clearInterval(countdownInterval);
-            document.body.removeChild(modal);
-            resolve();
+            setTimeout(() => {
+              modals.forEach(modal =>
+                document.querySelector(".modal-container")?.removeChild(modal),
+              );
+              resolve();
+            }, 1000);
           }
         }, 1000);
       });
@@ -380,6 +410,32 @@ const Home: React.FC = () => {
     handsManager.start(videoRef.current!);
     backgroundMusic.play();
   };
+
+  useEffect(() => {
+    let previousGauge = 0;
+    const interval = setInterval(() => {
+      if (tetrisGameRef.current) {
+        setLinesCleared(tetrisGameRef.current.linesCleared);
+        const currentGauge = tetrisGameRef.current.linesCleared % 5;
+        // 이전 gauge 값과 현재 gauge 값을 비교하여 4를 지나쳤다면 setGauge(4) 호출
+        if (
+          (previousGauge < 4 && currentGauge < previousGauge) ||
+          (previousGauge < 4 && currentGauge >= 4)
+        ) {
+          setGauge(4);
+        }
+        setGauge(currentGauge);
+        previousGauge = currentGauge;
+        if (currentGauge === 4 && tetrisGameRef.current.linesCleared > 0) {
+          setTimeout(() => {
+            setGauge(0);
+          }, 2000);
+        }
+        drawNextBlock(tetrisGameRef.current.getNextBlock());
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let previousGauge = 0;
@@ -653,8 +709,11 @@ const Home: React.FC = () => {
 
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible">
-      <div className="flex items-center justify-around">
-        <div className="flex h-[802px]">
+      <div className="flex items-center justify-around relative">
+        <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
+          {/* 모달 요소들이 여기에 추가됨 */}
+        </div>
+        <div className="relative flex h-[802px]">
           <div className="flex h-full w-[50px] flex-col-reverse border-2 p-4">
             <div
               className="w-full transition-all duration-700 ease-in-out"
@@ -672,7 +731,6 @@ const Home: React.FC = () => {
                 width="400"
                 height="800"
               />
-              {/* <div ref={borderRef} id="tetris-border" /> */}
             </div>
             <NameLabel name={"USER1"} />
           </div>
