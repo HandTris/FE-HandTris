@@ -22,6 +22,7 @@ import { getRoomCode } from "@/util/getRoomCode";
 import { getAccessToken } from "@/util/getAccessToken";
 import { motion } from "framer-motion";
 import { containerVariants, itemVariants } from "@/util/animation";
+import { useToast } from "@/components/ui/use-toast";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -35,7 +36,7 @@ const Home: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
   const [gameResult, setGameResult] = useState<string | null>(null);
-
+  const { toast } = useToast();
   const [landmarks, setLandmarks] = useState<any>();
   const [leftHandLandmarks, setLeftHandLandmarks] = useState<any>();
   const [rightHandLandmarks, setRightHandLandmarks] = useState<any>();
@@ -99,7 +100,6 @@ const Home: React.FC = () => {
       tetrisGameRef.current.roomCode = roomCode;
     }
   });
-
   useEffect(() => {
     const roomCode = getRoomCode();
     const token = getAccessToken();
@@ -120,6 +120,42 @@ const Home: React.FC = () => {
 
     connectWebSocket();
   }, []);
+
+  // TODO
+  useEffect(() => {
+    const preventRefresh = (e: KeyboardEvent | BeforeUnloadEvent) => {
+      if (e.type === "keydown") {
+        const keyEvent = e as KeyboardEvent;
+        if (
+          keyEvent.key === "F5" ||
+          (keyEvent.ctrlKey && keyEvent.key === "r")
+        ) {
+          keyEvent.preventDefault();
+          showToast();
+        }
+      } else if (e.type === "beforeunload") {
+        e.preventDefault();
+        e.returnValue = "";
+        showToast();
+      }
+    };
+
+    const showToast = () => {
+      toast({
+        title: "새로고침 불가",
+        description: "게임 중 새로고침은 허용되지 않습니다.",
+        duration: 3000,
+      });
+    };
+
+    window.addEventListener("keydown", preventRefresh as EventListener);
+    window.addEventListener("beforeunload", preventRefresh);
+
+    return () => {
+      window.removeEventListener("keydown", preventRefresh as EventListener);
+      window.removeEventListener("beforeunload", preventRefresh);
+    };
+  }, [toast]);
 
   const subscribeToEntering = (roomCode: string) => {
     wsManagerRef.current?.subscribe(
@@ -246,7 +282,7 @@ const Home: React.FC = () => {
   const startGame = async () => {
     const roomCode = getRoomCode();
     const showCountdown = () => {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         let count = 3;
         const modal = document.createElement("div");
         modal.style.position = "fixed";
@@ -373,7 +409,8 @@ const Home: React.FC = () => {
         if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
           return "Pointing Right";
         }
-      } else { // 플레이어 기준 오른손
+      } else {
+        // 플레이어 기준 오른손
         const thumbCalculateAngleLeft = (thumbTip: any, thumbBase: any) => {
           const deltaY = thumbTip.y - thumbBase.y;
           const deltaX = thumbTip.x - thumbBase.x;
