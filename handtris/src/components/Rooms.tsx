@@ -32,6 +32,7 @@ function Rooms() {
     mutationFn: enterRoom,
     onSuccess: data => {
       sessionStorage.setItem("roomCode", data.data.roomCode);
+      sessionStorage.setItem("roomName", data.data.title);
       setIsLeaving(true);
       setTimeout(() => {
         router.push("/play/tetris");
