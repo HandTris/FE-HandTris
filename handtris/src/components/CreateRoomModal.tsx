@@ -21,7 +21,15 @@ type DialogDemoProps = {
 };
 
 function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
-  const [title, setTitle] = useState("");
+  const titles = [
+    "이 구역 테트리스 짱은 나",
+    "나랑 테트리스 한 판?",
+    "핸드트리스 마스터만 들어와",
+  ];
+  const getRandomTitle = () =>
+    titles[Math.floor(Math.random() * titles.length)];
+
+  const [title, setTitle] = useState(getRandomTitle());
   const router = useRouter();
   console.log(onSuccess);
 
