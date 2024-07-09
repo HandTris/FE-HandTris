@@ -5,5 +5,4 @@ export type Room = {
   participantCount: number;
   participantLimit: number;
   roomCode: string;
-  gameStatus: string;
 };

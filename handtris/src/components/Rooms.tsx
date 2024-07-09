@@ -94,9 +94,8 @@ function Rooms() {
                 <Button
                   className="bg-green-500 text-white hover:bg-green-600 text-lg py-2 px-4 w-full h-full"
                   onClick={() => enterRoomMutation.mutate(room.roomCode)}
-                  disabled={room.gameStatus !== "NON_PLAYING"}
                 >
-                  {room.gameStatus === "NON_PLAYING" ? "JOIN" : "IN GAME"}
+                  {"JOIN"}
                 </Button>
               </div>
             </div>
