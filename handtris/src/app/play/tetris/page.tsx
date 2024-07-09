@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
+import WaitingModal from "@/components/WaitingModal";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -722,6 +723,7 @@ const Home: React.FC = () => {
       className="flex flex-col relative h-full pt-12"
     >
       <div className="flex items-center justify-around relative">
+        <WaitingModal isOpen={true} isLoading={false} />
         {/* <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
           </div> */}
         <div className="relative flex">
