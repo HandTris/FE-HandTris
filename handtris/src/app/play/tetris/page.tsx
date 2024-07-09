@@ -8,7 +8,6 @@ import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import ThreeScene from "@/components/ThreeScene";
 import { NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
@@ -18,6 +17,8 @@ import { motion } from "framer-motion";
 import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
+import LeftJoystickModel from "@/components/LeftJoystickModel";
+import RightJoystickModel from "@/components/RightJoystickModel";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -779,8 +780,8 @@ const Home: React.FC = () => {
         </div>
       </div>
       <div className="fixed left-0 top-[50%] columns-2">
-        <ThreeScene handLandmarks={rightHandLandmarks} />
-        <ThreeScene handLandmarks={leftHandLandmarks} />
+        <LeftJoystickModel handLandmarks={rightHandLandmarks} />
+        <RightJoystickModel handLandmarks={leftHandLandmarks} />
       </div>
       <div>
         <p className="text-2xl text-green-400">{gesture}</p>
