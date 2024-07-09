@@ -17,7 +17,7 @@ export class HandGestureManager {
     this.hands.setOptions({
       maxNumHands: 2,
       modelComplexity: 1,
-      minDetectionConfidence: 0.9,
+      minDetectionConfidence: 0.7,
       minTrackingConfidence: 0.7,
     });
 

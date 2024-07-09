@@ -30,10 +30,10 @@ const LeftJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
     mount.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft white light
+    const ambientLight = new THREE.AmbientLight(0xcccccc, 3); // Soft white light
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(0, 250, 0).normalize();
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+    directionalLight.position.set(0, 50, 0).normalize();
     scene.add(directionalLight);
 
     // Axes Helper
@@ -76,8 +76,8 @@ const LeftJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
         obj.traverse(node => {
           if ((node as THREE.Mesh).isMesh) {
             (node as THREE.Mesh).material = new THREE.MeshPhongMaterial({
-              color: 0xff0000,
-              emissive: 0x333333, // Add emissive property for better visibility
+              color: 0x0a808,
+              // emissive: 0xccccc, // Add emissive property for better visibility
             });
           }
         });
@@ -96,6 +96,7 @@ const LeftJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
         const x = 0;
         const y = radius * Math.cos(angleInRadians);
         const z = 60;
+        joystickRef.current.rotation.z = 1.5708; // 90도 = 1.5708 rad
 
         camera.position.set(x, y, z); // Set camera position
         camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
@@ -165,7 +166,7 @@ const LeftJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
     }
   }, [handLandmarks, cameraAdjusted]);
 
-  return <div ref={mountRef} style={{ width: "320px", height: "240px" }} />;
+  return <div ref={mountRef} style={{ width: "320px", height: "480px" }} />;
 };
 
 export default LeftJoystickModel;
