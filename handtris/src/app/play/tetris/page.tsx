@@ -13,7 +13,7 @@ import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
 import { getRoomCode } from "@/util/getRoomCode";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
@@ -38,10 +38,10 @@ const Home: React.FC = () => {
   const [rightHandLandmarks, setRightHandLandmarks] = useState<
     LandmarkList | undefined
   >();
-
+  const [otherUserJoined, setOtherUserJoined] = useState(false);
   const [linesCleared, setLinesCleared] = useState(0);
   const [gauge, setGauge] = useState(0);
-
+  const [showWaitingModal, setShowWaitingModal] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
@@ -72,64 +72,6 @@ const Home: React.FC = () => {
                 nextBlock.color,
                 false,
               );
-              //   if (nextBlock.color === "orange") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.9,
-              //       y + 1,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else if (nextBlock.color === "yellow") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.7,
-              //       y + 1.65,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else if (nextBlock.color === "red") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.7,
-              //       y + 1.7,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else if (nextBlock.color === "cyan") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.1,
-              //       y + 1,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else if (nextBlock.color === "green") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.7,
-              //       y + 1.6,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else if (nextBlock.color === "purple") {
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.25,
-              //       y + 1,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   } else {
-              //     // blue 처리
-              //     tetrisGameRef.current.drawSquareCanvas(
-              //       context,
-              //       x + 1.2,
-              //       y + 0.5,
-              //       nextBlock.color,
-              //       false,
-              //     );
-              //   }
             }
           });
         });
@@ -205,9 +147,20 @@ const Home: React.FC = () => {
         console.log("대기방에서 받는 메시지: ", parsedMessage);
         if (parsedMessage.isOwner !== undefined) {
           setIsOwner(prevIsOwner => {
-            return (
-              prevIsOwner === null ? parsedMessage.isOwner : prevIsOwner
-            ) as boolean | null;
+            if (prevIsOwner === null) {
+              if (parsedMessage.isOwner) {
+                // 방장인 경우
+                return true;
+              } else {
+                // 참가자인 경우
+                setOtherUserJoined(true);
+                return false;
+              }
+            } else if (prevIsOwner === true && !parsedMessage.isOwner) {
+              // 방장이고 다른 사람이 들어온 경우
+              setOtherUserJoined(true);
+            }
+            return prevIsOwner;
           });
         }
       },
@@ -320,6 +273,8 @@ const Home: React.FC = () => {
   };
 
   const startGame = async () => {
+    setShowWaitingModal(false);
+    await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
     const showCountdown = () => {
       return new Promise<void>(resolve => {
@@ -688,6 +643,15 @@ const Home: React.FC = () => {
   };
 
   const handleReadyStartClick = () => {
+    if (!otherUserJoined) {
+      toast({
+        title: "대기 중",
+        description: "상대방이 입장할 때까지 기다려주세요.",
+        duration: 3000,
+      });
+      return;
+    }
+
     if (isOwner) {
       if (isAllReady) {
         handleStartGameClick();
@@ -718,195 +682,230 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex flex-col relative h-full pt-12"
-    >
-      <div className="flex items-center justify-around relative">
-        <WaitingModal isOpen={true} isLoading={false} />
-        <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
-        <div className="relative flex">
-          <div className="flex w-[20px] flex-col-reverse border-2 p-4">
-            <div
-              className="w-full transition-all duration-700 ease-in-out"
-              style={{
-                height: `${(gauge / 4) * 100}%`,
-                background: "linear-gradient(to top, green, lightgreen)",
-              }}
-            ></div>
-          </div>
-          <div id="tetris-container" className="flex flex-col justify-between">
-            <div className={`${TETRIS_CANVAS}`}>
-              <canvas
-                ref={canvasTetrisRef}
-                id="tetris"
-                width="300"
-                height="600"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col justify-between">
-            <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
-              <div className="press bg-white text-center text-2xl text-black">
-                NEXT
-              </div>
-              <canvas
-                ref={nextBlockRef}
-                width="150"
-                height="150"
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="relative flex">
-          <div className="tetris_opposer flex flex-col justify-between">
-            <div className={`${TETRIS_CANVAS}`}>
-              <canvas
-                ref={canvasTetris2Ref}
-                id="tetrisCanvas2"
-                width="300"
-                height="600"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col items-center justify-between">
-            <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
-              <h1 className="press bg-white text-center text-2xl text-black">
-                IMAGE
-              </h1>
-              <Image
-                src="/image/profile-pic.jpeg"
-                width={150}
-                height={100}
-                alt="profile"
-                className="h-full w-full overflow-hidden object-cover"
-              />
-            </div>
-            <div className="w-[50%] text-white">
-              <BoardDesc type="Score" desc={1700} />
-              <BoardDesc type="Lines" desc={linesCleared} />
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* 조이스틱 모델 및 제스쳐 피드백 부분 */}
-      <div className="flex justify-center items-center gap-2">
-        <div className="flex justify-center items-center">
-          <Image
-            src={
-              gestureFeedback === "Move Left"
-                ? "/image/MoveLeftPressed.png"
-                : "/image/MoveLeftDefault.png"
+    <div className="relative">
+      <AnimatePresence>
+        {showWaitingModal && (
+          <WaitingModal
+            isOpen={showWaitingModal}
+            isLoading={!otherUserJoined}
+            onClose={() => setShowWaitingModal(false)}
+            onReady={handleReadyStartClick}
+            isOwner={isOwner}
+            isAllReady={isAllReady}
+            currentUser={{
+              image: "/image/profile_1.jpeg",
+              name: "USER1",
+              winrate: "20%",
+              stats: "1/5",
+            }}
+            otherUser={
+              otherUserJoined
+                ? {
+                    image: "/image/profile_1.jpeg",
+                    name: "USER2",
+                    winrate: "30%",
+                    stats: "2/5",
+                  }
+                : null
             }
-            alt="Move Left"
-            width={85}
-            height={85}
           />
-        </div>
-        <LeftJoystickModel handLandmarks={rightHandLandmarks} />
-        <div className="flex justify-center items-center">
-          <Image
-            src={
-              gestureFeedback === "Move Right"
-                ? "/image/MoveRightPressed.png"
-                : "/image/MoveRightDefault.png"
-            }
-            alt="Move Right"
-            width={85}
-            height={85}
-          />
-        </div>
-        <div className="flex justify-center items-center">
-          <Image
-            src={
-              gestureFeedback === "Rotate"
-                ? "/image/RotatePressed.png"
-                : "/image/RotateDefault.png"
-            }
-            alt="Rotate"
-            width={85}
-            height={85}
-          />
-        </div>
-        <RightJoystickModel handLandmarks={leftHandLandmarks} />
-        <div className="flex justify-center items-center">
-          <Image
-            src={
-              gestureFeedback === "Drop"
-                ? "/image/DropPressed.png"
-                : "/image/DropDefault.png"
-            }
-            alt="Drop"
-            width={85}
-            height={85}
-          />
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
 
-      <div>
-        <p className="text-2xl text-green-400">{gesture}</p>
+      <motion.div
+        initial={{ opacity: 0, y: "-100%" }}
+        animate={{
+          opacity: showWaitingModal ? 0 : 1,
+          y: showWaitingModal ? "-100%" : 0,
+        }}
+        transition={{ duration: 0.5, delay: showWaitingModal ? 0 : 0.5 }}
+      >
+        <div className="flex items-center justify-around relative">
+          <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
+          <div className="relative flex">
+            <div className="flex w-[20px] flex-col-reverse border-2 p-4">
+              <div
+                className="w-full transition-all duration-700 ease-in-out"
+                style={{
+                  height: `${(gauge / 4) * 100}%`,
+                  background: "linear-gradient(to top, green, lightgreen)",
+                }}
+              ></div>
+            </div>
+            <div
+              id="tetris-container"
+              className="flex flex-col justify-between"
+            >
+              <div className={`${TETRIS_CANVAS}`}>
+                <canvas
+                  ref={canvasTetrisRef}
+                  id="tetris"
+                  width="300"
+                  height="600"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col justify-between">
+              <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
+                <div className="press bg-white text-center text-2xl text-black">
+                  NEXT
+                </div>
+                <canvas
+                  ref={nextBlockRef}
+                  width="150"
+                  height="150"
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="relative flex">
+            <div className="tetris_opposer flex flex-col justify-between">
+              <div className={`${TETRIS_CANVAS}`}>
+                <canvas
+                  ref={canvasTetris2Ref}
+                  id="tetrisCanvas2"
+                  width="300"
+                  height="600"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col items-center justify-between">
+              <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
+                <h1 className="press bg-white text-center text-2xl text-black">
+                  IMAGE
+                </h1>
+                <Image
+                  src="/image/profile-pic.jpeg"
+                  width={150}
+                  height={100}
+                  alt="profile"
+                  className="h-full w-full overflow-hidden object-cover"
+                />
+              </div>
+              <div className="w-[50%] text-white">
+                <BoardDesc type="Score" desc={1700} />
+                <BoardDesc type="Lines" desc={linesCleared} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 조이스틱 모델 및 제스쳐 피드백 부분 */}
+        <div className="flex justify-center items-center gap-2">
+          <div className="flex justify-center items-center">
+            <Image
+              src={
+                gestureFeedback === "Move Left"
+                  ? "/image/MoveLeftPressed.png"
+                  : "/image/MoveLeftDefault.png"
+              }
+              alt="Move Left"
+              width={85}
+              height={85}
+            />
+          </div>
+          <LeftJoystickModel handLandmarks={rightHandLandmarks} />
+          <div className="flex justify-center items-center">
+            <Image
+              src={
+                gestureFeedback === "Move Right"
+                  ? "/image/MoveRightPressed.png"
+                  : "/image/MoveRightDefault.png"
+              }
+              alt="Move Right"
+              width={85}
+              height={85}
+            />
+          </div>
+          <div className="flex justify-center items-center">
+            <Image
+              src={
+                gestureFeedback === "Rotate"
+                  ? "/image/RotatePressed.png"
+                  : "/image/RotateDefault.png"
+              }
+              alt="Rotate"
+              width={85}
+              height={85}
+            />
+          </div>
+          <RightJoystickModel handLandmarks={leftHandLandmarks} />
+          <div className="flex justify-center items-center">
+            <Image
+              src={
+                gestureFeedback === "Drop"
+                  ? "/image/DropPressed.png"
+                  : "/image/DropDefault.png"
+              }
+              alt="Drop"
+              width={85}
+              height={85}
+            />
+          </div>
+        </div>
+        <div>
+          <p className="text-2xl text-green-400">{gesture}</p>
+          <button
+            type="button"
+            onClick={handleReadyStartClick}
+            className={`
+    ${isStart ? "hidden" : ""}
+    ${
+      isOwner && !isAllReady
+        ? "text-darkgray cursor-not-allowed bg-gray-600"
+        : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
+    } 
+    w-[400px] max-w-full p-3 text-xl font-bold
+    transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:brightness-125
+  `}
+            disabled={(isOwner && !isAllReady) || false}
+          >
+            {isOwner
+              ? isAllReady
+                ? "Game Start"
+                : "Waiting for Ready"
+              : "Ready"}
+          </button>
+        </div>
+
+        {gameResult && (
+          <div
+            id="gameResult"
+            className={`${gameResultStyle} ${resultClass} press leading-15 text-2xl`}
+          >
+            {gameResult}
+          </div>
+        )}
+
         <button
           type="button"
-          onClick={handleReadyStartClick}
-          className={`
-        ${isStart ? "hidden" : ""}
-        ${
-          isOwner && !isAllReady
-            ? "text-darkgray cursor-not-allowed bg-gray-600"
-            : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
-        } 
-        w-[400px] max-w-full p-3 text-xl font-bold
-        transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:brightness-125
-      `}
-          disabled={(isOwner && !isAllReady) || false}
+          className="fixed left-4 top-4 bg-red-400 text-white p-2 rounded"
+          onClick={handleClearButtonClick}
         >
-          {isOwner
-            ? isAllReady
-              ? "Game Start"
-              : "Waiting for Ready"
-            : "Ready"}
+          임시버튼(눌러서 set.clear())
         </button>
-      </div>
 
-      {gameResult && (
-        <div
-          id="gameResult"
-          className={`${gameResultStyle} ${resultClass} press leading-15 text-2xl`}
-        >
-          {gameResult}
+        <div className="fixed bottom-4 left-4">
+          <div ref={gestureRef} />
+          <video
+            ref={videoRef}
+            id="video"
+            width="320"
+            height="240"
+            autoPlay
+            className="hidden"
+          />
+          <canvas
+            ref={canvasRef}
+            id="canvas"
+            width="320"
+            height="240"
+            className=""
+          />
         </div>
-      )}
-
-      <button
-        type="button"
-        className="fixed left-4 top-4 bg-red-400 text-white p-2 rounded"
-        onClick={handleClearButtonClick}
-      >
-        임시버튼(눌러서 set.clear())
-      </button>
-
-      <div className="fixed bottom-4 left-4">
-        <div ref={gestureRef} />
-        <video
-          ref={videoRef}
-          id="video"
-          width="320"
-          height="240"
-          autoPlay
-          className="hidden"
-        />
-        <canvas
-          ref={canvasRef}
-          id="canvas"
-          width="320"
-          height="240"
-          className=""
-        />
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

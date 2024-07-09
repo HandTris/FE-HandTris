@@ -24,12 +24,12 @@ export const UserCard = ({
 }: UserCardProps) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-6 bg-gradient-to-tl p-8 ${bgColorFrom} ${bgColorTo} w-5/12 rounded-2xl border-4 shadow-lg ${borderColor} transform transition-transform duration-300`}
+      className={`flex flex-col items-center justify-center gap-6 bg-gradient-to-tl p-8 ${bgColorFrom} ${bgColorTo} w-5/12 border-[8px] shadow-lg ${borderColor} transform transition-transform duration-300`}
       style={{ height: "550px" }}
     >
       {isLoading ? (
         <div className="flex flex-col items-center gap-6 h-full py-2">
-          <h1 className="pixel text-2xl">WAITING FOR SOMEONE</h1>
+          <h1 className="pixel text-2xl animate-pulse">WAITING FOR SOMEONE</h1>
           <Image
             src="/gif/tetris_.gif"
             alt="loading"
@@ -45,7 +45,7 @@ export const UserCard = ({
             alt="profile-pic"
             width={400}
             height={400}
-            className={`rounded-full border-4 ${borderColor} shadow-xl`}
+            className={`border-[8px] ${borderColor} shadow-xl`}
           />
           <div className="space-y-2 text-center pixel">
             <h1 className="text-4xl font-extrabold tracking-wide text-white">
