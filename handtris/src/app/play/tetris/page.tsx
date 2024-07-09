@@ -17,6 +17,7 @@ import { motion } from "framer-motion";
 import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
+import WaitingModal from "@/components/WaitingModal";
 import LeftJoystickModel from "@/components/LeftJoystickModel";
 import RightJoystickModel from "@/components/RightJoystickModel";
 
@@ -724,6 +725,7 @@ const Home: React.FC = () => {
       className="flex flex-col relative h-full pt-12"
     >
       <div className="flex items-center justify-around relative">
+        <WaitingModal isOpen={true} isLoading={false} />
         <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
         <div className="relative flex">
           <div className="flex w-[20px] flex-col-reverse border-2 p-4">

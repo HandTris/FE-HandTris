@@ -19,7 +19,7 @@ const WaitingModal = ({ isOpen, onClose, isLoading }: WaitingModalProps) => {
   };
 
   const user2 = {
-    image: "/image/profile_2.jpeg",
+    image: "/image/profile_1.jpeg",
     name: "USER2",
     winrate: "30%",
     stats: "2/5",
@@ -28,7 +28,7 @@ const WaitingModal = ({ isOpen, onClose, isLoading }: WaitingModalProps) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <button onClick={onClose} className="hidden"></button>
       <div
         id="modal"

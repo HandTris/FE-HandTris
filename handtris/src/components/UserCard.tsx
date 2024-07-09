@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { PacmanLoader } from "react-spinners";
 
 type UserCardProps = {
   isLoading: boolean;
@@ -15,6 +14,7 @@ type UserCardProps = {
     stats: string;
   };
 };
+
 export const UserCard = ({
   isLoading,
   bgColorFrom,
@@ -28,26 +28,26 @@ export const UserCard = ({
       style={{ height: "550px" }}
     >
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center gap-6">
-          <div className="flex items-center justify-center">
-            <PacmanLoader color={"white"} loading={isLoading} size={70} />
-          </div>
-          <div className="space-y-2 text-center">
-            <div className="mx-auto h-10 w-32 rounded bg-gray-700"></div>
-            <div className="mx-auto h-8 w-24 rounded bg-gray-700"></div>
-            <div className="mx-auto h-8 w-16 rounded bg-gray-700"></div>
-          </div>
+        <div className="flex flex-col items-center gap-6 h-full py-2">
+          <h1 className="pixel text-2xl">WAITING FOR SOMEONE</h1>
+          <Image
+            src="/gif/tetris_.gif"
+            alt="loading"
+            width={400}
+            height={400}
+            className="object-contain"
+          />
         </div>
       ) : (
         <>
           <Image
             src={user.image}
-            alt={"profile-pic"}
-            width={450}
-            height={450}
+            alt="profile-pic"
+            width={400}
+            height={400}
             className={`rounded-full border-4 ${borderColor} shadow-xl`}
           />
-          <div className="space-y-2 text-center">
+          <div className="space-y-2 text-center pixel">
             <h1 className="text-4xl font-extrabold tracking-wide text-white">
               {user.name}
             </h1>
@@ -55,7 +55,7 @@ export const UserCard = ({
               WINRATE: <span className="text-green-400">{user.winrate}</span>
             </h2>
             <h3 className="text-xl font-medium text-gray-300">
-              STATS: <span className="text-red-400">{user.stats}</span>
+              RECENT STATS: <span className="text-red-400">{user.stats}</span>
             </h3>
           </div>
         </>
