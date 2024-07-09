@@ -54,7 +54,7 @@ const LoginForm = () => {
               setSubmitting(false);
             })
             .then(() => {
-              router.push("/main");
+              router.push("/lobby");
               setTimeout(() => showLoginSuccessToast(toast), 100);
             })
             .catch(error => {

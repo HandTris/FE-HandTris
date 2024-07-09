@@ -45,7 +45,7 @@ export const UserCard = ({
             alt="profile-pic"
             width={400}
             height={400}
-            className={`border-[8px] ${borderColor} shadow-xl`}
+            className={`border-[8px] ${borderColor} shadow-xl object-cover overflow-hidden`}
           />
           <div className="space-y-2 text-center pixel">
             <h1 className="text-4xl font-extrabold tracking-wide text-white">
