@@ -63,64 +63,71 @@ const Home: React.FC = () => {
         nextBlock.activeTetromino.forEach((row, y) => {
           row.forEach((value, x) => {
             if (value && tetrisGameRef.current) {
-              if (nextBlock.color === "orange") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.9,
-                  y + 1,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "yellow") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.7,
-                  y + 1.65,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "red") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.7,
-                  y + 1.7,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "cyan") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.1,
-                  y + 1,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "green") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.7,
-                  y + 1.6,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "purple") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.25,
-                  y + 1,
-                  nextBlock.color,
-                  false,
-                );
-              } else {
-                // blue 처리
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.2,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              }
+              tetrisGameRef.current.drawSquareCanvas(
+                context,
+                x + 1.3,
+                y + 0.5,
+                nextBlock.color,
+                false,
+              );
+              //   if (nextBlock.color === "orange") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.9,
+              //       y + 1,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else if (nextBlock.color === "yellow") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.7,
+              //       y + 1.65,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else if (nextBlock.color === "red") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.7,
+              //       y + 1.7,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else if (nextBlock.color === "cyan") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.1,
+              //       y + 1,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else if (nextBlock.color === "green") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.7,
+              //       y + 1.6,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else if (nextBlock.color === "purple") {
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.25,
+              //       y + 1,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   } else {
+              //     // blue 처리
+              //     tetrisGameRef.current.drawSquareCanvas(
+              //       context,
+              //       x + 1.2,
+              //       y + 0.5,
+              //       nextBlock.color,
+              //       false,
+              //     );
+              //   }
             }
           });
         });
@@ -708,13 +715,17 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="flex flex-col relative h-full pt-12"
+    >
       <div className="flex items-center justify-around relative">
-        <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
-          {/* 모달 요소들이 여기에 추가됨 */}
-        </div>
-        <div className="relative flex h-[802px]">
-          <div className="flex h-full w-[50px] flex-col-reverse border-2 p-4">
+        {/* <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
+          </div> */}
+        <div className="relative flex">
+          <div className="flex w-[20px] flex-col-reverse border-2 p-4">
             <div
               className="w-full transition-all duration-700 ease-in-out"
               style={{
@@ -723,50 +734,50 @@ const Home: React.FC = () => {
               }}
             ></div>
           </div>
-          <div id="tetris-container">
+          <div id="tetris-container" className="flex flex-col justify-between">
             <div className={`${TETRIS_CANVAS}`}>
               <canvas
                 ref={canvasTetrisRef}
                 id="tetris"
-                width="400"
-                height="800"
+                width="300"
+                height="600"
               />
             </div>
-            <NameLabel name={"USER1"} />
           </div>
-          <div className="flex h-[250px] w-[250px] flex-col border-4 border-l-0 border-t-0">
-            <div className="press bg-white text-center text-2xl text-black">
-              NEXT
+          <div className="flex flex-col justify-between">
+            <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
+              <div className="press bg-white text-center text-2xl text-black">
+                NEXT
+              </div>
+              <canvas
+                ref={nextBlockRef}
+                width="150"
+                height="150"
+                className="w-full h-full"
+              />
             </div>
-            <canvas
-              ref={nextBlockRef}
-              width="250"
-              height="250"
-              className="w-full h-full"
-            />
           </div>
         </div>
-        <div className="flex h-[802px]">
-          <div className="tetris_opposer">
+        <div className="relative flex">
+          <div className="tetris_opposer flex flex-col justify-between">
             <div className={`${TETRIS_CANVAS}`}>
               <canvas
                 ref={canvasTetris2Ref}
                 id="tetrisCanvas2"
-                width="400"
-                height="800"
+                width="300"
+                height="600"
               />
             </div>
-            <NameLabel name={"USER2"} />
           </div>
           <div className="flex flex-col items-center justify-between">
-            <div className="flex h-[250px] w-[250px] flex-col border-4 border-l-0 border-t-0">
+            <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
               <h1 className="press bg-white text-center text-2xl text-black">
                 IMAGE
               </h1>
               <Image
                 src="/image/profile-pic.jpeg"
-                width={250}
-                height={200}
+                width={150}
+                height={100}
                 alt="profile"
                 className="h-full w-full overflow-hidden object-cover"
               />
@@ -778,22 +789,26 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
+
       <div className="fixed left-0 top-[50%] columns-2">
         <ThreeScene handLandmarks={rightHandLandmarks} />
         <ThreeScene handLandmarks={leftHandLandmarks} />
       </div>
-      <div>
-        <p className="text-2xl text-green-400">{gesture}</p>
+
+      <div className="fixed bottom-8 left-0 right-0 flex justify-center items-center z-50">
         <button
           type="button"
           onClick={handleReadyStartClick}
-          className={`${
-            isStart
-              ? "hidden"
-              : isOwner && !isAllReady
-                ? "text-darkgray cursor-not-allowed bg-gray-600"
-                : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
-          } mx-auto w-[400px] transform border p-3 transition-transform hover:scale-105 hover:shadow-xl hover:brightness-125`}
+          className={`
+        ${isStart ? "hidden" : ""}
+        ${
+          isOwner && !isAllReady
+            ? "text-darkgray cursor-not-allowed bg-gray-600"
+            : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
+        } 
+        w-[400px] max-w-full p-3 text-xl font-bold
+        transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:brightness-125
+      `}
           disabled={(isOwner && !isAllReady) || false}
         >
           {isOwner
@@ -803,6 +818,7 @@ const Home: React.FC = () => {
             : "Ready"}
         </button>
       </div>
+
       {gameResult && (
         <div
           id="gameResult"
@@ -811,14 +827,16 @@ const Home: React.FC = () => {
           {gameResult}
         </div>
       )}
+
       <button
         type="button"
-        className="fixed left-0 top-5 bg-red-400 text-white"
+        className="fixed left-4 top-4 bg-red-400 text-white p-2 rounded"
         onClick={handleClearButtonClick}
       >
         임시버튼(눌러서 set.clear())
       </button>
-      <div className="fixed bottom-0 left-0">
+
+      <div className="fixed bottom-4 left-4">
         <div ref={gestureRef} />
         <video
           ref={videoRef}

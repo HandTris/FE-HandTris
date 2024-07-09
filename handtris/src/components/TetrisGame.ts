@@ -45,7 +45,7 @@ const COLORS = {
 export class TetrisGame {
   ROW = 20;
   COL = 10;
-  SQ = 40;
+  SQ = 30;
   VACANT = "#303030";
   GRID_COLOR = "#2B292A";
   board: string[][];
