@@ -5,7 +5,7 @@ import { Landmark } from "@/types";
 interface ThreeSceneProps {
   handLandmarks: Landmark[] | undefined;
 }
-const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
+const LeftJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -25,15 +25,15 @@ const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
       0.1,
       1000,
     );
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 2); // Soft white light
+    const ambientLight = new THREE.AmbientLight(0xcccccc, 3); // Soft white light
     scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(0, 250, 0).normalize();
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+    directionalLight.position.set(0, 50, 0).normalize();
     scene.add(directionalLight);
 
     // Axes Helper
@@ -76,8 +76,8 @@ const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
         obj.traverse(node => {
           if ((node as THREE.Mesh).isMesh) {
             (node as THREE.Mesh).material = new THREE.MeshPhongMaterial({
-              color: 0xff0000,
-              emissive: 0x333333, // Add emissive property for better visibility
+              color: 0x0a808,
+              // emissive: 0xccccc, // Add emissive property for better visibility
             });
           }
         });
@@ -96,6 +96,7 @@ const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
         const x = 0;
         const y = radius * Math.cos(angleInRadians);
         const z = 60;
+        joystickRef.current.rotation.z = 1.5708; // 90도 = 1.5708 rad
 
         camera.position.set(x, y, z); // Set camera position
         camera.lookAt(new THREE.Vector3(0, 0, 0)); // Look at the center of the scene
@@ -129,14 +130,14 @@ const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
 
   useEffect(() => {
     if (handLandmarks && handLandmarks.length > 0 && joystickRef.current) {
-      const landmark0 = handLandmarks[0];
+      const landmark4 = handLandmarks[4];
       const landmark17 = handLandmarks[17];
       const joystick = joystickRef.current;
 
-      // Calculate the angle between the z coordinates of landmark0 and landmark3
-      const deltaY = landmark0.y - landmark17.y; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
-      const deltaX = landmark0.x - landmark17.x;
-      const angle = -Math.atan2(deltaY, deltaX); // theta, 단위: rad
+      // Calculate the angle between the z coordinates of landmark4 and landmark3
+      const deltaY = landmark17.y - landmark4.y; // 사람의 조작과 웹캠에 보여지는 화면으로 인해 3과 0의 순서가 다름
+      const deltaX = landmark17.x - landmark4.x;
+      const angle = Math.atan2(deltaY, deltaX); // theta, 단위: rad
 
       // Rotate the joystick model based on the calculated angle
       if (angle > 1.05 && angle < 2.1) {
@@ -165,7 +166,7 @@ const ThreeScene = ({ handLandmarks }: ThreeSceneProps) => {
     }
   }, [handLandmarks, cameraAdjusted]);
 
-  return <div ref={mountRef} style={{ width: "320px", height: "240px" }} />;
+  return <div ref={mountRef} style={{ width: "320px", height: "400px" }} />;
 };
 
-export default ThreeScene;
+export default LeftJoystickModel;

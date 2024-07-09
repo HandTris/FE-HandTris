@@ -8,7 +8,6 @@ import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import ThreeScene from "@/components/ThreeScene";
 import { NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
 import GestureFeedback from "@/components/GestureFeedback";
@@ -19,6 +18,8 @@ import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
 import WaitingModal from "@/components/WaitingModal";
+import LeftJoystickModel from "@/components/LeftJoystickModel";
+import RightJoystickModel from "@/components/RightJoystickModel";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -639,6 +640,7 @@ const Home: React.FC = () => {
     }
   };
 
+  //feedback: "move right", "move left", "rotate", "drop"
   const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
@@ -724,8 +726,7 @@ const Home: React.FC = () => {
     >
       <div className="flex items-center justify-around relative">
         <WaitingModal isOpen={true} isLoading={false} />
-        {/* <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
-          </div> */}
+        <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
         <div className="relative flex">
           <div className="flex w-[20px] flex-col-reverse border-2 p-4">
             <div
@@ -791,13 +792,62 @@ const Home: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <div className="fixed left-0 top-[50%] columns-2">
-        <ThreeScene handLandmarks={rightHandLandmarks} />
-        <ThreeScene handLandmarks={leftHandLandmarks} />
+      {/* 조이스틱 모델 및 제스쳐 피드백 부분 */}
+      <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-center items-center">
+          <Image
+            src={
+              gestureFeedback === "Move Left"
+                ? "/image/MoveLeftPressed.png"
+                : "/image/MoveLeftDefault.png"
+            }
+            alt="Move Left"
+            width={85}
+            height={85}
+          />
+        </div>
+        <LeftJoystickModel handLandmarks={rightHandLandmarks} />
+        <div className="flex justify-center items-center">
+          <Image
+            src={
+              gestureFeedback === "Move Right"
+                ? "/image/MoveRightPressed.png"
+                : "/image/MoveRightDefault.png"
+            }
+            alt="Move Right"
+            width={85}
+            height={85}
+          />
+        </div>
+        <div className="flex justify-center items-center">
+          <Image
+            src={
+              gestureFeedback === "Rotate"
+                ? "/image/RotatePressed.png"
+                : "/image/RotateDefault.png"
+            }
+            alt="Rotate"
+            width={85}
+            height={85}
+          />
+        </div>
+        <RightJoystickModel handLandmarks={leftHandLandmarks} />
+        <div className="flex justify-center items-center">
+          <Image
+            src={
+              gestureFeedback === "Drop"
+                ? "/image/DropPressed.png"
+                : "/image/DropDefault.png"
+            }
+            alt="Drop"
+            width={85}
+            height={85}
+          />
+        </div>
       </div>
 
-      <div className="fixed bottom-8 left-0 right-0 flex justify-center items-center z-50">
+      <div>
+        <p className="text-2xl text-green-400">{gesture}</p>
         <button
           type="button"
           onClick={handleReadyStartClick}
@@ -855,9 +905,6 @@ const Home: React.FC = () => {
           height="240"
           className=""
         />
-        {gestureFeedback && (
-          <GestureFeedback gestureFeedback={gestureFeedback} />
-        )}
       </div>
     </motion.div>
   );
