@@ -8,18 +8,16 @@ import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import { NameLabel } from "@/styles";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
-import GestureFeedback from "@/components/GestureFeedback";
 import { BoardDesc } from "@/components/BoardDesc";
 import { getRoomCode } from "@/util/getRoomCode";
 import { AnimatePresence, motion } from "framer-motion";
-import { containerVariants } from "@/util/animation";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
 import WaitingModal from "@/components/WaitingModal";
 import LeftJoystickModel from "@/components/LeftJoystickModel";
 import RightJoystickModel from "@/components/RightJoystickModel";
+import GameResultModal from "@/components/GameResultModal";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -54,7 +52,7 @@ const Home: React.FC = () => {
   const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastGestureRef = useRef<string | null>(null);
-
+  const [showResultModal, setShowResultModal] = useState(false);
   const drawNextBlock = (nextBlock: Piece) => {
     const canvas = nextBlockRef.current;
 
@@ -78,6 +76,11 @@ const Home: React.FC = () => {
       }
     }
   };
+  useEffect(() => {
+    if (gameResult) {
+      setShowResultModal(true);
+    }
+  }, [gameResult]);
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -213,7 +216,7 @@ const Home: React.FC = () => {
             );
           }
         }
-      }, 3000); // 3 seconds
+      }, 30000); // 3 seconds
 
       return () => clearTimeout(timeoutId);
     }
@@ -237,6 +240,40 @@ const Home: React.FC = () => {
     }
   };
 
+  const handlePlayAgain = () => {
+    setShowResultModal(false);
+    setGameResult(null);
+    setIsStart(false);
+    setIsAllReady(false);
+    setLinesCleared(0);
+    setGauge(0);
+    if (tetrisGameRef.current) {
+      tetrisGameRef.current.linesCleared = 0;
+    }
+    if (canvasTetrisRef.current) {
+      const ctx = canvasTetrisRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(
+          0,
+          0,
+          canvasTetrisRef.current.width,
+          canvasTetrisRef.current.height,
+        );
+      }
+    }
+    if (canvasTetris2Ref.current) {
+      const ctx2 = canvasTetris2Ref.current.getContext("2d");
+      if (ctx2) {
+        ctx2.clearRect(
+          0,
+          0,
+          canvasTetris2Ref.current.width,
+          canvasTetris2Ref.current.height,
+        );
+      }
+    }
+    setShowWaitingModal(true);
+  };
   const handleReadyClick = async () => {
     const roomCode = getRoomCode();
     try {
@@ -694,15 +731,15 @@ const Home: React.FC = () => {
             isAllReady={isAllReady}
             currentUser={{
               image: "/image/profile_1.jpeg",
-              name: "USER1",
+              name: "CHOCO",
               winrate: "20%",
               stats: "1/5",
             }}
             otherUser={
               otherUserJoined
                 ? {
-                    image: "/image/profile_1.jpeg",
-                    name: "USER2",
+                    image: "/image/Lucky.jpeg",
+                    name: "Lucky Unicorn",
                     winrate: "30%",
                     stats: "2/5",
                   }
@@ -869,14 +906,15 @@ const Home: React.FC = () => {
           </button>
         </div>
 
-        {gameResult && (
-          <div
-            id="gameResult"
-            className={`${gameResultStyle} ${resultClass} press leading-15 text-2xl`}
-          >
-            {gameResult}
-          </div>
-        )}
+        <AnimatePresence>
+          {showResultModal && (
+            <GameResultModal
+              result={gameResult === "you WIN!" ? "WIN" : "LOSE"}
+              onPlayAgain={handlePlayAgain}
+              // FIX LINES CLEARED
+            />
+          )}
+        </AnimatePresence>
 
         <button
           type="button"
