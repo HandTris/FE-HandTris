@@ -1,7 +1,7 @@
 import { Howl } from "howler";
 
 export const backgroundMusic = new Howl({
-  src: ["/sound/themeA.ogg"],
+  src: ["/sound/mainMusic.mp3"],
   loop: true,
   volume: 0.6,
 });

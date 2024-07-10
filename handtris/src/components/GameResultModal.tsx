@@ -1,63 +1,130 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { myStatus } from "@/services/gameService";
+import { Trophy, Frown, BarChart2 } from "lucide-react"; // 아이콘 추가
 
 interface GameResultModalProps {
   result: "WIN" | "LOSE";
   onPlayAgain: () => void;
   linesCleared: number;
-  time: number;
+}
+
+interface PlayerStats {
+  win: number;
+  lose: number;
+  winRate: number;
 }
 
 const GameResultModal: React.FC<GameResultModalProps> = ({
   result,
   onPlayAgain,
   linesCleared,
-  time,
 }) => {
   const router = useRouter();
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
-  };
+  useEffect(() => {
+    const fetchPlayerStats = async () => {
+      try {
+        const response = await myStatus();
+        if (response.data) {
+          const currentStats = response.data;
+          const updatedStats = {
+            win: currentStats.win + (result === "WIN" ? 1 : 0),
+            lose: currentStats.lose + (result === "LOSE" ? 1 : 0),
+            winRate: 0,
+          };
+          updatedStats.winRate = Number(
+            (
+              (updatedStats.win / (updatedStats.win + updatedStats.lose)) *
+              100
+            ).toFixed(2),
+          );
+          setPlayerStats(updatedStats);
+        }
+      } catch (error) {
+        console.error("Failed to fetch player stats:", error);
+      }
+    };
+
+    fetchPlayerStats();
+  }, [result]);
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
     >
-      <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-10 rounded-xl text-center shadow-2xl max-w-md w-full">
-        <h2
-          className={`text-6xl font-bold mb-8 ${result === "WIN" ? "text-green-400" : "text-red-400"}`}
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-10 rounded-2xl text-center shadow-2xl max-w-md w-full border border-gray-700">
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
-          {result === "WIN" ? "YOU WIN!" : "YOU LOSE!"}
-        </h2>
-        <div className="space-y-4 mb-8">
-          <div className="bg-gray-700 p-4 rounded-lg">
+          {result === "WIN" ? (
+            <Trophy className="w-20 h-20 mx-auto text-yellow-400 mb-4" />
+          ) : (
+            <Frown className="w-20 h-20 mx-auto text-red-400 mb-4" />
+          )}
+          <h2
+            className={`text-6xl font-bold mb-8 ${
+              result === "WIN" ? "text-yellow-400" : "text-red-400"
+            }`}
+          >
+            {result === "WIN" ? "YOU WIN!" : "YOU LOSE!"}
+          </h2>
+        </motion.div>
+        <div className="space-y-6 mb-8">
+          <motion.div
+            className="bg-gray-700 p-4 rounded-lg shadow-inner"
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
             <p className="text-xl text-gray-300 mb-2">Lines Cleared</p>
             <p className="text-4xl font-bold text-white">{linesCleared}</p>
-          </div>
-          <div className="bg-gray-700 p-4 rounded-lg">
-            <p className="text-xl text-gray-300 mb-2">Time</p>
-            <p className="text-4xl font-bold text-white">{formatTime(time)}</p>
-          </div>
+          </motion.div>
+          {playerStats && (
+            <motion.div
+              className="bg-gray-700 p-4 rounded-lg shadow-inner"
+              initial={{ x: 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="flex items-center justify-center mb-2">
+                <BarChart2 className="w-5 h-5 mr-2 text-blue-400" />
+                <p className="text-xl text-gray-300">Updated Stats</p>
+              </div>
+              <p className="text-2xl font-bold text-white">
+                {playerStats.win}W - {playerStats.lose}L
+              </p>
+              <p className="text-xl text-gray-300 mt-2">
+                Win Rate:{" "}
+                <span className="text-green-400">{playerStats.winRate}%</span>
+              </p>
+            </motion.div>
+          )}
         </div>
         <div className="flex justify-center space-x-4">
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onPlayAgain}
-            className="px-8 py-3 bg-green-500 text-white rounded-full hover:bg-green-600 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
           >
             Play Again
-          </button>
-          <button
-            onClick={() => router.push("/lobby")}
-            className="px-8 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push("/lobby?refresh=true")}
+            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
           >
             Back to Lobby
-          </button>
+          </motion.button>
         </div>
       </div>
     </motion.div>
