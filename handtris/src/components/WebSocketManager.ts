@@ -1,5 +1,6 @@
 import { TetrisBoard } from "@/types";
 import { getAccessToken } from "@/util/getAccessToken";
+import { getRoomCode } from "@/util/getRoomCode";
 import SockJS from "sockjs-client";
 import Stomp, { Client, Frame, Message } from "stompjs";
 
@@ -31,6 +32,7 @@ export class WebSocketManager {
       // 커스텀 헤더를 설정할 수 있는 방법을 사용합니다.
       const headers: { [key: string]: string } = {
         Authorization: `Bearer ${this.token}`,
+        roomCode: getRoomCode(),
       };
 
       this.stompClient.connect(
@@ -96,6 +98,19 @@ export class WebSocketManager {
       this.stompClient.send(
         URL,
         { Authorization: `Bearer ${this.token}` },
+        JSON.stringify(message),
+      );
+      console.log("Message sent: ", message);
+    } else {
+      console.log("WebSocket connection is not established yet.");
+    }
+  }
+  sendMessageOnDisconnecting(gameInfo: unknown, URL: string, isStart: boolean) {
+    if (this.stompClient && this.connected) {
+      const message = {};
+      this.stompClient.send(
+        URL,
+        { Authorization: `Bearer ${this.token}`, isStart: isStart },
         JSON.stringify(message),
       );
       console.log("Message sent: ", message);
