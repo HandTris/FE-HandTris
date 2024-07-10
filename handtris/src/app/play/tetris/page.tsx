@@ -76,6 +76,24 @@ const Home: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const roomCode = getRoomCode();
+    const handleBeforeUnload = () => {
+      if (wsManagerRef.current && wsManagerRef.current.connected) {
+        wsManagerRef.current.sendMessageOnDisconnecting(
+          {},
+          `/app/${roomCode}/disconnect`,
+          isStart,
+        );
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isStart]);
+
   useEffect(() => {
     if (gameResult) {
       setShowResultModal(true);
@@ -162,6 +180,10 @@ const Home: React.FC = () => {
             } else if (prevIsOwner === true && !parsedMessage.isOwner) {
               // 방장이고 다른 사람이 들어온 경우
               setOtherUserJoined(true);
+            } else if (prevIsOwner === true && parsedMessage.isOwner) {
+              //FIXME - isOwner가 true인 경우 무조건 방장 처리
+              // 방장이고 다른 사람이 나간 경우
+              setOtherUserJoined(false);
             }
             return prevIsOwner;
           });
@@ -381,7 +403,6 @@ const Home: React.FC = () => {
             isAttack: boolean;
           }) => {
             if (tetrisGameRef.current) {
-              tetrisGameRef.current.drawBoard2(message.board);
               if (message.isEnd) {
                 tetrisGameRef.current.gameEnd = true;
                 backgroundMusic.pause();
@@ -391,6 +412,7 @@ const Home: React.FC = () => {
               if (message.isAttack) {
                 tetrisGameRef.current.addBlockRow();
               }
+              tetrisGameRef.current.drawBoard2(message.board);
             }
           },
         );
