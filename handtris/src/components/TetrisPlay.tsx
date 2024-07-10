@@ -455,7 +455,8 @@ const Home: React.FC = () => {
                 setGameResult("you WIN!");
               }
               if (message.isAttack) {
-                tetrisGameRef.current.addBlockRow();
+                // tetrisGameRef.current.addBlockRow();
+                tetrisGameRef.current.isAttacked = true;
               }
               tetrisGameRef.current.drawBoard2(message.board);
             }

@@ -67,6 +67,7 @@ export class TetrisGame {
   isGameStart: boolean;
   isRowFull: boolean;
   isAttack: boolean;
+  isAttacked: boolean;
   nextBlock: Piece;
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
@@ -101,6 +102,7 @@ export class TetrisGame {
     this.clearRow = this.clearFullRow;
     this.linesCleared = 0;
     this.isRowFull = false;
+    this.isAttack = false;
     this.isAttack = false;
 
     this.drawBoard();
@@ -494,6 +496,10 @@ export class Piece {
       this.game.roomCode,
     );
     this.game.isRowFull = false;
+    if (this.game.isAttacked) {
+      this.game.addBlockRow();
+      this.game.isAttacked = false;
+    }
   }
 
   collision(x: number, y: number, piece: number[][] = this.activeTetromino) {
