@@ -4,6 +4,8 @@ import * as React from "react";
 import { createPortal } from "react-dom";
 import { UserCard } from "./UserCard";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 interface WaitingModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ const WaitingModal = ({
   currentUser,
   otherUser,
 }: WaitingModalProps) => {
+  const router = useRouter();
+
   if (!isOpen) return null;
 
   const getButtonText = () => {
@@ -48,6 +52,10 @@ const WaitingModal = ({
   };
 
   const isButtonDisabled = (isOwner && !otherUser) || (!isOwner && !otherUser);
+
+  const handleBackToLobby = () => {
+    router.push("/lobby");
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -70,6 +78,15 @@ const WaitingModal = ({
           }}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm"
         >
+          <div className="absolute top-12 left-12 pixel">
+            <button
+              onClick={handleBackToLobby}
+              className="flex items-center px-6 py-3 text-3xl font-bold text-white bg-gray-800 transition-all duration-300 hover:bg-gray-700 border-4 border-green-500 hover:border-green-400 hover:scale-105 shadow-lg hover:shadow-green-500/50 hover:animate-pulse"
+            >
+              <ArrowLeft className="mr-3 h-8 w-8" />
+              Back to Lobby
+            </button>
+          </div>
           <button onClick={onClose} className="hidden"></button>
           <div
             id="modal"
@@ -77,7 +94,7 @@ const WaitingModal = ({
           >
             <h1
               id="title"
-              className="text-black-400 border-b-8 border-green-400 p-4 px-6 pixel text-center text-xl font-bold tracking-widest animate-pulse bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
+              className="text-black-400 border-b-8 border-green-400 p-4 px-6 pixel text-center text-3xl font-bold tracking-widest animate-pulse bg-gradient-to-r from-green-500 to-white bg-clip-text text-transparent"
             >
               {sessionStorage.getItem("roomName")}
             </h1>
@@ -113,14 +130,14 @@ const WaitingModal = ({
           </div>
           <button
             onClick={onReady}
-            className={`mt-4 px-6 py-2 text-white rounded-lg transition-colors ${
+            className={`mt-4 text-3xl pixel px-6 py-4 text-white rounded-lg transition-colors ${
               isButtonDisabled
                 ? "bg-gray-500 cursor-not-allowed"
                 : "bg-green-500 hover:bg-green-600"
             }`}
             disabled={isButtonDisabled}
           >
-            {getButtonText()}
+            {getButtonText().toUpperCase()}
           </button>
         </motion.div>
       )}

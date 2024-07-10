@@ -438,32 +438,6 @@ const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    let previousGauge = 0;
-    const interval = setInterval(() => {
-      if (tetrisGameRef.current) {
-        setLinesCleared(tetrisGameRef.current.linesCleared);
-        const currentGauge = tetrisGameRef.current.linesCleared % 5;
-        // 이전 gauge 값과 현재 gauge 값을 비교하여 4를 지나쳤다면 setGauge(4) 호출
-        if (
-          (previousGauge < 4 && currentGauge < previousGauge) ||
-          (previousGauge < 4 && currentGauge >= 4)
-        ) {
-          setGauge(4);
-        }
-        setGauge(currentGauge);
-        previousGauge = currentGauge;
-        if (currentGauge === 4 && tetrisGameRef.current.linesCleared > 0) {
-          setTimeout(() => {
-            setGauge(0);
-          }, 2000);
-        }
-        drawNextBlock(tetrisGameRef.current.getNextBlock());
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   const onResults = useCallback((results: HandLandmarkResults) => {
     const canvasCtx = canvasRef.current!.getContext("2d")!;
     const recognizeGesture = (
