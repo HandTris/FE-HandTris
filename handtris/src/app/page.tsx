@@ -10,6 +10,7 @@ const LoginPage = () => {
   const [showSplash, setShowSplash] = useState(true);
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
   useEffect(() => {
     const authStatus = searchParams.get("auth");
     if (authStatus === "failed") {
@@ -20,16 +21,21 @@ const LoginPage = () => {
       });
     }
   }, [searchParams, toast]);
+
   useEffect(() => {
-    const hasSeenSplash = localStorage.getItem("hasSeenSplash");
-    if (hasSeenSplash) {
-      setShowSplash(false);
+    if (typeof window !== "undefined") {
+      const hasSeenSplash = localStorage.getItem("hasSeenSplash");
+      if (hasSeenSplash) {
+        setShowSplash(false);
+      }
     }
   }, []);
 
   const handleSplashFinish = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("hasSeenSplash", "true");
+    }
     setShowSplash(false);
-    localStorage.setItem("hasSeenSplash", "true");
   };
 
   if (showSplash) {

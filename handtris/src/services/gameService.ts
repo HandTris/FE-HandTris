@@ -28,3 +28,30 @@ export const exitRoom = async (gameUuid: string) => {
   });
   return data;
 };
+
+export const myStatus = async () => {
+  const data = await fetchWithAuth(`${BASE_URL}/records`);
+  return data;
+};
+
+export const searchStatus = async (nicname: string) => {
+  const data = await fetchWithAuth(`${BASE_URL}/records/${nicname}`);
+  return data;
+};
+
+export const updateStatus = async (status: string) => {
+  const data = await fetchWithAuth(`${BASE_URL}/records`, {
+    method: "POST",
+    body: JSON.stringify({
+      gameResult: status,
+    }),
+  });
+  return data;
+};
+
+export const searchRoomPlayer = async (gameUuid: string) => {
+  const data = await fetchWithAuth(
+    `${BASE_URL}/records/participant/${gameUuid}`,
+  );
+  return data;
+};

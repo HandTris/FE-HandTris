@@ -16,11 +16,10 @@ import { Label } from "@/components/ui/label";
 import { createRoom } from "@/services/gameService";
 
 type DialogDemoProps = {
-  onSuccess: () => void;
   onClose: () => void;
 };
 
-function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
+function CreateRoomModal({ onClose }: DialogDemoProps) {
   const titles = [
     "이 구역 테트리스 짱은 나",
     "나랑 테트리스 한 판?",
@@ -31,7 +30,6 @@ function CreateRoomModal({ onSuccess, onClose }: DialogDemoProps) {
 
   const [title, setTitle] = useState(getRandomTitle());
   const router = useRouter();
-  console.log(onSuccess);
 
   const createRoomMutation = useMutation({
     mutationFn: createRoom,

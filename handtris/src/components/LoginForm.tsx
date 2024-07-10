@@ -52,9 +52,7 @@ const LoginForm = () => {
                 sameSite: "strict",
               });
               setSubmitting(false);
-            })
-            .then(() => {
-              router.push("/lobby");
+              router.replace("/lobby");
               setTimeout(() => showLoginSuccessToast(toast), 100);
             })
             .catch(error => {

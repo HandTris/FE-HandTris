@@ -21,3 +21,11 @@ export interface Landmark {
   y: number;
   z: number;
 }
+
+export type UserInfo = {
+  nickname: string;
+  win: number;
+  lose: number;
+  winRate: number;
+  profileImageUrl: string;
+};
