@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useCallback, useState } from "react";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
@@ -37,7 +36,7 @@ const Home: React.FC = () => {
     LandmarkList | undefined
   >();
   const [otherUserJoined, setOtherUserJoined] = useState(false);
-  const [linesCleared, setLinesCleared] = useState(0);
+  const [linesCleared, setLinesCleared] = useState(null);
   const [gauge, setGauge] = useState(0);
   const [showWaitingModal, setShowWaitingModal] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -211,7 +210,7 @@ const Home: React.FC = () => {
         setGameResult(null);
         setIsStart(false);
         setIsAllReady(false);
-        setLinesCleared(0);
+        setLinesCleared(null);
         setGauge(0);
         if (tetrisGameRef.current) {
           tetrisGameRef.current.linesCleared = 0;
@@ -335,6 +334,8 @@ const Home: React.FC = () => {
     setShowWaitingModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
+    const handsManager = new HandGestureManager(onResults);
+    handsManager.start(videoRef.current!);
     const showCountdown = () => {
       return new Promise<void>(resolve => {
         let count = 3;
@@ -429,8 +430,6 @@ const Home: React.FC = () => {
         console.error("Failed to connect to WebSocket for game", error);
       }
     }
-    const handsManager = new HandGestureManager(onResults);
-    handsManager.start(videoRef.current!);
     backgroundMusic.play();
   };
 
@@ -556,37 +555,34 @@ const Home: React.FC = () => {
       canvasRef.current!.width,
       canvasRef.current!.height,
     );
-    canvasCtx.drawImage(
-      results.image,
-      0,
-      0,
-      canvasRef.current!.width,
-      canvasRef.current!.height,
-    );
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       for (let i = 0; i < results.multiHandLandmarks.length; i++) {
         const landmarks = results.multiHandLandmarks[i] as LandmarkList;
         const classification = results.multiHandedness[i];
         const handType = classification.label;
-        const landmarkColor = handType === "Left" ? "#0000FF" : "#FF0000";
+        const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
+        for (let j = 0; j < landmarks.length; j++) {
+          // 랜드마크 위치 좌우 반전
+          landmarks[j].x = 1 - landmarks[j].x;
+        }
         drawLandmarks(canvasCtx, landmarks, {
           color: landmarkColor,
           lineWidth: 0.1,
         });
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#00FF00",
+          color: "#ffffff",
           lineWidth: 1,
         });
+        for (let j = 0; j < landmarks.length; j++) {
+          // 랜드마크 위치 원복
+          landmarks[j].x = 1 - landmarks[j].x;
+        }
         const gesture = recognizeGesture(landmarks, handType);
         if (handType === "Left") {
-          setGesture(gesture);
           setLeftHandLandmarks(landmarks);
         } else {
           setRightHandLandmarks(landmarks);
-        }
-        if (gestureRef.current) {
-          gestureRef.current.innerText = `Gesture : ${gesture}`;
         }
         handleGesture(gesture, handType);
       }
@@ -594,9 +590,6 @@ const Home: React.FC = () => {
         borderRef.current.style.boxShadow = "none";
       }
     } else {
-      if (gestureRef.current) {
-        gestureRef.current.innerText = "Gesture : None";
-      }
       if (borderRef.current) {
         borderRef.current.style.boxShadow = "0 0 20px 20px red";
       }
@@ -678,27 +671,6 @@ const Home: React.FC = () => {
       setGestureFeedback(null);
       setLastGesture(null);
     }, 1000);
-  };
-
-  const handleClearButtonClick = async () => {
-    try {
-      const response = await fetch(
-        "https://api.checkmatejungle.shop/user/clear",
-        {
-          method: "GET",
-          headers: {},
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const result = await response.json();
-      console.log("Server response: ", result);
-    } catch (error) {
-      console.error("Error during GET request: ", error);
-    }
   };
 
   const handleReadyStartClick = () => {
@@ -805,16 +777,43 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col justify-between">
-              <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
-                <div className="press bg-white text-center text-2xl text-black">
-                  NEXT
+              <div className="flex flex-cols-2 gap-[50px]">
+                <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
+                  <div className="press bg-white text-center text-2xl text-black">
+                    NEXT
+                  </div>
+                  <canvas
+                    ref={nextBlockRef}
+                    width="150"
+                    height="150"
+                    className="w-full h-full"
+                  />
                 </div>
-                <canvas
-                  ref={nextBlockRef}
-                  width="150"
-                  height="150"
-                  className="w-full h-full"
-                />
+                <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
+                  <div className="press bg-white text-center text-xl text-black">
+                    Attack
+                  </div>
+                  <div className="text-center text-[60px] text-white">
+                    {linesCleared}
+                  </div>
+                </div>
+              </div>
+              <div className="flex h-[300px] w-[350px] flex-col border-4 border-l-0 border-t-0">
+                <div className="press bg-white text-center text-2xl text-black">
+                  Your Hands
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-0">
+                    <canvas
+                      ref={canvasRef}
+                      id="canvas"
+                      width="350"
+                      height="271"
+                      className=""
+                    />
+                  </div>
+                  <div className="absolute inset-0"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -830,28 +829,21 @@ const Home: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col items-center justify-between">
-              <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
-                <h1 className="press bg-white text-center text-2xl text-black">
-                  IMAGE
-                </h1>
+              <div className="flex h-[150px] w-[150px] flex-col border-[3px]">
                 <Image
-                  src="/image/profile-pic.jpeg"
+                  src="/image/Lucky.jpeg"
                   width={150}
                   height={100}
                   alt="profile"
                   className="h-full w-full overflow-hidden object-cover"
                 />
               </div>
-              <div className="w-[50%] text-white">
-                <BoardDesc type="Score" desc={1700} />
-                <BoardDesc type="Lines" desc={linesCleared} />
-              </div>
             </div>
           </div>
         </div>
 
         {/* 조이스틱 모델 및 제스쳐 피드백 부분 */}
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-start items-center gap-2 ml-[50px]">
           <div className="flex justify-center items-center">
             <Image
               src={
@@ -903,31 +895,6 @@ const Home: React.FC = () => {
             />
           </div>
         </div>
-        <div>
-          <p className="text-2xl text-green-400">{gesture}</p>
-          <button
-            type="button"
-            onClick={handleReadyStartClick}
-            className={`
-    ${isStart ? "hidden" : ""}
-    ${
-      isOwner && !isAllReady
-        ? "text-darkgray cursor-not-allowed bg-gray-600"
-        : "cursor-pointer border border-green-600 bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-600"
-    } 
-    w-[400px] max-w-full p-3 text-xl font-bold
-    transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:brightness-125
-  `}
-            disabled={(isOwner && !isAllReady) || false}
-          >
-            {isOwner
-              ? isAllReady
-                ? "Game Start"
-                : "Waiting for Ready"
-              : "Ready"}
-          </button>
-        </div>
-
         <AnimatePresence>
           {showResultModal && (
             <GameResultModal
@@ -937,15 +904,6 @@ const Home: React.FC = () => {
             />
           )}
         </AnimatePresence>
-
-        <button
-          type="button"
-          className="fixed left-4 top-4 bg-red-400 text-white p-2 rounded"
-          onClick={handleClearButtonClick}
-        >
-          임시버튼(눌러서 set.clear())
-        </button>
-
         <div className="fixed bottom-4 left-4">
           <div ref={gestureRef} />
           <video
@@ -955,13 +913,6 @@ const Home: React.FC = () => {
             height="240"
             autoPlay
             className="hidden"
-          />
-          <canvas
-            ref={canvasRef}
-            id="canvas"
-            width="320"
-            height="240"
-            className=""
           />
         </div>
       </motion.div>
