@@ -65,16 +65,40 @@ const Home: React.FC = () => {
               if (nextBlock.color === "orange") {
                 tetrisGameRef.current.drawSquareCanvas(
                   context,
-                  x + 1.2,
-                  y - 0.5,
+                  x + 1.3,
+                  y + 0.5,
                   nextBlock.color,
                   false,
                 );
               } else if (nextBlock.color === "blue") {
                 tetrisGameRef.current.drawSquareCanvas(
                   context,
-                  x + 0.2,
-                  y - 0.5,
+                  x + 0.5,
+                  y - 0.1,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "green") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.0,
+                  y + 0.9,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "red") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.0,
+                  y + 1.0,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "yellow") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.0,
+                  y + 0.8,
                   nextBlock.color,
                   false,
                 );
@@ -613,7 +637,7 @@ const Home: React.FC = () => {
       // handType이 "left"이면
       if (gesture == "Pointing Left") {
         console.log("Pointing Left");
-        if (now - lastMoveTime.current.rotate < 1000) {
+        if (now - lastMoveTime.current.rotate < 500) {
         } else {
           lastMoveTime.current.rotate = now;
           tetrisGameRef.current?.p.rotate();
@@ -786,7 +810,7 @@ const Home: React.FC = () => {
                   <div className="press bg-white text-center text-xl text-black">
                     Attack
                   </div>
-                  <div className="text-center text-[60px] text-white">
+                  <div className="text-center text-[60px] p-2 text-white">
                     {linesCleared}
                   </div>
                 </div>
