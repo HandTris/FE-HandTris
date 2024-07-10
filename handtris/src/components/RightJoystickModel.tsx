@@ -163,7 +163,7 @@ const RightJoystickModel = ({ handLandmarks }: ThreeSceneProps) => {
     }
   }, [handLandmarks, cameraAdjusted]);
 
-  return <div ref={mountRef} style={{ width: "320px", height: "400px" }} />;
+  return <div ref={mountRef} style={{ width: "180px", height: "400px" }} />;
 };
 
 export default RightJoystickModel;
