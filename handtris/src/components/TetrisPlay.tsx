@@ -481,24 +481,15 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    let previousGauge = 0;
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        const currentGauge = tetrisGameRef.current.linesCleared % 5;
-        // 이전 gauge 값과 현재 gauge 값을 비교하여 4를 지나쳤다면 setGauge(4) 호출
-        if (
-          (previousGauge < 4 && currentGauge < previousGauge) ||
-          (previousGauge < 4 && currentGauge >= 4)
-        ) {
-          setGauge(4);
-        }
+        const currentGauge = tetrisGameRef.current.linesCleared % 4;
         setGauge(currentGauge);
-        previousGauge = currentGauge;
-        if (currentGauge === 4 && tetrisGameRef.current.linesCleared > 0) {
+        if (currentGauge === 3 && tetrisGameRef.current.linesCleared > 0) {
           setTimeout(() => {
             setGauge(0);
-          }, 2000);
+          }, 1000);
         }
         drawNextBlock(tetrisGameRef.current.getNextBlock());
       }
@@ -763,7 +754,7 @@ const Home: React.FC = () => {
               <div
                 className="w-full transition-all duration-700 ease-in-out"
                 style={{
-                  height: `${(gauge / 4) * 100}%`,
+                  height: `${(gauge / 3) * 100}%`,
                   background: "linear-gradient(to top, green, lightgreen)",
                 }}
               ></div>
