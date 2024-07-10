@@ -1,11 +1,18 @@
-"use client";
-
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { UserCard } from "./UserCard";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { getRoomName } from "@/util/getRoomCode";
+import { useRouter } from "next/navigation";
+
+export interface Player {
+  nickname: string;
+  profileImageUrl: string;
+  win: number;
+  lose: number;
+  winRate: number;
+}
 
 interface WaitingModalProps {
   isOpen: boolean;
@@ -14,44 +21,31 @@ interface WaitingModalProps {
   onReady: () => void;
   isOwner: boolean | null;
   isAllReady: boolean;
-  currentUser: {
-    image: string;
-    name: string;
-    winrate: string;
-    stats: string;
-  };
-  otherUser: {
-    image: string;
-    name: string;
-    winrate: string;
-    stats: string;
-  } | null;
+  players: Player[];
 }
 
 const WaitingModal = ({
   isOpen,
-  isLoading,
+  //   isLoading,
   onClose,
   onReady,
   isOwner,
   isAllReady,
-  currentUser,
-  otherUser,
+  players = [],
 }: WaitingModalProps) => {
   const router = useRouter();
-
   if (!isOpen) return null;
 
   const getButtonText = () => {
     if (isOwner) {
-      if (!otherUser) return "대기 중...";
+      if (players.length < 2) return "대기 중...";
       if (isAllReady) return "Game Start";
       return "상대방 준비 대기 중...";
     }
     return "Ready";
   };
 
-  const isButtonDisabled = (isOwner && !otherUser) || (!isOwner && !otherUser);
+  const isButtonDisabled = players.length < 2;
 
   const handleBackToLobby = () => {
     router.push("/lobby");
@@ -96,7 +90,7 @@ const WaitingModal = ({
               id="title"
               className="text-black-400 border-b-8 border-green-400 p-4 px-6 pixel text-center text-3xl font-bold tracking-widest animate-pulse bg-gradient-to-r from-green-500 to-white bg-clip-text text-transparent"
             >
-              {sessionStorage.getItem("roomName")}
+              {typeof window !== "undefined" ? getRoomName() : null}
             </h1>
             <div className="relative z-10 p-8 text-white">
               <div className={`flex h-full items-center justify-around`}>
@@ -105,25 +99,18 @@ const WaitingModal = ({
                   bgColorFrom="from-gray-800"
                   bgColorTo="to-purple-700"
                   borderColor="border-purple-600"
-                  user={currentUser}
+                  user={players[0] || null}
                 />
                 <div className="mx-8 text-6xl font-extrabold text-white drop-shadow-lg pixel">
                   <span className="text-purple-500">V</span>
                   <span className="text-yellow-600">S</span>
                 </div>
                 <UserCard
-                  isLoading={isLoading}
+                  isLoading={players.length === 1}
                   bgColorFrom="from-gray-800"
                   bgColorTo="to-yellow-700"
                   borderColor="border-yellow-600"
-                  user={
-                    otherUser || {
-                      image: "",
-                      name: "",
-                      winrate: "",
-                      stats: "",
-                    }
-                  }
+                  user={players[1] || null}
                 />
               </div>
             </div>

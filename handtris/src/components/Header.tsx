@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import useAuth from "@/hook/useAuth";
 import LogoutDialog from "./LogoutDialog";
@@ -17,14 +17,27 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { myStatus } from "@/services/gameService";
+import { UserInfo } from "@/types";
 
 function Header() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [myInfo, setMyInfo] = useState(null);
+  const [myInfo, setMyInfo] = useState<UserInfo>();
   const { isLoggedIn, setIsLoggedIn } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  const fetchMyStatus = useCallback(async () => {
+    if (isLoggedIn) {
+      try {
+        const data = await myStatus();
+        setMyInfo(data.data);
+      } catch (error) {
+        console.error("Failed to fetch user status:", error);
+      }
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     const checkToken = () => {
@@ -36,19 +49,15 @@ function Header() {
   }, [pathname, setIsLoggedIn]);
 
   useEffect(() => {
-    const fetchMyStatus = async () => {
-      if (isLoggedIn) {
-        try {
-          const data = await myStatus();
-          setMyInfo(data.data);
-        } catch (error) {
-          console.error("Failed to fetch user status:", error);
-        }
-      }
-    };
-
     fetchMyStatus();
-  }, [isLoggedIn]);
+  }, [fetchMyStatus]);
+
+  useEffect(() => {
+    if (pathname === "/lobby" && searchParams.get("refresh") === "true") {
+      fetchMyStatus();
+      router.replace("/lobby");
+    }
+  }, [pathname, searchParams, fetchMyStatus, router]);
 
   const handleLogout = () => {
     Cookies.remove("accessToken");
@@ -65,8 +74,8 @@ function Header() {
   return (
     <header className="flex items-center justify-between bg-[#040F2D] p-4 border-t-0 border-2 border-gray-200 relative z-10">
       <Link
-        href="/"
-        className="text-2xl font-bold text-green-400 hover:text-green-500 pixel"
+        href="/lobby"
+        className="text-4xl font-bold text-green-400 hover:text-green-500 pixel"
       >
         HANDTRIS
       </Link>

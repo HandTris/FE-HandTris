@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Room } from "@/types/Room";
-import { enterRoom, fetchRooms, myStatus } from "@/services/gameService";
+import { enterRoom, fetchRooms } from "@/services/gameService";
 import { useRouter } from "next/navigation";
 import CreateRoomModal from "./CreateRoomModal";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -32,7 +32,7 @@ function Rooms() {
 
   const sortedRooms = useMemo(() => {
     if (!roomsData?.data) return [];
-    return [...roomsData.data].sort((a, b) => b.id - a.id);
+    return [...roomsData.data].reverse();
   }, [roomsData]);
 
   const enterRoomMutation = useMutation({

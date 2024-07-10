@@ -33,6 +33,7 @@ export const myStatus = async () => {
   const data = await fetchWithAuth(`${BASE_URL}/records`);
   return data;
 };
+// 요청 본문의 타입을 정의
 
 export const searchStatus = async (nicname: string) => {
   const data = await fetchWithAuth(`${BASE_URL}/records/${nicname}`);
@@ -41,7 +42,7 @@ export const searchStatus = async (nicname: string) => {
 
 export const updateStatus = async (status: string) => {
   const data = await fetchWithAuth(`${BASE_URL}/records`, {
-    method: "POST",
+    method: "PUT",
     body: JSON.stringify({
       gameResult: status,
     }),

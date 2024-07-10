@@ -6,8 +6,10 @@ import { Formik, Form } from "formik";
 import axios from "axios";
 import CustomField from "../../components/CustomField";
 import registerValidation from "../../yup/registervalidation";
+import { useRouter } from "next/navigation";
 
 const Signup = () => {
+  const router = useRouter();
   return (
     <div className="flex h-full items-center justify-center p-4">
       <motion.div
@@ -26,15 +28,17 @@ const Signup = () => {
           }}
           validationSchema={registerValidation}
           onSubmit={(values, { setSubmitting }) => {
-            axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signup`, {
-              username: values.username,
-              password: values.password,
-              nickname: values.nickname,
-            });
-            setTimeout(() => {
-              alert(JSON.stringify(values, null, 2));
-              setSubmitting(false);
-            }, 400);
+            axios
+              .post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signup`, {
+                username: values.username,
+                password: values.password,
+                nickname: values.nickname,
+              })
+              .then(response => {
+                console.log(response);
+                setSubmitting(false);
+                router.push("/login");
+              });
           }}
         >
           {({ isSubmitting, isValid }) => (
@@ -44,11 +48,7 @@ const Signup = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
               >
-                <CustomField
-                  type="text"
-                  name="username"
-                  placeholder="username"
-                />
+                <CustomField type="text" name="username" placeholder="ID" />
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
