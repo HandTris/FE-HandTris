@@ -62,13 +62,32 @@ const Home: React.FC = () => {
         nextBlock.activeTetromino.forEach((row, y) => {
           row.forEach((value, x) => {
             if (value && tetrisGameRef.current) {
-              tetrisGameRef.current.drawSquareCanvas(
-                context,
-                x + 1.3,
-                y + 0.5,
-                nextBlock.color,
-                false,
-              );
+              if (nextBlock.color === "orange") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.2,
+                  y - 0.5,
+                  nextBlock.color,
+                  false,
+                );
+              } else if (nextBlock.color === "blue") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 0.2,
+                  y - 0.5,
+                  nextBlock.color,
+                  false,
+                );
+              } else {
+                //"cyan"
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 0.5,
+                  y + 0.5,
+                  nextBlock.color,
+                  false,
+                );
+              }
             }
           });
         });
@@ -754,7 +773,7 @@ const Home: React.FC = () => {
         <div className="flex items-center justify-around relative">
           <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
           <div className="relative flex">
-            <div className="flex w-[20px] flex-col-reverse border-2 p-4">
+            <div className="flex w-[20px] flex-col-reverse border-2">
               <div
                 className="w-full transition-all duration-700 ease-in-out"
                 style={{
