@@ -32,7 +32,7 @@ export class WebSocketManager {
       // 커스텀 헤더를 설정할 수 있는 방법을 사용합니다.
       const headers: { [key: string]: string } = {
         Authorization: `Bearer ${this.token}`,
-        roomCode: getRoomCode(),
+        roomCode: getRoomCode() as string,
       };
 
       this.stompClient.connect(
