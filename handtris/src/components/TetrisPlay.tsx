@@ -305,7 +305,7 @@ const Home: React.FC = () => {
             );
           }
         }
-      }, 7000);
+      }, 70000);
 
       return () => clearTimeout(timeoutId);
     }
