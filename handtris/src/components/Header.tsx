@@ -59,16 +59,40 @@ function Header() {
     }
   }, [pathname, searchParams, fetchMyStatus, router]);
 
-  const handleLogout = () => {
-    Cookies.remove("accessToken");
-    setIsLoggedIn(false);
-    setIsDialogOpen(false);
-    router.push("/login");
-    toast({
-      title: "로그아웃 성공",
-      description: "로그아웃 되었습니다.",
-      variant: "default",
-    });
+  //   const handleLogout = () => {
+  //     Cookies.remove("accessToken");
+  //     setIsLoggedIn(false);
+  //     setIsDialogOpen(false);
+  //     router.push("/login");
+  //     toast({
+  //       title: "로그아웃 성공",
+  //       description: "로그아웃 되었습니다.",
+  //       variant: "default",
+  //     });
+  //   };
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/logout", { method: "POST" });
+      if (response.ok) {
+        setIsLoggedIn(false);
+        setIsDialogOpen(false);
+        router.push("/login");
+        toast({
+          title: "로그아웃 성공",
+          description: "로그아웃 되었습니다.",
+          variant: "default",
+        });
+      } else {
+        throw new Error("로그아웃 실패");
+      }
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);
+      toast({
+        title: "로그아웃 실패",
+        description: "로그아웃 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -83,7 +107,7 @@ function Header() {
         {isLoggedIn && (
           <>
             <h1 className="text-white text-xl pixel">
-              WELCOME / {myInfo?.nickname || "CHOCO"}
+              {myInfo?.nickname || `로그인이 만료되었습니다.`}
             </h1>
             <Sheet>
               <SheetTrigger asChild>

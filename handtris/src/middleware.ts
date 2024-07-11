@@ -31,7 +31,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/lobby", request.url));
       }
     } else {
-      // Token is invalid, clear it and redirect to login
       const response = NextResponse.redirect(
         new URL("/?auth=failed", request.url),
       );
