@@ -103,7 +103,7 @@ export class TetrisGame {
     this.linesCleared = 0;
     this.isRowFull = false;
     this.isAttack = false;
-    this.isAttack = false;
+    this.isAttacked = false;
 
     this.drawBoard();
     this.drawSquareCanvas = this.drawSquare;
