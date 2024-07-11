@@ -862,8 +862,7 @@ const Home: React.FC = () => {
                 <div className="flex h-[150px] w-[150px] flex-col border-[3px]">
                   <Image
                     src={
-                      roomPlayers[1]?.profileImageUrl ||
-                      "/image/default-profile.png"
+                      roomPlayers[1]?.profileImageUrl || "/image/profile_1.jpeg"
                     }
                     width={150}
                     height={100}
