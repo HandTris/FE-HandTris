@@ -38,6 +38,7 @@
     "react-dom": "^18",
     "react-slick": "^0.30.2",
     "react-spinners": "^0.14.1",
+    "sharp": "^0.33.4",
     "slick-carousel": "^1.8.1",
     "sockjs": "^0.3.24",
     "sockjs-client": "^1.6.1",

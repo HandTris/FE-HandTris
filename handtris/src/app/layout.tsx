@@ -1,13 +1,14 @@
 import { Nanum_Gothic_Coding } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
+// import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ReactQueryProviders from "@/hook/useReactQuery";
 import React from "react";
 import { MusicProvider } from "@/components/MusicProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { BackNavigationBlocker } from "@/components/BackNavigationBlocker";
-
+import dynamic from "next/dynamic";
+const HeaderComponent = dynamic(() => import("@/components/Header"));
 const nanum = Nanum_Gothic_Coding({
   weight: "700",
   subsets: ["latin"],
@@ -35,7 +36,7 @@ export default function RootLayout({
         <div className="mx-auto flex h-[100vh] w-full max-w-[1400px] flex-col">
           <ReactQueryProviders>
             <MusicProvider>
-              <Header />
+              <HeaderComponent />
               <main className="grow flex flex-col flex-1 overflow-hidden">
                 <BackNavigationBlocker />
                 {children}
