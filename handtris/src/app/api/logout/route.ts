@@ -11,17 +11,15 @@ export async function POST(request: Request) {
     value: "",
     path: "/",
     httpOnly: true,
-    secure: true, // HTTPS를 사용한다고 가정
+    secure: true,
     sameSite: "strict" as const,
   };
 
-  // expires 사용
   cookieStore.set({
     ...cookieOptions,
     expires: new Date(0),
   });
 
-  // maxAge 사용
   cookieStore.set({
     ...cookieOptions,
     maxAge: 0,
@@ -29,7 +27,6 @@ export async function POST(request: Request) {
 
   const response = NextResponse.json({ message: "로그아웃 성공" });
 
-  // 추가적인 Set-Cookie 헤더
   const cookieString = `accessToken=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict${domain ? `; Domain=${domain}` : ""}`;
   response.headers.append("Set-Cookie", cookieString);
 
