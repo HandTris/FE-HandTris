@@ -11,10 +11,13 @@ import {
   Swords,
 } from "lucide-react";
 import CountUp from "react-countup";
+import { getRoomCode } from "@/util/getRoomCode";
+import { WebSocketManager } from "./WebSocketManager";
 interface GameResultModalProps {
   result: "WIN" | "LOSE";
   onPlayAgain: () => void;
   linesCleared: number;
+  wsManager: WebSocketManager;
 }
 
 interface PlayerStats {
@@ -26,11 +29,28 @@ interface PlayerStats {
 const GameResultModal: React.FC<GameResultModalProps> = ({
   result,
   onPlayAgain,
+  wsManager,
 }) => {
   const router = useRouter();
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [prevWinRate, setPrevWinRate] = useState<number | null>(null);
 
+  const handleBackToLobby = () => {
+    const roomCode = getRoomCode();
+    if (roomCode && wsManager && wsManager.connected) {
+      wsManager.sendMessageOnDisconnecting(
+        {},
+        `/app/${roomCode}/disconnect`,
+        false, // isStart는 대기실에서 false입니다
+      );
+      wsManager.disconnect();
+    }
+    // exitRoom(roomCode as string);
+    sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("roomName");
+
+    router.push("/lobby?refresh=true");
+  };
   useEffect(() => {
     const fetchPlayerStats = async () => {
       try {
@@ -164,7 +184,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => router.push("/lobby?refresh=true")}
+            onClick={handleBackToLobby}
             className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-lg font-semibold"
           >
             Back to Lobby
