@@ -202,7 +202,9 @@ export class TetrisGame {
     }
   }
   createNewBag(): Piece[] {
-    const bag = PIECES.map(piece => new Piece(piece.shape, piece.color, this));
+    const bag = PIECES.slice(0, 7).map(
+      piece => new Piece(piece.shape, piece.color, this),
+    );
     for (let i = bag.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [bag[i], bag[j]] = [bag[j], bag[i]];
@@ -218,7 +220,6 @@ export class TetrisGame {
   }
 
   randomPiece(): Piece {
-
     return this.getNextPieceFromBag();
   }
   gaugeFullPiece(): Piece {
