@@ -55,6 +55,9 @@ const Home: React.FC = () => {
   const [showResultModal, setShowResultModal] = useState(false);
   const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const isSub = useRef(false);
+  const isSubTemp = useRef(false);
+
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -318,18 +321,21 @@ const Home: React.FC = () => {
   const subscribeToState = async () => {
     const roomCode = getRoomCode();
     if (wsManagerRef.current && isOwner != null) {
-      wsManagerRef.current.subscribe(
-        `/topic/state/${roomCode}`,
-        (message: { isReady: boolean; isStart: boolean }) => {
-          console.log("대기 정보 message received: ", message);
-          setIsAllReady(message.isReady);
-          if (message.isStart && !isStart) {
-            setIsStart(true);
-            startGame(); // 클라이언트 시작 로직
-          }
-        },
-      );
-      console.log(`Subscribed to /topic/state/${roomCode}`);
+      if (!isSubTemp.current) {
+        wsManagerRef.current.subscribe(
+          `/topic/state/${roomCode}`,
+          (message: { isReady: boolean; isStart: boolean }) => {
+            console.log("대기 정보 message received: ", message);
+            setIsAllReady(message.isReady);
+            if (message.isStart && !isStart) {
+              setIsStart(true);
+              startGame(); // 클라이언트 시작 로직
+            }
+          },
+        );
+        console.log(`Subscribed to /topic/state/${roomCode}`);
+        isSubTemp.current = true;
+      }
     }
   };
 
@@ -467,33 +473,37 @@ const Home: React.FC = () => {
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
+
       try {
-        wsManagerRef.current?.subscribe(
-          `/user/queue/tetris/${roomCode}`,
-          (message: {
-            board: TetrisBoard;
-            isEnd: boolean;
-            isAttack: boolean;
-            isGaugeFull: boolean;
-          }) => {
-            if (tetrisGameRef.current) {
-              if (message.isEnd) {
-                tetrisGameRef.current.gameEnd = true;
-                backgroundMusic.pause();
-                playSoundEffect("/sounds/winner.wav");
-                setGameResult("you WIN!");
+        if (!isSub.current) {
+          wsManagerRef.current?.subscribe(
+            `/user/queue/tetris/${roomCode}`,
+            (message: {
+              board: TetrisBoard;
+              isEnd: boolean;
+              isAttack: boolean;
+              isGaugeFull: boolean;
+            }) => {
+              if (tetrisGameRef.current) {
+                if (message.isEnd) {
+                  tetrisGameRef.current.gameEnd = true;
+                  backgroundMusic.pause();
+                  playSoundEffect("/sounds/winner.wav");
+                  setGameResult("you WIN!");
+                }
+                if (message.isAttack) {
+                  // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
+                  tetrisGameRef.current.isAttacked = true;
+                }
+                if (message.isGaugeFull) {
+                  tetrisGameRef.current.isGaugeFullAttacked = true;
+                }
+                tetrisGameRef.current.drawBoard2(message.board);
               }
-              if (message.isAttack) {
-                // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
-                tetrisGameRef.current.isAttacked = true;
-              }
-              if (message.isGaugeFull) {
-                tetrisGameRef.current.isGaugeFullAttacked = true;
-              }
-              tetrisGameRef.current.drawBoard2(message.board);
-            }
-          },
-        );
+            },
+          );
+          isSub.current = true;
+        }
         await showCountdown();
         tetrisGameRef.current = new TetrisGame(
           ctx,
