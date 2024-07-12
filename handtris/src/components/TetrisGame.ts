@@ -69,6 +69,7 @@ export class TetrisGame {
   isAttack: boolean;
   isAttacked: boolean;
   nextBlock: Piece;
+  isGaugeFull: boolean;
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -104,6 +105,7 @@ export class TetrisGame {
     this.isRowFull = false;
     this.isAttack = false;
     this.isAttacked = false;
+    this.isGaugeFull = false;
 
     this.drawBoard();
     this.drawSquareCanvas = this.drawSquare;
@@ -202,8 +204,13 @@ export class TetrisGame {
   }
 
   randomPiece(): Piece {
-    const r = Math.floor(Math.random() * PIECES.length);
+    const r = Math.floor(Math.random() * (PIECES.length - 1));
     const piece = PIECES[r];
+    return new Piece(piece.shape, piece.color, this);
+  }
+  gaugeFullPiece(): Piece {
+    const piece = PIECES[7];
+    this.isGaugeFull = false;
     return new Piece(piece.shape, piece.color, this);
   }
 
@@ -388,7 +395,12 @@ export class Piece {
     } else {
       this.lock();
       this.game.p = this.game.nextBlock;
-      this.game.nextBlock = this.game.randomPiece();
+      if (this.game.isGaugeFull == true) {
+        this.game.nextBlock = this.game.gaugeFullPiece();
+        this.game.isGaugeFull = false;
+      } else {
+        this.game.nextBlock = this.game.randomPiece();
+      }
       this.game.p.drawGhost();
     }
   }
