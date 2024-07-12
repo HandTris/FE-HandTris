@@ -156,33 +156,50 @@ export class TetrisGame {
     };
 
     if (isGhost && color !== this.VACANT) {
-      ctx.fillStyle = `${colorSet.ghost}40`;
+      // 고스트 블록 그리기
+      ctx.fillStyle = `${colorSet.main}15`;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+
+      // 고스트 블록 테두리
+      ctx.strokeStyle = `${colorSet.main}70`;
+      ctx.lineWidth = 0.6;
+      ctx.strokeRect(
+        x * this.SQ + 1,
+        y * this.SQ + 1,
+        this.SQ - 2,
+        this.SQ - 2,
+      );
     } else {
+      // 일반 블록 그리기 (변경 없음)
       ctx.fillStyle = colorSet.main;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
       if (color !== this.VACANT) {
+        // 블록의 밝은 부분
+        ctx.fillStyle = colorSet.light;
         ctx.beginPath();
         ctx.moveTo(x * this.SQ, y * this.SQ);
         ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
         ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-        ctx.fillStyle = colorSet.light;
         ctx.fill();
 
+        // 블록의 어두운 부분
+        ctx.fillStyle = colorSet.dark;
         ctx.beginPath();
         ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
         ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
         ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-        ctx.fillStyle = colorSet.dark;
         ctx.fill();
       }
     }
 
-    ctx.strokeStyle = this.GRID_COLOR;
-    ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+    // 그리드 선 (고스트 블록에는 그리지 않음)
+    if (!isGhost) {
+      ctx.strokeStyle = this.GRID_COLOR;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+    }
   }
-
   drawBoard() {
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
@@ -342,14 +359,22 @@ export class Piece {
             if (this.y + r >= 0 && this.x + c >= 0) {
               this.game.board_forsend[this.y + r][this.x + c] = color;
             }
+            this.game.drawSquare(
+              this.game.ctx,
+              this.x + c,
+              this.y + r,
+              color,
+              false,
+            );
+          } else if (this.y + r !== this.y) {
+            this.game.drawSquare(
+              this.game.ctx,
+              this.x + c,
+              this.y + r,
+              color,
+              true,
+            );
           }
-          this.game.drawSquare(
-            this.game.ctx,
-            this.x + c,
-            this.y + r,
-            color,
-            isGhost,
-          );
         }
       }
     }
@@ -372,7 +397,6 @@ export class Piece {
     this.fillGhost(this.ghostY, this.color);
     this.prevGhostY = this.ghostY;
   }
-
   unDrawGhost() {
     if (this.prevGhostY !== -1) {
       this.fillGhost(this.prevGhostY, this.game.VACANT);
@@ -384,7 +408,7 @@ export class Piece {
     for (let r = 0; r < this.activeTetromino.length; r++) {
       for (let c = 0; c < this.activeTetromino[r].length; c++) {
         if (this.activeTetromino[r][c]) {
-          if (ghostY + r >= 0 && this.x + c >= 0) {
+          if (ghostY + r >= 0 && this.x + c >= 0 && ghostY + r > this.y + r) {
             this.game.drawSquare(
               this.game.ctx,
               this.x + c,
@@ -409,9 +433,7 @@ export class Piece {
   moveDown() {
     if (!this.collision(0, 1)) {
       this.unDraw();
-      this.unDrawGhost();
       this.y++;
-      this.drawGhost();
       this.draw();
     } else {
       this.lock();
@@ -422,7 +444,7 @@ export class Piece {
       } else {
         this.game.nextBlock = this.game.randomPiece();
       }
-      this.game.p.drawGhost();
+      this.game.p.draw();
     }
   }
 

@@ -960,6 +960,7 @@ const Home: React.FC = () => {
             {showResultModal && (
               <GameResultModal
                 result={gameResult === "you WIN!" ? "WIN" : "LOSE"}
+                wsManager={wsManagerRef.current!}
                 onPlayAgain={handlePlayAgain}
                 linesCleared={linesCleared || 0}
               />
