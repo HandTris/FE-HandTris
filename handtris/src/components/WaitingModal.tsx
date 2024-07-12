@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { getRoomName } from "@/util/getRoomCode";
 import { useRouter } from "next/navigation";
+import { exitRoom } from "@/services/gameService";
 
 export interface Player {
   nickname: string;
@@ -48,6 +49,10 @@ const WaitingModal = ({
   const isButtonDisabled = players.length < 2;
 
   const handleBackToLobby = () => {
+    sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("roomName");
+    exitRoom(sessionStorage.getItem("roomCode") as string);
+
     router.push("/lobby");
   };
 
