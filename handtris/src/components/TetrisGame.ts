@@ -69,6 +69,7 @@ export class TetrisGame {
   isAttack: boolean;
   isAttacked: boolean;
   nextBlock: Piece;
+  pieceBag: Piece[];
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -90,8 +91,9 @@ export class TetrisGame {
     this.board_forsend = this.createBoard();
     this.ctx = ctx;
     this.ctx2 = ctx2;
-    this.p = this.randomPiece();
-    this.nextBlock = this.randomPiece(); // 다음 블럭 초기화
+    this.pieceBag = this.createNewBag();
+    this.p = this.getNextPieceFromBag();
+    this.nextBlock = this.getNextPieceFromBag();
     this.dropStart = Date.now();
     this.gameOver = false;
     this.wsManager = wsManager;
@@ -195,11 +197,24 @@ export class TetrisGame {
       }
     }
   }
+  createNewBag(): Piece[] {
+    const bag = PIECES.map(piece => new Piece(piece.shape, piece.color, this));
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    return bag;
+  }
+
+  getNextPieceFromBag(): Piece {
+    if (this.pieceBag.length === 0) {
+      this.pieceBag = this.createNewBag();
+    }
+    return this.pieceBag.pop()!;
+  }
 
   randomPiece(): Piece {
-    const r = Math.floor(Math.random() * PIECES.length);
-    const piece = PIECES[r];
-    return new Piece(piece.shape, piece.color, this);
+    return this.getNextPieceFromBag();
   }
 
   getNextBlock(): Piece {
