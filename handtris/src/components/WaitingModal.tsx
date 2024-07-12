@@ -49,7 +49,10 @@ const WaitingModal = ({
   const isButtonDisabled = players.length < 2;
 
   const handleBackToLobby = () => {
+    sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("roomName");
     exitRoom(sessionStorage.getItem("roomCode") as string);
+
     router.push("/lobby");
   };
 
