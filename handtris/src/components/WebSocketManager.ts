@@ -50,6 +50,27 @@ export class WebSocketManager {
       );
     });
   }
+  async disconnect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.stompClient && this.connected) {
+        this.stompClient.disconnect(
+          () => {
+            console.log("Disconnected");
+            this.connected = false;
+            resolve();
+          },
+          (error: string | Frame) => {
+            console.error(`Disconnection error: ${error}`);
+            alert(`Failed to disconnect from WebSocket: ${error}`);
+            reject(error);
+          },
+        );
+      } else {
+        console.warn("Stomp client is not connected");
+        resolve(); // Already disconnected
+      }
+    });
+  }
 
   subscribe<T>(subscribeUrl: string, onMessage: (message: T) => void) {
     if (this.connected && this.stompClient) {

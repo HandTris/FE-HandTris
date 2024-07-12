@@ -71,7 +71,7 @@ export class TetrisGame {
   nextBlock: Piece;
   isGaugeFull: boolean;
   isGaugeFullAttacked: boolean;
-
+  pieceBag: Piece[];
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -93,8 +93,9 @@ export class TetrisGame {
     this.board_forsend = this.createBoard();
     this.ctx = ctx;
     this.ctx2 = ctx2;
-    this.p = this.randomPiece();
-    this.nextBlock = this.randomPiece(); // 다음 블럭 초기화
+    this.pieceBag = this.createNewBag();
+    this.p = this.getNextPieceFromBag();
+    this.nextBlock = this.getNextPieceFromBag();
     this.dropStart = Date.now();
     this.gameOver = false;
     this.wsManager = wsManager;
@@ -154,40 +155,35 @@ export class TetrisGame {
       ghost: color,
     };
 
-    ctx.clearRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
-    if (isGhost) {
-      ctx.strokeStyle = colorSet.ghost;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 3]);
-      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
-      ctx.setLineDash([]);
+    if (isGhost && color !== this.VACANT) {
+      ctx.fillStyle = `${colorSet.ghost}40`;
+      ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
     } else {
       ctx.fillStyle = colorSet.main;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-      ctx.beginPath();
-      ctx.moveTo(x * this.SQ, y * this.SQ);
-      ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
-      ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-      ctx.fillStyle = colorSet.light;
-      ctx.fill();
+      if (color !== this.VACANT) {
+        ctx.beginPath();
+        ctx.moveTo(x * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.light;
+        ctx.fill();
 
-      ctx.beginPath();
-      ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
-      ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
-      ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-      ctx.fillStyle = colorSet.dark;
-      ctx.fill();
-
-      ctx.strokeStyle = this.GRID_COLOR;
-      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+        ctx.beginPath();
+        ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.dark;
+        ctx.fill();
+      }
     }
+
+    ctx.strokeStyle = this.GRID_COLOR;
+    ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
   }
 
   drawBoard() {
-    this.ctx.fillStyle = this.VACANT;
-    this.ctx.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
-
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
         this.drawSquare(this.ctx, c, r, this.board[r][c]);
@@ -205,11 +201,25 @@ export class TetrisGame {
       }
     }
   }
+  createNewBag(): Piece[] {
+    const bag = PIECES.map(piece => new Piece(piece.shape, piece.color, this));
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    return bag;
+  }
+
+  getNextPieceFromBag(): Piece {
+    if (this.pieceBag.length === 0) {
+      this.pieceBag = this.createNewBag();
+    }
+    return this.pieceBag.pop()!;
+  }
 
   randomPiece(): Piece {
-    const r = Math.floor(Math.random() * (PIECES.length - 1));
-    const piece = PIECES[r];
-    return new Piece(piece.shape, piece.color, this);
+
+    return this.getNextPieceFromBag();
   }
   gaugeFullPiece(): Piece {
     const piece = PIECES[7];
@@ -273,7 +283,7 @@ export class TetrisGame {
   moveToGhostPosition() {
     const ghostPosition = this.calculateGhostPosition();
     this.p.moveTo(ghostPosition.x, ghostPosition.y);
-    this.drawBoard(); // 블록의 새로운 위치를 반영하도록 보드를 다시 그립니다.
+    this.drawBoard();
   }
 
   calculateGhostPosition() {
@@ -309,6 +319,7 @@ export class Piece {
   y: number;
   game: TetrisGame;
   ghostY: number;
+  prevGhostY: number;
 
   constructor(tetromino: number[][][], color: string, game: TetrisGame) {
     this.tetromino = tetromino;
@@ -319,6 +330,7 @@ export class Piece {
     this.y = -2;
     this.game = game;
     this.ghostY = this.calculateGhostY();
+    this.prevGhostY = -1;
   }
 
   fill(color: string, isGhost: boolean = false) {
@@ -344,21 +356,27 @@ export class Piece {
 
   draw() {
     this.fill(this.color);
+    this.drawGhost();
   }
 
   unDraw() {
     this.fill(this.game.VACANT);
-  }
-
-  drawGhost() {
     this.unDrawGhost();
+  }
+  drawGhost() {
+    if (this.prevGhostY !== -1) {
+      this.fillGhost(this.prevGhostY, this.game.VACANT);
+    }
     this.ghostY = this.calculateGhostY();
     this.fillGhost(this.ghostY, this.color);
+    this.prevGhostY = this.ghostY;
   }
 
   unDrawGhost() {
-    this.fillGhost(this.ghostY, this.game.VACANT);
-    this.game.drawBoard(); // 기존 보드를 다시 그려서 얼룩을 지우기
+    if (this.prevGhostY !== -1) {
+      this.fillGhost(this.prevGhostY, this.game.VACANT);
+      this.prevGhostY = -1;
+    }
   }
 
   fillGhost(ghostY: number, color: string) {
@@ -392,7 +410,6 @@ export class Piece {
       this.unDraw();
       this.unDrawGhost();
       this.y++;
-      this.ghostY = this.calculateGhostY();
       this.drawGhost();
       this.draw();
     } else {
@@ -469,6 +486,7 @@ export class Piece {
   }
 
   lock() {
+    this.unDrawGhost();
     for (let r = 0; r < this.activeTetromino.length; r++) {
       for (let c = 0; c < this.activeTetromino[r].length; c++) {
         if (!this.activeTetromino[r][c]) {

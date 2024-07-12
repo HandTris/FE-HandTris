@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { getRoomName } from "@/util/getRoomCode";
 import { useRouter } from "next/navigation";
+import { WebSocketManager } from "./WebSocketManager";
 
 export interface Player {
   nickname: string;
@@ -21,6 +22,7 @@ interface WaitingModalProps {
   onReady: () => void;
   isOwner: boolean | null;
   isAllReady: boolean;
+  wsManager: WebSocketManager;
   players: Player[];
 }
 
@@ -32,6 +34,7 @@ const WaitingModal = ({
   isOwner,
   isAllReady,
   players = [],
+  wsManager,
 }: WaitingModalProps) => {
   const router = useRouter();
   if (!isOpen) return null;
@@ -48,6 +51,19 @@ const WaitingModal = ({
   const isButtonDisabled = players.length < 2;
 
   const handleBackToLobby = () => {
+    const roomCode = sessionStorage.getItem("roomCode");
+    if (roomCode && wsManager && wsManager.connected) {
+      wsManager.sendMessageOnDisconnecting(
+        {},
+        `/app/${roomCode}/disconnect`,
+        false, // isStart는 대기실에서 false입니다
+      );
+      wsManager.disconnect();
+    }
+    // exitRoom(roomCode as string);
+    sessionStorage.removeItem("roomCode");
+    sessionStorage.removeItem("roomName");
+
     router.push("/lobby");
   };
 
