@@ -110,6 +110,13 @@ const J = [
     [0, 0, 1],
   ],
 ];
+const X = [
+  [
+    [1, 1, 1],
+    [1, 0, 1],
+    [1, 1, 1],
+  ],
+];
 
 // the pieces and their colors
 const PIECES: { shape: number[][][]; color: string }[] = [
@@ -120,6 +127,7 @@ const PIECES: { shape: number[][][]; color: string }[] = [
   { shape: L, color: "purple" },
   { shape: I, color: "cyan" },
   { shape: J, color: "orange" },
+  { shape: X, color: "pink" },
 ];
 
-export { PIECES, Z, S, T, O, L, I, J };
+export { PIECES, Z, S, T, O, L, I, J, X };

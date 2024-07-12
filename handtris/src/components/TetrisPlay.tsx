@@ -471,6 +471,7 @@ const Home: React.FC = () => {
             board: TetrisBoard;
             isEnd: boolean;
             isAttack: boolean;
+            isGaugeFull: boolean;
           }) => {
             if (tetrisGameRef.current) {
               if (message.isEnd) {
@@ -480,8 +481,11 @@ const Home: React.FC = () => {
                 setGameResult("you WIN!");
               }
               if (message.isAttack) {
-                // tetrisGameRef.current.addBlockRow();
+                // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                 tetrisGameRef.current.isAttacked = true;
+              }
+              if (message.isGaugeFull) {
+                tetrisGameRef.current.isGaugeFullAttacked = true;
               }
               tetrisGameRef.current.drawBoard2(message.board);
             }
@@ -505,6 +509,16 @@ const Home: React.FC = () => {
       toggleMusic();
     }
   };
+  useEffect(() => {
+    if (tetrisGameRef.current) {
+      if (
+        !tetrisGameRef.current.isGaugeFull &&
+        tetrisGameRef.current?.linesCleared % 4 === 3
+      ) {
+        tetrisGameRef.current.isGaugeFull = true;
+      }
+    }
+  }, [linesCleared]);
 
   useEffect(() => {
     const interval = setInterval(() => {

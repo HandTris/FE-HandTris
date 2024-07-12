@@ -95,9 +95,10 @@ export class WebSocketManager {
     isEnd: boolean,
     isAttack: boolean,
     roomCode: string | null,
+    isGaugeFull: boolean,
   ) {
     if (this.stompClient && this.stompClient.connected) {
-      const message = { board, isEnd, isAttack };
+      const message = { board, isEnd, isAttack, isGaugeFull };
       if (this.connected) {
         this.stompClient.send(
           `/app/${roomCode}/tetris`,
