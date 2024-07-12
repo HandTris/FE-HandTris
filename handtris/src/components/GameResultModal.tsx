@@ -2,8 +2,15 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { myStatus } from "@/services/gameService";
-import { Trophy, Frown, BarChart2 } from "lucide-react"; // 아이콘 추가
-
+import {
+  Trophy,
+  Frown,
+  BarChart2,
+  ArrowUp,
+  ArrowDown,
+  Swords,
+} from "lucide-react";
+import CountUp from "react-countup";
 interface GameResultModalProps {
   result: "WIN" | "LOSE";
   onPlayAgain: () => void;
@@ -19,10 +26,10 @@ interface PlayerStats {
 const GameResultModal: React.FC<GameResultModalProps> = ({
   result,
   onPlayAgain,
-  linesCleared,
 }) => {
   const router = useRouter();
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [prevWinRate, setPrevWinRate] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPlayerStats = async () => {
@@ -30,6 +37,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
         const response = await myStatus();
         if (response.data) {
           const currentStats = response.data;
+          setPrevWinRate(currentStats.winRate);
           const updatedStats = {
             win: currentStats.win + (result === "WIN" ? 1 : 0),
             lose: currentStats.lose + (result === "LOSE" ? 1 : 0),
@@ -58,16 +66,16 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
       exit={{ opacity: 0, scale: 0.8 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80"
     >
-      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-10 rounded-2xl text-center shadow-2xl max-w-md w-full border border-gray-700">
+      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-8 rounded-3xl text-center shadow-2xl max-w-md w-full border-2 border-gray-700">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
           {result === "WIN" ? (
-            <Trophy className="w-20 h-20 mx-auto text-yellow-400 mb-4" />
+            <Trophy className="w-24 h-24 mx-auto text-yellow-400 mb-4" />
           ) : (
-            <Frown className="w-20 h-20 mx-auto text-red-400 mb-4" />
+            <Frown className="w-24 h-24 mx-auto text-red-400 mb-4" />
           )}
           <h2
             className={`text-6xl font-bold mb-8 ${
@@ -77,43 +85,79 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
             {result === "WIN" ? "YOU WIN!" : "YOU LOSE!"}
           </h2>
         </motion.div>
-        <div className="space-y-6 mb-8">
-          <motion.div
-            className="bg-gray-700 p-4 rounded-lg shadow-inner"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            <p className="text-xl text-gray-300 mb-2">Lines Cleared</p>
-            <p className="text-4xl font-bold text-white">{linesCleared}</p>
-          </motion.div>
-          {playerStats && (
+        {playerStats && (
+          <div className="space-y-6 mb-8">
             <motion.div
-              className="bg-gray-700 p-4 rounded-lg shadow-inner"
+              className="bg-gray-800 p-6 rounded-2xl shadow-inner border border-gray-700"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="flex items-center justify-center mb-2">
+                <BarChart2 className="w-8 h-8 mr-3 text-blue-400" />
+                <p className="text-2xl text-gray-300">Win Rate</p>
+              </div>
+              <div className="text-7xl font-bold flex items-center justify-center">
+                <span
+                  className={
+                    result === "WIN" ? "text-green-400" : "text-red-400"
+                  }
+                >
+                  <CountUp
+                    start={prevWinRate || 0}
+                    end={playerStats.winRate}
+                    duration={2}
+                    decimals={2}
+                    suffix="%"
+                  />
+                </span>
+                {prevWinRate !== null &&
+                  prevWinRate !== playerStats.winRate && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{
+                        delay: 2,
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 10,
+                      }}
+                      className={`ml-3 ${
+                        result === "WIN" ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {result === "WIN" ? (
+                        <ArrowUp className="w-10 h-10" />
+                      ) : (
+                        <ArrowDown className="w-10 h-10" />
+                      )}
+                    </motion.div>
+                  )}
+              </div>
+            </motion.div>
+            <motion.div
+              className="bg-gray-800 p-4 rounded-2xl shadow-inner border border-gray-700"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.6 }}
             >
               <div className="flex items-center justify-center mb-2">
-                <BarChart2 className="w-5 h-5 mr-2 text-blue-400" />
-                <p className="text-xl text-gray-300">Updated Stats</p>
+                <Swords className="w-6 h-6 mr-2 text-purple-400" />
+                <p className="text-xl text-gray-300">Match History</p>
               </div>
-              <p className="text-2xl font-bold text-white">
-                {playerStats.win}W - {playerStats.lose}L
-              </p>
-              <p className="text-xl text-gray-300 mt-2">
-                Win Rate:{" "}
-                <span className="text-green-400">{playerStats.winRate}%</span>
+              <p className="text-3xl font-bold text-white">
+                <span className="text-green-400">{playerStats.win}W</span> -{" "}
+                <span className="text-red-400">{playerStats.lose}L</span>
               </p>
             </motion.div>
-          )}
-        </div>
+          </div>
+        )}
         <div className="flex justify-center space-x-4">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onPlayAgain}
-            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 text-lg font-semibold"
           >
             Play Again
           </motion.button>
@@ -121,7 +165,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => router.push("/lobby?refresh=true")}
-            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50"
+            className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full transition focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 text-lg font-semibold"
           >
             Back to Lobby
           </motion.button>
