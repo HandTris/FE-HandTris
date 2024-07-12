@@ -754,6 +754,7 @@ const Home: React.FC = () => {
         {showWaitingModal && (
           <WaitingModal
             isOpen={showWaitingModal}
+            wsManager={wsManagerRef.current!}
             isLoading={isLoading}
             onClose={() => setShowWaitingModal(false)}
             onReady={handleReadyStartClick}
