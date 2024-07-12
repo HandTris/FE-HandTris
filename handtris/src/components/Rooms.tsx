@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Room } from "@/types/Room";
 import { enterRoom, fetchRooms } from "@/services/gameService";
@@ -29,6 +29,9 @@ function Rooms() {
     queryKey: ["game_room"],
     queryFn: fetchRooms,
   });
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const sortedRooms = useMemo(() => {
     if (!roomsData?.data) return [];
