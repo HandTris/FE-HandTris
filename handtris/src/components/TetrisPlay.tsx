@@ -470,6 +470,7 @@ const Home: React.FC = () => {
             board: TetrisBoard;
             isEnd: boolean;
             isAttack: boolean;
+            isGaugeFull: boolean;
           }) => {
             if (tetrisGameRef.current) {
               if (message.isEnd) {
@@ -481,6 +482,9 @@ const Home: React.FC = () => {
               if (message.isAttack) {
                 // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                 tetrisGameRef.current.isAttacked = true;
+              }
+              if (message.isGaugeFull) {
+                tetrisGameRef.current.isGaugeFullAttacked = true;
               }
               tetrisGameRef.current.drawBoard2(message.board);
             }
