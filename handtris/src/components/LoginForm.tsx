@@ -36,26 +36,50 @@ const LoginForm = () => {
           values,
           { setSubmitting, setFieldError }: FormikHelpers<LoginFormValues>,
         ) => {
+          // 기존 토큰 삭제
+          Cookies.remove("accessToken", { path: "/" });
+          Cookies.remove("refreshToken", { path: "/" });
+
           axios
             .post(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/signin`, values)
             .then(response => {
               const { accessToken, refreshToken } = response.data.data;
+              console.log("Received accessToken:", accessToken);
+              console.log("Received refreshToken:", refreshToken);
 
               Cookies.set("accessToken", accessToken, {
-                domain: window.location.hostname,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+                expires: 1,
               });
               Cookies.set("refreshToken", refreshToken, {
-                domain: window.location.hostname,
                 path: "/",
-                sameSite: "strict",
+                sameSite: "lax",
+                secure: process.env.NODE_ENV === "production",
+                expires: 1,
               });
-              setSubmitting(false);
-              router.replace("/lobby");
-              setTimeout(() => showLoginSuccessToast(toast), 100);
+
+              // 설정된 토큰 확인
+              console.log("All cookies after setting:", Cookies.get());
+
+              const setRefreshToken = Cookies.get("refreshToken");
+              const setAccessToken = Cookies.get("accessToken");
+              console.log("Set accessToken:", setAccessToken);
+              console.log("Set refreshToken:", setRefreshToken);
+
+              if (setAccessToken && setRefreshToken) {
+                setSubmitting(false);
+                router.replace("/lobby");
+                setTimeout(() => showLoginSuccessToast(toast), 100);
+              } else {
+                console.error("Failed to set tokens");
+                setFieldError("api", "Failed to set tokens. Please try again.");
+                setSubmitting(false);
+              }
             })
             .catch(error => {
+              console.error("Login error:", error);
               if (error.response) {
                 setFieldError(
                   "api",
