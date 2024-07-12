@@ -153,6 +153,7 @@ const Home: React.FC = () => {
           `/app/${roomCode}/disconnect`,
           isStart,
         );
+        wsManagerRef.current.disconnect();
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);

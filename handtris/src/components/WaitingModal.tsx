@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { getRoomName } from "@/util/getRoomCode";
 import { useRouter } from "next/navigation";
-import { exitRoom } from "@/services/gameService";
 import { WebSocketManager } from "./WebSocketManager";
 
 export interface Player {
@@ -59,8 +58,9 @@ const WaitingModal = ({
         `/app/${roomCode}/disconnect`,
         false, // isStart는 대기실에서 false입니다
       );
+      wsManager.disconnect();
     }
-    exitRoom(roomCode as string);
+    // exitRoom(roomCode as string);
     sessionStorage.removeItem("roomCode");
     sessionStorage.removeItem("roomName");
 
