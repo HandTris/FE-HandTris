@@ -149,40 +149,35 @@ export class TetrisGame {
       ghost: color,
     };
 
-    ctx.clearRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
-    if (isGhost) {
-      ctx.strokeStyle = colorSet.ghost;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([5, 3]);
-      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
-      ctx.setLineDash([]);
+    if (isGhost && color !== this.VACANT) {
+      ctx.fillStyle = `${colorSet.ghost}40`;
+      ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
     } else {
       ctx.fillStyle = colorSet.main;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-      ctx.beginPath();
-      ctx.moveTo(x * this.SQ, y * this.SQ);
-      ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
-      ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-      ctx.fillStyle = colorSet.light;
-      ctx.fill();
+      if (color !== this.VACANT) {
+        ctx.beginPath();
+        ctx.moveTo(x * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.light;
+        ctx.fill();
 
-      ctx.beginPath();
-      ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
-      ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
-      ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
-      ctx.fillStyle = colorSet.dark;
-      ctx.fill();
-
-      ctx.strokeStyle = this.GRID_COLOR;
-      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+        ctx.beginPath();
+        ctx.moveTo((x + 1) * this.SQ, y * this.SQ);
+        ctx.lineTo((x + 1) * this.SQ, (y + 1) * this.SQ);
+        ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
+        ctx.fillStyle = colorSet.dark;
+        ctx.fill();
+      }
     }
+
+    ctx.strokeStyle = this.GRID_COLOR;
+    ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
   }
 
   drawBoard() {
-    this.ctx.fillStyle = this.VACANT;
-    this.ctx.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
-
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
         this.drawSquare(this.ctx, c, r, this.board[r][c]);
@@ -263,7 +258,7 @@ export class TetrisGame {
   moveToGhostPosition() {
     const ghostPosition = this.calculateGhostPosition();
     this.p.moveTo(ghostPosition.x, ghostPosition.y);
-    this.drawBoard(); // 블록의 새로운 위치를 반영하도록 보드를 다시 그립니다.
+    this.drawBoard();
   }
 
   calculateGhostPosition() {
@@ -299,6 +294,7 @@ export class Piece {
   y: number;
   game: TetrisGame;
   ghostY: number;
+  prevGhostY: number;
 
   constructor(tetromino: number[][][], color: string, game: TetrisGame) {
     this.tetromino = tetromino;
@@ -309,6 +305,7 @@ export class Piece {
     this.y = -2;
     this.game = game;
     this.ghostY = this.calculateGhostY();
+    this.prevGhostY = -1;
   }
 
   fill(color: string, isGhost: boolean = false) {
@@ -334,21 +331,27 @@ export class Piece {
 
   draw() {
     this.fill(this.color);
+    this.drawGhost();
   }
 
   unDraw() {
     this.fill(this.game.VACANT);
-  }
-
-  drawGhost() {
     this.unDrawGhost();
+  }
+  drawGhost() {
+    if (this.prevGhostY !== -1) {
+      this.fillGhost(this.prevGhostY, this.game.VACANT);
+    }
     this.ghostY = this.calculateGhostY();
     this.fillGhost(this.ghostY, this.color);
+    this.prevGhostY = this.ghostY;
   }
 
   unDrawGhost() {
-    this.fillGhost(this.ghostY, this.game.VACANT);
-    this.game.drawBoard(); // 기존 보드를 다시 그려서 얼룩을 지우기
+    if (this.prevGhostY !== -1) {
+      this.fillGhost(this.prevGhostY, this.game.VACANT);
+      this.prevGhostY = -1;
+    }
   }
 
   fillGhost(ghostY: number, color: string) {
@@ -382,7 +385,6 @@ export class Piece {
       this.unDraw();
       this.unDrawGhost();
       this.y++;
-      this.ghostY = this.calculateGhostY();
       this.drawGhost();
       this.draw();
     } else {
@@ -454,6 +456,7 @@ export class Piece {
   }
 
   lock() {
+    this.unDrawGhost();
     for (let r = 0; r < this.activeTetromino.length; r++) {
       for (let c = 0; c < this.activeTetromino[r].length; c++) {
         if (!this.activeTetromino[r][c]) {
