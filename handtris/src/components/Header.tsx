@@ -44,7 +44,6 @@ function Header() {
       const token = Cookies.get("accessToken");
       setIsLoggedIn(!!token);
     };
-
     checkToken();
   }, [pathname, setIsLoggedIn]);
 
@@ -59,21 +58,23 @@ function Header() {
     }
   }, [pathname, searchParams, fetchMyStatus, router]);
 
-  //   const handleLogout = () => {
-  //     Cookies.remove("accessToken");
-  //     setIsLoggedIn(false);
-  //     setIsDialogOpen(false);
-  //     router.push("/login");
-  //     toast({
-  //       title: "로그아웃 성공",
-  //       description: "로그아웃 되었습니다.",
-  //       variant: "default",
-  //     });
-  //   };
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", { method: "POST" });
+      const accessToken = Cookies.get("accessToken");
+      const refreshToken = Cookies.get("refreshToken");
+      const headers = new Headers();
+      headers.set("Authorization", `Bearer ${accessToken}`);
+      headers.set("Authorization-Refresh", `Bearer ${refreshToken}`); // 커스텀 헤더 추가
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/auth/signout`,
+        {
+          method: "POST",
+          headers: headers,
+        },
+      );
       if (response.ok) {
+        Cookies.remove("accessToken");
+        Cookies.remove("refreshToken");
         setIsLoggedIn(false);
         setIsDialogOpen(false);
         router.push("/login");
