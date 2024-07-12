@@ -250,7 +250,10 @@ const Home: React.FC = () => {
                 fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
               } else if (prevIsOwner === true && parsedMessage.isOwner) {
                 setOtherUserJoined(false);
-                fetchRoomPlayers(); // 상대방이 퇴장했을 때 플레이어 정보 다시 가져오기
+                fetchRoomPlayers();
+              } else if (prevIsOwner === false && parsedMessage.isOwner) {
+                fetchRoomPlayers();
+                setIsOwner(true);
               }
               return prevIsOwner;
             });
