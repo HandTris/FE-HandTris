@@ -83,7 +83,6 @@ const Home: React.FC = () => {
 
   const drawNextBlock = (nextBlock: Piece) => {
     const canvas = nextBlockRef.current;
-
     if (canvas && nextBlock) {
       const context = canvas.getContext("2d");
       if (context) {
@@ -419,6 +418,13 @@ const Home: React.FC = () => {
       handsManagerRef.current.start(videoRef.current!);
     }
     const showCountdown = () => {
+      tetrisGameRef.current = null;
+      if (nextBlockRef.current !== null) {
+        const ctx = nextBlockRef.current.getContext("2d");
+        if (ctx !== null) {
+          ctx.clearRect(0, 0, 150, 150);
+        }
+      }
       return new Promise<void>(resolve => {
         let count = 3;
         const modals: HTMLElement[] = [];
