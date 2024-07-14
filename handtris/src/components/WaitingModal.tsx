@@ -20,24 +20,28 @@ interface WaitingModalProps {
   isOpen: boolean;
   isLoading: boolean;
   onClose: () => void;
-  onReady: () => void;
+  onReadyToggle: () => void;
+  onStartGame: () => void;
   isOwner: boolean | null;
   isAllReady: boolean;
+  isReady: boolean;
   wsManager: WebSocketManager;
   players: Player[];
 }
 
 const WaitingModal = ({
   isOpen,
-  //   isLoading,
   onClose,
-  onReady,
+  onReadyToggle,
+  onStartGame,
   isOwner,
   isAllReady,
+  isReady,
   players = [],
   wsManager,
 }: WaitingModalProps) => {
   const router = useRouter();
+
   if (!isOpen) return null;
 
   const getButtonText = () => {
@@ -46,7 +50,7 @@ const WaitingModal = ({
       if (isAllReady) return "Game Start";
       return "상대방 준비 대기 중...";
     }
-    return "Ready";
+    return isReady ? "Cancel Ready" : "Ready";
   };
 
   const isButtonDisabled = players.length < 2;
@@ -133,11 +137,17 @@ const WaitingModal = ({
             </div>
           </div>
           <button
-            onClick={onReady}
+            onClick={isOwner ? onStartGame : onReadyToggle}
             className={`mt-4 text-3xl pixel px-6 py-4 text-white rounded-lg transition-colors ${
               isButtonDisabled
                 ? "bg-gray-500 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600"
+                : isOwner
+                  ? isAllReady
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-yellow-600 cursor-default"
+                  : isReady
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-blue-600 hover:bg-blue-700"
             }`}
             disabled={isButtonDisabled}
           >
