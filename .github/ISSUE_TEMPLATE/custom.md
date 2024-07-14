@@ -1,0 +1,17 @@
+---
+name: Custom issue template
+about: Describe this issue template's purpose here.
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+## 현재 상태 (AS IS)
+현재 상황을 상세히 설명하세요.
+
+## 원하는 상태 (TO BE)
+기대하는 결과나 해결책을 설명하세요.
+
+## 추가 정보
+이슈에 대한 추가 정보를 입력하세요.
