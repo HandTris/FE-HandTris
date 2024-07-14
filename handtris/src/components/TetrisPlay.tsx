@@ -25,6 +25,7 @@ const Home: React.FC = () => {
   const { isMusicPlaying, toggleMusic } = useMusic();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
+  const [isReady, setIsReady] = useState(false); // 레디 상태 추가
   const [isStart, setIsStart] = useState(false);
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
@@ -178,6 +179,7 @@ const Home: React.FC = () => {
       tetrisGameRef.current.roomCode = roomCode;
     }
   });
+
   useEffect(() => {
     const roomCode = getRoomCode();
 
@@ -275,6 +277,7 @@ const Home: React.FC = () => {
     },
     [fetchRoomPlayers],
   );
+
   useEffect(() => {
     if (isOwner != null) {
       subscribeToState();
@@ -329,6 +332,7 @@ const Home: React.FC = () => {
           (message: { isReady: boolean; isStart: boolean }) => {
             console.log("대기 정보 message received: ", message);
             setIsAllReady(message.isReady);
+            setIsReady(message.isReady); // 서버에서 받은 레디 상태를 설정
             if (message.isStart && !isStart) {
               setIsStart(true);
               startGame(); // 클라이언트 시작 로직
@@ -374,39 +378,46 @@ const Home: React.FC = () => {
       }
     }
     setShowWaitingModal(true);
+    handleReadyToggle();
   };
-  const handleReadyClick = async () => {
-    const roomCode = getRoomCode();
-    try {
-      wsManagerRef.current?.sendMessageOnWaiting(
-        {
-          isAllReady: true,
-          isStart: false,
-        },
-        `/app/${roomCode}/tetris/ready`,
-      );
-      console.log(`Message sent to /app/${roomCode}/tetris/ready`);
-    } catch (error) {
-      console.error(
-        `Failed to send message to /app/${roomCode}/tetris/ready`,
-        error,
-      );
+
+  const handleReadyToggle = () => {
+    if (!isOwner) {
+      handleReadyClick();
     }
   };
 
-  const handleStartGameClick = async () => {
+  const handleReadyClick = async () => {
     const roomCode = getRoomCode();
-    try {
-      wsManagerRef.current?.sendMessageForStart(
+    setIsReady(prevState => {
+      const newState = !prevState;
+      wsManagerRef.current?.sendMessageOnWaiting(
         {
-          isAllReady: true,
-          isStart: true,
+          isAllReady: newState,
+          isStart: false,
         },
-        `/app/${roomCode}/tetris/start`,
+        `/topic/state/${roomCode}`,
       );
-      console.log("Message sent to start the game");
-    } catch (error) {
-      console.error("Failed to send message to start the game", error);
+      console.log(`Message sent to /topic/state/${roomCode}`);
+      return newState;
+    });
+  };
+
+  const handleStartGameClick = async () => {
+    if (isOwner && isAllReady) {
+      const roomCode = getRoomCode();
+      try {
+        wsManagerRef.current?.sendMessageForStart(
+          {
+            isAllReady: true,
+            isStart: true,
+          },
+          `/app/${roomCode}/tetris/start`,
+        );
+        console.log("Message sent to start the game");
+      } catch (error) {
+        console.error("Failed to send message to start the game", error);
+      }
     }
   };
 
@@ -533,6 +544,7 @@ const Home: React.FC = () => {
       toggleMusic();
     }
   };
+
   useEffect(() => {
     if (tetrisGameRef.current) {
       if (
@@ -754,25 +766,6 @@ const Home: React.FC = () => {
     }, 1000);
   };
 
-  const handleReadyStartClick = () => {
-    if (!otherUserJoined) {
-      toast({
-        title: "대기 중",
-        description: "상대방이 입장할 때까지 기다려주세요.",
-        duration: 3000,
-      });
-      return;
-    }
-
-    if (isOwner) {
-      if (isAllReady) {
-        handleStartGameClick();
-      }
-    } else {
-      handleReadyClick();
-    }
-  };
-
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -796,10 +789,12 @@ const Home: React.FC = () => {
             wsManager={wsManagerRef.current!}
             isLoading={isLoading}
             onClose={() => setShowWaitingModal(false)}
-            onReady={handleReadyStartClick}
             isOwner={isOwner}
             isAllReady={isAllReady}
             players={roomPlayers}
+            isReady={isReady} // 추가
+            onReadyToggle={handleReadyToggle} // 추가
+            onStartGame={handleStartGameClick} // 추가
           />
         )}
       </AnimatePresence>
