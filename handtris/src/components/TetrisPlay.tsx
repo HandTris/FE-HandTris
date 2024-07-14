@@ -48,6 +48,7 @@ const Home: React.FC = () => {
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
   const wsManagerRef = useRef<WebSocketManager | null>(null);
+  const handsManagerRef = useRef<HandGestureManager | null>(null);
   const tetrisGameRef = useRef<TetrisGame | null>(null);
   const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
@@ -82,7 +83,6 @@ const Home: React.FC = () => {
 
   const drawNextBlock = (nextBlock: Piece) => {
     const canvas = nextBlockRef.current;
-
     if (canvas && nextBlock) {
       const context = canvas.getContext("2d");
       if (context) {
@@ -182,17 +182,18 @@ const Home: React.FC = () => {
     const roomCode = getRoomCode();
 
     const connectWebSocket = async () => {
-      wsManagerRef.current = new WebSocketManager();
-      try {
-        await wsManagerRef.current.connect(
-          "https://api.checkmatejungle.shop/ws",
-        );
-        subscribeToEntering(roomCode);
-      } catch (error) {
-        console.error("Failed to connect to WebSocket", error);
+      if (!wsManagerRef.current) {
+        wsManagerRef.current = new WebSocketManager();
+        try {
+          await wsManagerRef.current.connect(
+            "https://api.checkmatejungle.shop/ws",
+          );
+          subscribeToEntering(roomCode);
+        } catch (error) {
+          console.error("Failed to connect to WebSocket", error);
+        }
       }
     };
-
     connectWebSocket();
   }, []);
 
@@ -412,9 +413,18 @@ const Home: React.FC = () => {
     setShowWaitingModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
-    const handsManager = new HandGestureManager(onResults);
-    handsManager.start(videoRef.current!);
+    if (!handsManagerRef.current) {
+      handsManagerRef.current = new HandGestureManager(onResults);
+      handsManagerRef.current.start(videoRef.current!);
+    }
     const showCountdown = () => {
+      tetrisGameRef.current = null;
+      if (nextBlockRef.current !== null) {
+        const ctx = nextBlockRef.current.getContext("2d");
+        if (ctx !== null) {
+          ctx.clearRect(0, 0, 150, 150);
+        }
+      }
       return new Promise<void>(resolve => {
         let count = 3;
         const modals: HTMLElement[] = [];
