@@ -251,6 +251,7 @@ const Home: React.FC = () => {
                 }
               } else if (prevIsOwner === true && !parsedMessage.isOwner) {
                 setOtherUserJoined(true);
+                setIsAllReady(false);
                 fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
               } else if (prevIsOwner === true && parsedMessage.isOwner) {
                 setOtherUserJoined(false);
