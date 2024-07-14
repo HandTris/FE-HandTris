@@ -12,6 +12,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import BannerCarousel from "./BannerCarousel";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "./ui/use-toast";
+import { menuClickSound, menuHoverSound } from "@/hook/howl";
 
 function Rooms() {
   const router = useRouter();
@@ -46,6 +47,13 @@ function Rooms() {
       router.push("/play/tetris");
     },
     onError: error => {
+      toast({
+        title: "방 입장 실패!",
+        description: "방에 입장하지 못했습니다",
+        duration: 2000,
+        className: "toast-error",
+      });
+      refetch();
       console.error("Failed to enter room:", error);
     },
   });
@@ -71,13 +79,12 @@ function Rooms() {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* <h1 className="text-center text-2xl font-bold text-white">
-          Game Lobby
-        </h1> */}
         <BannerCarousel />
         <div className="flex justify-between">
           <Button
+            onMouseEnter={menuHoverSound}
             onClick={() => {
+              menuClickSound();
               refetch();
               toast({
                 title: "방 새로고침!",
@@ -99,6 +106,7 @@ function Rooms() {
           {currentRooms.map((room: Room) => (
             <Card
               key={room.roomCode}
+              onMouseEnter={menuHoverSound}
               className="group bg-gray-800 shadow-lg transition-all duration-300 hover:shadow-green-500/50 hover:scale-105"
             >
               <div className="flex items-stretch p-4 h-24">
@@ -120,7 +128,10 @@ function Rooms() {
                 <div className="flex-shrink-0 w-24 flex items-center justify-center ml-2">
                   <Button
                     className="bg-green-500 text-white hover:bg-green-600 text-base py-2 px-4 w-full h-16"
-                    onClick={() => enterRoomMutation.mutate(room.roomCode)}
+                    onClick={() => {
+                      menuClickSound();
+                      enterRoomMutation.mutate(room.roomCode);
+                    }}
                   >
                     JOIN
                   </Button>

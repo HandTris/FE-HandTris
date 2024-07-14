@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createRoom } from "@/services/gameService";
+import { menuClickSound, menuHoverSound } from "@/hook/howl";
 
 type DialogDemoProps = {
   onClose: () => void;
@@ -52,6 +53,8 @@ function CreateRoomModal({ onClose }: DialogDemoProps) {
     <Dialog modal={true} onOpenChange={isOpen => !isOpen && onClose()}>
       <DialogTrigger asChild>
         <Button
+          onMouseEnter={menuHoverSound}
+          onClick={menuClickSound}
           variant="secondary"
           className="bg-gray-800 p-6 border-2 border-white text-xl text-white hover:border-green-500 hover:text-green-500 hover:bg-gray-800 hover:scale-105 transition-all duration-200 ease-in-out
           shadow-lg hover:shadow-md hover:shadow-green-500/50

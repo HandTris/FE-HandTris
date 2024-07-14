@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { getRoomName } from "@/util/getRoomCode";
 import { useRouter } from "next/navigation";
 import { WebSocketManager } from "./WebSocketManager";
+import { menuClickSound, menuHoverSound } from "@/hook/howl";
 
 export interface Player {
   nickname: string;
@@ -56,14 +57,13 @@ const WaitingModal = ({
       wsManager.sendMessageOnDisconnecting(
         {},
         `/app/${roomCode}/disconnect`,
-        false, // isStart는 대기실에서 false입니다
+        false,
       );
       wsManager.disconnect();
     }
-    // exitRoom(roomCode as string);
     sessionStorage.removeItem("roomCode");
     sessionStorage.removeItem("roomName");
-
+    menuClickSound();
     router.push("/lobby");
   };
 
@@ -90,6 +90,7 @@ const WaitingModal = ({
         >
           <div className="absolute top-12 left-12 pixel">
             <button
+              onMouseEnter={menuHoverSound}
               onClick={handleBackToLobby}
               className="flex items-center px-6 py-3 text-3xl font-bold text-white bg-gray-800 transition-all duration-300 hover:bg-gray-700 border-4 border-green-500 hover:border-green-400 hover:scale-105 shadow-lg hover:shadow-green-500/50 hover:animate-pulse"
             >

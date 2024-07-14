@@ -109,7 +109,7 @@ function Header() {
   };
 
   return (
-    <header className="flex items-center justify-between bg-[#040F2D] p-4 border-t-0 border-2 border-gray-200 relative z-10">
+    <header className="flex items-center justify-between bg-[#040F2D] p-4 pl-8 border-t-0 border-4 border-gray-200 relative z-10">
       <Link
         href="/lobby"
         className="text-4xl font-bold text-green-400 hover:text-green-500 pixel"
