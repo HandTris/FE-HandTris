@@ -1,11 +1,14 @@
 ---
-name: Custom issue template
-about: Describe this issue template's purpose here.
+name: Feature request
+about: Suggest an idea for this project
 title: ''
 labels: ''
 assignees: ''
 
 ---
+
+## 관련 이슈 번호
+Closes #[이슈 번호]
 
 ## PR 타입 (하나 이상의 PR 타입 선택)
 - [ ] **🛠️ CREATE**: 새로운 파일이나 프로젝트 생성
@@ -23,5 +26,13 @@ assignees: ''
 ## 변경 사항 (TO BE)
 PR을 통해 변경된 사항을 상세히 설명하세요.
 
+## 반영 브랜치
+반영할 브랜치를 기입하세요.
+
+## 반영 사항
+구체적인 반영 사항을 설명하세요.
+
 ## 추가 정보
-이슈에 대한 추가 정보를 입력하세요.
+PR에 대한 추가 정보를 입력하세요.
+
+## 참여자
