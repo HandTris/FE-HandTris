@@ -156,12 +156,10 @@ export class TetrisGame {
     };
 
     if (isGhost && color !== this.VACANT) {
-      // 고스트 블록 그리기
-      ctx.fillStyle = `${colorSet.main}15`;
+      ctx.fillStyle = `${colorSet.main}40`;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
-      // 고스트 블록 테두리
-      ctx.strokeStyle = `${colorSet.main}70`;
+      ctx.strokeStyle = `${colorSet.main}50`;
       ctx.lineWidth = 0.6;
       ctx.strokeRect(
         x * this.SQ + 1,
@@ -170,19 +168,16 @@ export class TetrisGame {
         this.SQ - 2,
       );
     } else {
-      // 일반 블록 그리기 (변경 없음)
       ctx.fillStyle = colorSet.main;
       ctx.fillRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
 
       if (color !== this.VACANT) {
-        // 블록의 밝은 부분
         ctx.fillStyle = colorSet.light;
         ctx.beginPath();
         ctx.moveTo(x * this.SQ, y * this.SQ);
         ctx.lineTo((x + 1) * this.SQ, y * this.SQ);
         ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
         ctx.fill();
-
         // 블록의 어두운 부분
         ctx.fillStyle = colorSet.dark;
         ctx.beginPath();
@@ -191,13 +186,13 @@ export class TetrisGame {
         ctx.lineTo(x * this.SQ, (y + 1) * this.SQ);
         ctx.fill();
       }
-    }
 
-    // 그리드 선 (고스트 블록에는 그리지 않음)
-    if (!isGhost) {
-      ctx.strokeStyle = this.GRID_COLOR;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+      // 그리드 선 (고스트 블록이 아닐 때만)
+      if (!isGhost) {
+        ctx.strokeStyle = this.GRID_COLOR;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x * this.SQ, y * this.SQ, this.SQ, this.SQ);
+      }
     }
   }
   drawBoard() {
@@ -400,6 +395,24 @@ export class Piece {
   unDrawGhost() {
     if (this.prevGhostY !== -1) {
       this.fillGhost(this.prevGhostY, this.game.VACANT);
+      // 그리드 선 다시 그리기
+      for (let r = 0; r < this.activeTetromino.length; r++) {
+        for (let c = 0; c < this.activeTetromino[r].length; c++) {
+          if (this.activeTetromino[r][c]) {
+            const ghostY = this.prevGhostY + r;
+            if (ghostY >= 0 && this.x + c >= 0 && ghostY > this.y + r) {
+              this.game.ctx.strokeStyle = this.game.GRID_COLOR;
+              this.game.ctx.lineWidth = 1;
+              this.game.ctx.strokeRect(
+                (this.x + c) * this.game.SQ,
+                ghostY * this.game.SQ,
+                this.game.SQ,
+                this.game.SQ,
+              );
+            }
+          }
+        }
+      }
       this.prevGhostY = -1;
     }
   }
