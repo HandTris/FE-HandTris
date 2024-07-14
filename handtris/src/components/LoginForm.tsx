@@ -70,7 +70,7 @@ const LoginForm = () => {
 
               if (setAccessToken && setRefreshToken) {
                 setSubmitting(false);
-                router.replace("/lobby");
+                router.push("/lobby");
                 setTimeout(() => showLoginSuccessToast(toast), 100);
               } else {
                 console.error("Failed to set tokens");
