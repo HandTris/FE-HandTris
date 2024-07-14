@@ -259,6 +259,7 @@ const Home: React.FC = () => {
               } else if (prevIsOwner === false && parsedMessage.isOwner) {
                 fetchRoomPlayers();
                 setIsOwner(true);
+                return parsedMessage.isOwner;
               }
               return prevIsOwner;
             });
