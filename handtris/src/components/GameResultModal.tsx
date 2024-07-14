@@ -41,11 +41,10 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
       wsManager.sendMessageOnDisconnecting(
         {},
         `/app/${roomCode}/disconnect`,
-        false, // isStart는 대기실에서 false입니다
+        false,
       );
       wsManager.disconnect();
     }
-    // exitRoom(roomCode as string);
     sessionStorage.removeItem("roomCode");
     sessionStorage.removeItem("roomName");
 
