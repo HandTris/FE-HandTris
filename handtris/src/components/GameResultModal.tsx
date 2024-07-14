@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { myStatus } from "@/services/gameService";
+import { createPortal } from "react-dom";
 import {
   Trophy,
   Frown,
@@ -78,7 +79,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
     fetchPlayerStats();
   }, [result]);
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -190,7 +191,8 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
           </motion.button>
         </div>
       </div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 };
 
