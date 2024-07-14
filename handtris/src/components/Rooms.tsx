@@ -31,7 +31,7 @@ function Rooms() {
   });
   useEffect(() => {
     refetch();
-  }, [refetch]);
+  }, []);
 
   const sortedRooms = useMemo(() => {
     if (!roomsData?.data) return [];
