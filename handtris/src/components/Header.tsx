@@ -35,6 +35,7 @@ function Header() {
         setMyInfo(data.data);
       } catch (error) {
         console.error("Failed to fetch user status:", error);
+        handleLogout();
       }
     }
   }, [isLoggedIn]);
@@ -42,10 +43,14 @@ function Header() {
   useEffect(() => {
     const checkToken = () => {
       const token = Cookies.get("accessToken");
-      setIsLoggedIn(!!token);
+      const isTokenValid = !!token;
+      setIsLoggedIn(isTokenValid);
+      if (!isTokenValid && pathname === "/lobby") {
+        router.push("/login");
+      }
     };
     checkToken();
-  }, [pathname, setIsLoggedIn]);
+  }, [pathname, setIsLoggedIn, router]);
 
   useEffect(() => {
     fetchMyStatus();
@@ -64,7 +69,7 @@ function Header() {
       const refreshToken = Cookies.get("refreshToken");
       const headers = new Headers();
       headers.set("Authorization", `Bearer ${accessToken}`);
-      headers.set("Authorization-Refresh", `Bearer ${refreshToken}`); // 커스텀 헤더 추가
+      headers.set("Authorization-Refresh", `Bearer ${refreshToken}`);
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/auth/signout`,
         {
@@ -96,25 +101,31 @@ function Header() {
     }
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      router.push("/login");
+    }
+  };
+
   return (
     <header className="flex items-center justify-between bg-[#040F2D] p-4 border-t-0 border-2 border-gray-200 relative z-10">
       <Link
         href="/lobby"
         className="text-4xl font-bold text-green-400 hover:text-green-500 pixel"
+        onClick={handleLogoClick}
       >
         HANDTRIS
       </Link>
       <div className="flex items-center space-x-4">
-        {isLoggedIn && (
+        {isLoggedIn && myInfo && (
           <>
-            <h1 className="text-white text-xl pixel">
-              {myInfo?.nickname || `로그인이 만료되었습니다.`}
-            </h1>
+            <h1 className="text-white text-xl pixel">{myInfo.nickname}</h1>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" className="p-0">
                   <Image
-                    src={myInfo?.profileImageUrl || "/image/profile_1.jpeg"}
+                    src={myInfo.profileImageUrl || "/image/profile_1.jpeg"}
                     alt="profile"
                     width={50}
                     height={50}
@@ -128,26 +139,24 @@ function Header() {
                 </SheetHeader>
                 <div className="mt-6 flex flex-col items-center space-y-4">
                   <Image
-                    src={myInfo?.profileImageUrl || "/image/profile_1.jpeg"}
+                    src={myInfo.profileImageUrl || "/image/profile_1.jpeg"}
                     alt="profile"
                     width={100}
                     height={100}
                     className="rounded-full"
                   />
-                  <h2 className="text-2xl font-bold">
-                    {myInfo?.nickname || "CHOCO"}
-                  </h2>
+                  <h2 className="text-2xl font-bold">{myInfo.nickname}</h2>
                   <div className="w-full bg-gray-700 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between">
                       <span>전적:</span>
                       <span className="font-bold">
-                        {myInfo?.win || 0}승 {myInfo?.lose || 0}패
+                        {myInfo.win}승 {myInfo.lose}패
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>승률:</span>
                       <span className="font-bold text-green-400">
-                        {myInfo?.winRate || 0}%
+                        {myInfo.winRate}%
                       </span>
                     </div>
                   </div>
