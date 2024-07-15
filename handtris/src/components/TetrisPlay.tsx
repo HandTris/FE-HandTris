@@ -18,6 +18,8 @@ import RightJoystickModel from "@/components/RightJoystickModel";
 import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
+import ConfettiExplosion from "react-confetti-explosion";
+import ReactDOM from "react-dom";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -45,6 +47,7 @@ const Home: React.FC = () => {
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
   const canvasTetris2Ref = useRef<HTMLCanvasElement>(null);
   const nextBlockRef = useRef<HTMLCanvasElement>(null);
+  const confettiRef = useRef<HTMLCanvasElement>(null);
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
   const wsManagerRef = useRef<WebSocketManager | null>(null);
@@ -60,6 +63,7 @@ const Home: React.FC = () => {
   const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
   const prevIsDangerousRef = useRef(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
@@ -545,17 +549,19 @@ const Home: React.FC = () => {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAttacked = true;
                   const playOppTetrisElement =
-                  document.getElementById("tetris-container");
-                if (playOppTetrisElement) {
-                  playOppTetrisElement.classList.add("flipped-canvas");
-                  setTimeout(() => {
-                    playOppTetrisElement.classList.add("unflipped-canvas");
+                    document.getElementById("tetris-container");
+                  if (playOppTetrisElement) {
+                    playOppTetrisElement.classList.add("flipped-canvas");
                     setTimeout(() => {
-                      playOppTetrisElement.classList.remove("flipped-canvas");
-                      playOppTetrisElement.classList.remove("unflipped-canvas");
-                    }, 500);
-                  }, 3000);
-                }
+                      playOppTetrisElement.classList.add("unflipped-canvas");
+                      setTimeout(() => {
+                        playOppTetrisElement.classList.remove("flipped-canvas");
+                        playOppTetrisElement.classList.remove(
+                          "unflipped-canvas",
+                        );
+                      }, 500);
+                    }, 3000);
+                  }
                 }
                 if (message.isGaugeFull) {
                   tetrisGameRef.current.isGaugeFullAttacked = true;
@@ -820,6 +826,23 @@ const Home: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (showConfetti) {
+      const confetti = document.createElement("div");
+      confettiRef.current.appendChild(confetti);
+
+      return () => {
+        confettiRef.current?.removeChild(confetti);
+      };
+    }
+  }, [showConfetti]);
+
+  const toggleConfetti = useCallback(() => {
+    console.log("토글컨페티");
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 3000);
+  }, []);
+
   return (
     <div className="relative">
       <AnimatePresence>
@@ -891,7 +914,13 @@ const Home: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-around relative pt-8">
-            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
+            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
+              {showConfetti && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ConfettiExplosion />
+                </div>
+              )}
+            </div>
             <div className="relative flex">
               <div className="flex w-[20px] flex-col-reverse border-2">
                 <div
@@ -983,6 +1012,21 @@ const Home: React.FC = () => {
                     alt="profile"
                     className="h-full w-full overflow-hidden object-cover"
                   />
+                  <div className="absolute inset-0">
+                    <canvas
+                      ref={confettiRef}
+                      id="canvas"
+                      width="350"
+                      height="271"
+                      className=""
+                    />
+                  </div>
+                  <button
+                    className="absolute bg-blue-500 text-white p-2 rounded z-[99]"
+                    onClick={toggleConfetti}
+                  >
+                    Toggle Effect
+                  </button>
                 </div>
               </div>
             </div>
