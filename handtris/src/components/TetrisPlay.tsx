@@ -131,6 +131,14 @@ const Home: React.FC = () => {
                   nextBlock.color,
                   false,
                 );
+              } else if (nextBlock.color === "pink") {
+                tetrisGameRef.current.drawSquareCanvas(
+                  context,
+                  x + 1.05,
+                  y + 0.45,
+                  nextBlock.color,
+                  false,
+                );
               } else {
                 //"cyan"
                 tetrisGameRef.current.drawSquareCanvas(
