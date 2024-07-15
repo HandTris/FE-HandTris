@@ -235,6 +235,7 @@ export class TetrisGame {
       }
     }
     this.checkDangerousState();
+
     if (!this.gameEnd && !this.gameOver) {
       requestAnimationFrame(this.drop.bind(this));
     }
@@ -271,6 +272,7 @@ export class TetrisGame {
     const ghostPosition = this.calculateGhostPosition();
     this.p.moveTo(ghostPosition.x, ghostPosition.y);
     this.drawBoard();
+    playSoundEffect("/sounds/harddrop.mp3");
   }
 
   calculateGhostPosition() {

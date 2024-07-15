@@ -18,7 +18,7 @@ export function menuHoverSound() {
 }
 export function menuClickSound() {
   const soundEffect = new Howl({ src: ["/sound/Click_.mp3"], volume: 1.0 });
-  themeMusic.fade(0.5, 0.2, 1000);
+  themeMusic.fade(0.5, 0.2, 200);
   soundEffect.play();
 }
 
@@ -30,11 +30,11 @@ export function playSoundEffect(soundUrl: string) {
   const soundEffect = new Howl({ src: [soundUrl] });
 
   soundEffect.on("play", () => {
-    backgroundMusic.fade(0.6, 0.2, 1000);
+    backgroundMusic.fade(0.5, 0.2, 300);
   });
 
   soundEffect.on("end", () => {
-    backgroundMusic.fade(0.2, 0.6, 1000);
+    backgroundMusic.fade(0.2, 0.6, 300);
   });
 
   soundEffect.play();
