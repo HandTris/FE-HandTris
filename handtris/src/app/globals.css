@@ -361,6 +361,37 @@ canvas {
     font-size: 1.125rem !important;
 }
 
+@keyframes flipCanvas {
+    0% {
+      transform: rotateX(0deg);
+    }
+    100% {
+      transform: rotateX(180deg);
+    }
+  }
+  
+  .flipped-canvas {
+    animation: flipCanvas 0.5s ease-in-out forwards; /* 애니메이션 적용 */
+    transform-style: preserve-3d; /* 3D 변환 유지 */
+  }
+  /* 기존 flipCanvas 애니메이션 유지 */
+  
+  @keyframes unflipCanvas {
+    /* 새로운 애니메이션 정의 */
+    0% {
+      transform: rotateX(180deg);
+    }
+    100% {
+      transform: rotateX(0deg);
+    }
+  }
+  
+  .unflipped-canvas {
+    /* 새로운 클래스 정의 */
+    animation: unflipCanvas 0.5s ease-in-out forwards;
+    transform-style: preserve-3d;
+  }
+
 
 .shadow-text {
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
