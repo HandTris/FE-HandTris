@@ -39,7 +39,18 @@ const COLORS = {
     dark: "#7000CC",
     ghost: "#7000CC",
   },
-  red: { light: "#FF5B5B", main: "#FF0000", dark: "#CC0000", ghost: "#CC0000" },
+  pink: {
+    light: "#FF5BAD",
+    main: "#FF00FF",
+    dark: "#CC00CC",
+    ghost: "#CC00CC",
+  },
+  red: {
+    light: "#FF5B5B",
+    main: "#FF0000",
+    dark: "#CC0000",
+    ghost: "#CC0000",
+  },
 };
 
 export class TetrisGame {
