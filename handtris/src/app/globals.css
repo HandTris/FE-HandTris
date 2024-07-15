@@ -391,3 +391,29 @@ canvas {
 .vs-text-shadow {
   filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9));
 }
+
+@keyframes dangerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+  50% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+}
+
+@keyframes siren {
+  0%, 100% { background-color: rgba(255, 0, 0, 0.2); }
+  50% { background-color: rgba(0, 0, 255, 0.2); }
+}
+
+.danger-state::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  animation: siren 1s linear infinite;
+  pointer-events: none;
+}
+
+.danger-state {
+  position: relative;
+  overflow: hidden;
+}
