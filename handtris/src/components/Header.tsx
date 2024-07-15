@@ -107,7 +107,9 @@ function Header() {
       router.push("/login");
     }
   };
-
+  if (pathname === "/play/tetris") {
+    return null;
+  }
   return (
     <header className="flex items-center justify-between bg-[#040F2D] p-4 pl-8 border-t-0 border-4 border-gray-200 relative z-10">
       <Link

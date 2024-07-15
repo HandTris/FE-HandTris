@@ -360,3 +360,34 @@ canvas {
     border-radius: 8px !important;
     font-size: 1.125rem !important;
 }
+
+
+.shadow-text {
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.shadow-neon {
+  text-shadow: 0 0 5px #7CFC00, 0 0 10px #7CFC00, 0 0 15px #7CFC00, 0 0 20px #7CFC00;
+}
+
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.text-shadow-green {
+  text-shadow: 0 0 10px rgba(62, 249, 62, 0.521);
+}
+
+.vs-text-shadow {
+  filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.9));
+}

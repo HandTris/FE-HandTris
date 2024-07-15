@@ -37,7 +37,6 @@ const Home: React.FC = () => {
   const [rightHandLandmarks, setRightHandLandmarks] = useState<
     LandmarkList | undefined
   >();
-  const [otherUserJoined, setOtherUserJoined] = useState(false);
   const [linesCleared, setLinesCleared] = useState<number | null>(null);
   const [gauge, setGauge] = useState(0);
   const [showWaitingModal, setShowWaitingModal] = useState(true);
@@ -255,16 +254,13 @@ const Home: React.FC = () => {
                 if (parsedMessage.isOwner) {
                   return true;
                 } else {
-                  setOtherUserJoined(true);
                   fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
                   return false;
                 }
               } else if (prevIsOwner === true && !parsedMessage.isOwner) {
-                setOtherUserJoined(true);
                 setIsAllReady(false);
                 fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
               } else if (prevIsOwner === true && parsedMessage.isOwner) {
-                setOtherUserJoined(false);
                 fetchRoomPlayers();
               } else if (prevIsOwner === false && parsedMessage.isOwner) {
                 fetchRoomPlayers();
@@ -817,15 +813,49 @@ const Home: React.FC = () => {
         transition={{ duration: 0.5, delay: showWaitingModal ? 0 : 0.5 }}
       >
         <div className="">
-          <div className="flex justify-center items-center flex-cols-2 gap-[400px]">
-            <div className="press bg-white text-center text-4xl text-black border-4 ml-11 m-5 pl-4 pr-4">
-              {roomPlayers[0]?.nickname || "CHOCO"}
-            </div>
-            <div className="press bg-white text-center text-4xl text-black border-4 ml-16 pl-4 pr-4">
-              {roomPlayers[1]?.nickname || "LUCKY UNICORN"}
+          <div className="bg-gradient-to-r from-[#040F2D] via-[#0A1940] to-[#040F2D] py-4 px-8 border-4 border-t-0 border-green-400 shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-green-500 opacity-5 animate-pulse"></div>
+            <div className="flex justify-between items-center relative z-10">
+              <div className="flex items-center flex-1 justify-start gap-6">
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-green-400 rounded-full opacity-75 group-hover:opacity-100 transition duration-300 blur-sm"></div>
+                  <Image
+                    src={
+                      roomPlayers[0]?.profileImageUrl || "/image/profile_1.jpeg"
+                    }
+                    width={70}
+                    height={70}
+                    alt="Player 1"
+                    className="rounded-full border-2 border-white relative"
+                  />
+                </div>
+                <div className="pixel text-4xl text-white font-bold hover:text-green-400 transition duration-300">
+                  {roomPlayers[0]?.nickname || "CHOCO"}
+                </div>
+              </div>
+              <h1 className="pixel text-6xl font-bold bg-gradient-to-r from-yellow-600 via-yellow-400 to-green-500 text-transparent bg-clip-text animate-pulse">
+                VS
+              </h1>
+              <div className="flex items-center flex-1 justify-end gap-6">
+                <div className="pixel text-4xl text-white font-bold hover:text-green-400 transition duration-300">
+                  {roomPlayers[1]?.nickname || "LUCKY UNICORN"}
+                </div>
+                <div className="relative group">
+                  <div className="absolute -inset-0.5 bg-green-400 rounded-full opacity-75 group-hover:opacity-100 transition duration-300 blur-sm"></div>
+                  <Image
+                    src={
+                      roomPlayers[1]?.profileImageUrl || "/image/profile_1.jpeg"
+                    }
+                    width={70}
+                    height={70}
+                    alt="Player 2"
+                    className="rounded-full border-2 border-white relative"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="flex items-center justify-around relative">
+          <div className="flex items-center justify-around relative pt-8">
             <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
             <div className="relative flex">
               <div className="flex w-[20px] flex-col-reverse border-2">
