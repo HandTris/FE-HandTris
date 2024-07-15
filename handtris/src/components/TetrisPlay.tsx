@@ -84,7 +84,7 @@ const Home: React.FC = () => {
         setIsDangerous(newIsDangerous);
 
         if (newIsDangerous && !prevIsDangerousRef.current) {
-          playSoundEffect("/sound/warning.mp3");
+          playSoundEffect("/sound/warnings.mp3");
         }
 
         prevIsDangerousRef.current = newIsDangerous;
@@ -409,6 +409,7 @@ const Home: React.FC = () => {
   const handleReadyToggle = () => {
     if (!isOwner) {
       handleReadyClick();
+      playSoundEffect("/sounds/ready.mp3");
     }
   };
 
@@ -439,6 +440,7 @@ const Home: React.FC = () => {
           },
           `/app/${roomCode}/tetris/start`,
         );
+        playSoundEffect("/sounds/start.mp3");
         console.log("Message sent to start the game");
       } catch (error) {
         console.error("Failed to send message to start the game", error);
@@ -536,7 +538,7 @@ const Home: React.FC = () => {
                 if (message.isEnd) {
                   tetrisGameRef.current.gameEnd = true;
                   backgroundMusic.pause();
-                  playSoundEffect("/sounds/winner.wav");
+                  playSoundEffect("/sound/winner.mp3");
                   setGameResult("you WIN!");
                 }
                 if (message.isAttack) {
@@ -818,9 +820,9 @@ const Home: React.FC = () => {
             isOwner={isOwner}
             isAllReady={isAllReady}
             players={roomPlayers}
-            isReady={isReady} // 추가
-            onReadyToggle={handleReadyToggle} // 추가
-            onStartGame={handleStartGameClick} // 추가
+            isReady={isReady}
+            onReadyToggle={handleReadyToggle}
+            onStartGame={handleStartGameClick}
           />
         )}
       </AnimatePresence>
