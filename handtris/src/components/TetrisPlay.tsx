@@ -58,6 +58,8 @@ const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const isSub = useRef(false);
   const isSubTemp = useRef(false);
+  const [isDangerous, setIsDangerous] = useState(false);
+  const prevIsDangerousRef = useRef(false);
 
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
@@ -67,7 +69,6 @@ const Home: React.FC = () => {
         const response = await searchRoomPlayer(roomCode);
         if (response.data) {
           setRoomPlayers(response.data);
-          setOtherUserJoined(response.data.length > 1);
         }
       }
     } catch (error) {
@@ -75,6 +76,24 @@ const Home: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+  useEffect(() => {
+    const checkDangerousState = () => {
+      if (tetrisGameRef.current) {
+        const newIsDangerous = tetrisGameRef.current.isDangerous;
+        setIsDangerous(newIsDangerous);
+
+        if (newIsDangerous && !prevIsDangerousRef.current) {
+          playSoundEffect("/sound/warning.mp3");
+        }
+
+        prevIsDangerousRef.current = newIsDangerous;
+      }
+    };
+
+    const intervalId = setInterval(checkDangerousState, 300);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -139,7 +158,6 @@ const Home: React.FC = () => {
                   false,
                 );
               } else {
-                //"cyan"
                 tetrisGameRef.current.drawSquareCanvas(
                   context,
                   x + 0.5,
@@ -356,9 +374,11 @@ const Home: React.FC = () => {
     setIsStart(false);
     setIsAllReady(false);
     setLinesCleared(0);
+    setIsDangerous(false);
     setGauge(0);
     if (tetrisGameRef.current) {
       tetrisGameRef.current.linesCleared = 0;
+      tetrisGameRef.current.isDangerous = false;
     }
     if (canvasTetrisRef.current) {
       const ctx = canvasTetrisRef.current.getContext("2d");
@@ -427,6 +447,7 @@ const Home: React.FC = () => {
   };
 
   const startGame = async () => {
+    setIsDangerous(false);
     setShowWaitingModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
@@ -869,8 +890,13 @@ const Home: React.FC = () => {
               </div>
               <div
                 id="tetris-container"
-                className="flex flex-col justify-between"
+                className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
               >
+                {isDangerous && (
+                  <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-60 text-white text-center py-[2px] pixel animate-pulse">
+                    DANGER!
+                  </div>
+                )}
                 <div className={`${TETRIS_CANVAS}`}>
                   <canvas
                     ref={canvasTetrisRef}

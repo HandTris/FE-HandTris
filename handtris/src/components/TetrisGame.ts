@@ -1,59 +1,10 @@
 import { PIECES } from "@/components/Tetromino";
 import { WebSocketManager } from "./WebSocketManager";
 import { backgroundMusic, playSoundEffect } from "@/hook/howl";
-
-const COLORS = {
-  cyan: {
-    light: "#5BFFFF",
-    main: "#00FFFF",
-    dark: "#00CCCC",
-    ghost: "#00CCCC",
-  },
-  blue: {
-    light: "#5B5BFF",
-    main: "#0000FF",
-    dark: "#0000CC",
-    ghost: "#0000CC",
-  },
-  orange: {
-    light: "#FFAD5B",
-    main: "#FF8C00",
-    dark: "#CC7000",
-    ghost: "#CC7000",
-  },
-  yellow: {
-    light: "#FFFF5B",
-    main: "#FFFF00",
-    dark: "#CCCC00",
-    ghost: "#CCCC00",
-  },
-  green: {
-    light: "#5BFF5B",
-    main: "#00FF00",
-    dark: "#00CC00",
-    ghost: "#00CC00",
-  },
-  purple: {
-    light: "#AD5BFF",
-    main: "#8C00FF",
-    dark: "#7000CC",
-    ghost: "#7000CC",
-  },
-  pink: {
-    light: "#FF5BAD",
-    main: "#FF00FF",
-    dark: "#CC00CC",
-    ghost: "#CC00CC",
-  },
-  red: {
-    light: "#FF5B5B",
-    main: "#FF0000",
-    dark: "#CC0000",
-    ghost: "#CC0000",
-  },
-};
+import { COLORS } from "@/styles";
 
 export class TetrisGame {
+  isDangerous: boolean;
   ROW = 20;
   COL = 10;
   SQ = 30;
@@ -97,6 +48,7 @@ export class TetrisGame {
     wsManager: WebSocketManager,
     setGameResult: (result: string) => void,
   ) {
+    this.isDangerous = false;
     this.isEnd = false;
     this.gameEnd = false;
     this.hasSentEndMessage = false;
@@ -151,7 +103,18 @@ export class TetrisGame {
     }
     return board;
   }
-
+  checkDangerousState() {
+    const dangerThreshold = 5;
+    for (let r = 0; r < dangerThreshold; r++) {
+      for (let c = 0; c < this.COL; c++) {
+        if (this.board[r][c] !== this.VACANT) {
+          this.isDangerous = true;
+          return;
+        }
+      }
+    }
+    this.isDangerous = false;
+  }
   drawSquare(
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -271,7 +234,7 @@ export class TetrisGame {
         );
       }
     }
-
+    this.checkDangerousState();
     if (!this.gameEnd && !this.gameOver) {
       requestAnimationFrame(this.drop.bind(this));
     }
