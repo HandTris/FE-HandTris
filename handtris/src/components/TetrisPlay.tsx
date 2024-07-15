@@ -525,6 +525,18 @@ const Home: React.FC = () => {
                 if (message.isAttack) {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAttacked = true;
+                  const playOppTetrisElement =
+                  document.getElementById("tetris-container");
+                if (playOppTetrisElement) {
+                  playOppTetrisElement.classList.add("flipped-canvas");
+                  setTimeout(() => {
+                    playOppTetrisElement.classList.add("unflipped-canvas");
+                    setTimeout(() => {
+                      playOppTetrisElement.classList.remove("flipped-canvas");
+                      playOppTetrisElement.classList.remove("unflipped-canvas");
+                    }, 500);
+                  }, 3000);
+                }
                 }
                 if (message.isGaugeFull) {
                   tetrisGameRef.current.isGaugeFullAttacked = true;
