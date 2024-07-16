@@ -93,14 +93,21 @@ export class WebSocketManager {
 
   sendMessageOnGaming(
     game: TetrisGame,
+    roomCode: string | null,
     board: TetrisBoard,
     isEnd: boolean,
-    isAttack: boolean,
-    roomCode: string | null,
-    isGaugeFull: boolean,
+    isAddAttack: boolean,
+    isFlipAttack: boolean,
+    isDonutAttack: boolean,
   ) {
     if (this.stompClient && this.stompClient.connected) {
-      const message = { board, isEnd, isAttack, isGaugeFull };
+      const message = {
+        board,
+        isEnd,
+        isAddAttack,
+        isFlipAttack,
+        isDonutAttack,
+      };
       if (this.connected) {
         this.stompClient.send(
           `/app/${roomCode}/tetris`,
@@ -108,22 +115,22 @@ export class WebSocketManager {
           JSON.stringify(message),
         );
         console.log("Message sent: ", message);
-        if (message.isAttack) {
-          // const playOppTetrisElement =
-          //   document.getElementById("opposer_tetris");
-          // if (playOppTetrisElement) {
-          //   playOppTetrisElement.classList.add("flipped-canvas");
-          //   setTimeout(() => {
-          //     playOppTetrisElement.classList.add("unflipped-canvas");
-          //     setTimeout(() => {
-          //       playOppTetrisElement.classList.remove("flipped-canvas");
-          //       playOppTetrisElement.classList.remove("unflipped-canvas");
-          //     }, 500);
-          //   }, 3000);
-          // }
+        if (message.isFlipAttack) {
+          const playOppTetrisElement =
+            document.getElementById("opposer_tetris");
+          if (playOppTetrisElement) {
+            playOppTetrisElement.classList.add("flipped-canvas");
+            setTimeout(() => {
+              playOppTetrisElement.classList.add("unflipped-canvas");
+              setTimeout(() => {
+                playOppTetrisElement.classList.remove("flipped-canvas");
+                playOppTetrisElement.classList.remove("unflipped-canvas");
+              }, 500);
+            }, 3000);
+          }
         }
-        if (message.isGaugeFull) {
-          game.isGaugeFull = false;
+        if (message.isDonutAttack) {
+          game.isDonutAttack = false;
         }
       } else {
         console.log("WebSocket connection is not established yet.");
