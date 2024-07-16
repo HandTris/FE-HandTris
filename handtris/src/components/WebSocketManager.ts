@@ -120,6 +120,9 @@ export class WebSocketManager {
           //   }, 3000);
           // }
         }
+        if (message.isGaugeFull) {
+          isGaugeFull = false;
+        }
       } else {
         console.log("WebSocket connection is not established yet.");
       }

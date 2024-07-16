@@ -229,27 +229,27 @@ canvas {
 
 @keyframes shake {
     0% {
-        transform: translateY(-50px) scale(1.05);
+      transform: translateY(50px);
     }
     10% {
-        transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
     30% {
-        transform: translateY(-35px) scale(1.03);
+      transform: translateY(35px);
     }
     50% {
-        transform: translateY(0) scale(0.97);
+      transform: translateY(0);
     }
     70% {
-        transform: translateY(-15px) scale(1.02);
+      transform: translateY(15px);
     }
     85% {
-        transform: translateY(0) scale(0.99);
+      transform: translateY(0);
     }
     100% {
-        transform: translateY(0) scale(1);
+      transform: translateY(0);
     }
-}
+  }
 
 .shake {
     animation: shake 0.2s;
