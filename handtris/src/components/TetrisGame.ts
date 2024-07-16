@@ -261,6 +261,7 @@ export class TetrisGame {
     this.checkDangerousState();
     if (this.isAttack) {
       this.toggleAttackEffect = true;
+      this.isAttack = false;
     }
 
     if (!this.gameEnd && !this.gameOver) {
@@ -566,7 +567,7 @@ export class Piece {
       this.game,
       this.game.board_forsend,
       this.game.isEnd,
-      this.game.isRowFull,
+      this.game.isAttack,
       this.game.roomCode,
       this.game.isGaugeFull,
     );
@@ -578,6 +579,7 @@ export class Piece {
     }
     if (this.game.isAttack) {
       this.game.toggleAttackEffect = true;
+      this.game.isAttack = false;
     }
   }
 

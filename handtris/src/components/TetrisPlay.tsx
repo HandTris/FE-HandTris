@@ -606,6 +606,13 @@ const Home: React.FC = () => {
           newGauge = 3;
         }
         setGauge(newGauge);
+        if (newGauge == 1 && tetrisGameRef.current) {
+          tetrisGameRef.current.isAttack = true;
+        } else if (newGauge == 2 && tetrisGameRef.current) {
+          tetrisGameRef.current.isGaugeFull = true;
+        } else {
+          tetrisGameRef.current.isGaugeFull = true;
+        }
 
         if (newGauge === 3 && tetrisGameRef.current.linesCleared > 0) {
           setTimeout(() => {
