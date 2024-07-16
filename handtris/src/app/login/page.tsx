@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import LoginForm from "../../components/LoginForm";
+const LoginForm = dynamic(() => import("../../components/LoginForm"));
+import dynamic from "next/dynamic";
 
 const LoginPage = () => {
   return (
