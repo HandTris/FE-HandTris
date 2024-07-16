@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = ["/lobby", "/main", "/play/tetris", "/oauth2"];
-const PUBLIC_ROUTES = ["/", "/register"];
+const PUBLIC_ROUTES = ["/", "/register, '/login"];
 
 async function validateToken(accessToken: string) {
   try {
@@ -47,9 +47,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/?auth=failed", request.url));
   }
 
+  if (path === "/login" && accessToken) {
+    return NextResponse.redirect(new URL("/lobby", request.url));
+  }
+
   return NextResponse.next();
 }
-
 export const config = {
   matcher: [
     "/",
@@ -58,5 +61,6 @@ export const config = {
     "/main",
     "/play/tetris",
     "/oauth2/:path*",
+    "/login",
   ],
 };
