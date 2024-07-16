@@ -35,6 +35,7 @@ export class TetrisGame {
   isGaugeFullAttacked: boolean;
   pieceBag: Piece[];
   toggleAttackEffect: boolean;
+  toggleAttackedEffect: boolean;
   previousGreyRows: Set<number>;
 
   drawSquareCanvas: (
@@ -74,6 +75,7 @@ export class TetrisGame {
     this.isRowFull = false;
     this.isAttack = false;
     this.toggleAttackEffect = false;
+    this.toggleAttackedEffect = false;
     this.isAttacked = false;
     this.isGaugeFull = false;
     this.isGaugeFullAttacked = false;

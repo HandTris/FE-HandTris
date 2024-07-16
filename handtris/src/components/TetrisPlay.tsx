@@ -62,7 +62,8 @@ const Home: React.FC = () => {
   const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
   const prevIsDangerousRef = useRef(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [showFirstAttack, setShowFirstAttack] = useState(false);
+  const [showFirstAttacked, setShowFirstAttacked] = useState(false);
 
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
@@ -547,6 +548,7 @@ const Home: React.FC = () => {
                 if (message.isAttack) {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAttacked = true;
+                  tetrisGameRef.current.toggleAttackedEffect = true;
                   const playOppTetrisElement =
                     document.getElementById("tetris-container");
                   if (playOppTetrisElement) {
@@ -826,7 +828,7 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (showConfetti) {
+    if (showFirstAttack) {
       const confetti = document.createElement("div");
       if (confettiRef.current) {
         confettiRef.current.appendChild(confetti);
@@ -843,15 +845,45 @@ const Home: React.FC = () => {
       };
     }
   });
+  useEffect(() => {
+    if (showFirstAttacked) {
+      const confetti = document.createElement("div");
+      if (confettiRef.current) {
+        confettiRef.current.appendChild(confetti);
+      }
+      if (tetrisGameRef.current) {
+        tetrisGameRef.current.toggleAttackedEffect = false;
+      }
 
-  const toggleConfetti = useCallback(() => {
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 500);
+      return () => {
+        if (confettiRef.current && tetrisGameRef.current) {
+          confettiRef.current?.removeChild(confetti);
+          tetrisGameRef.current.toggleAttackedEffect = false;
+        }
+      };
+    }
+  });
+
+  const toggleShowFirstAttack = useCallback(() => {
+    setShowFirstAttack(true);
+    setTimeout(() => setShowFirstAttack(false), 500);
   }, []);
 
   useEffect(() => {
     if (tetrisGameRef.current?.toggleAttackEffect) {
-      toggleConfetti();
+      toggleShowFirstAttack();
+    }
+  });
+
+  const toggleShowFirstAttacked = useCallback(() => {
+    setShowFirstAttacked(true);
+    setTimeout(() => setShowFirstAttacked(false), 500);
+  }, []);
+
+  useEffect(() => {
+    if (tetrisGameRef.current?.toggleAttackedEffect) {
+      tetrisGameRef.current.toggleAttackedEffect = false;
+      toggleShowFirstAttacked();
     }
   });
 
@@ -954,6 +986,23 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
+                {showFirstAttacked && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div>
+                        <ConfettiExplosion
+                          force={0.25}
+                          duration={1300}
+                          particleCount={25}
+                          particleSize={7}
+                          colors={["#c91212", "#ec9898", "#f4d4d4", "#910909"]}
+                          width={400}
+                          height={"-30px"}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col justify-between">
                 <div className="flex flex-cols-2 gap-[50px]">
@@ -1006,7 +1055,7 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
-                {showConfetti && (
+                {showFirstAttack && (
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div>
@@ -1044,12 +1093,6 @@ const Home: React.FC = () => {
                       className=""
                     />
                   </div>
-                  <button
-                    className="absolute bg-blue-500 text-white p-2 rounded z-[99]"
-                    onClick={toggleConfetti}
-                  >
-                    Toggle Effect
-                  </button>
                 </div>
               </div>
             </div>
