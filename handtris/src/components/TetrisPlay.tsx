@@ -55,6 +55,7 @@ const Home: React.FC = () => {
   const lastMoveTime = useRef({ right: 0, left: 0, rotate: 0, drop: 0 });
   const feedbackTimeoutRef = useRef<number | null>(null);
   const lastGestureRef = useRef<string | null>(null);
+  const previousLinesClearedRef = useRef(0);
   const [showResultModal, setShowResultModal] = useState(false);
   const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -536,8 +537,9 @@ const Home: React.FC = () => {
             (message: {
               board: TetrisBoard;
               isEnd: boolean;
-              isAttack: boolean;
-              isGaugeFull: boolean;
+              isAddAttack: boolean;
+              isFlipAttack: boolean;
+              isDonutAttack: boolean;
             }) => {
               if (tetrisGameRef.current) {
                 if (message.isEnd) {
@@ -546,28 +548,30 @@ const Home: React.FC = () => {
                   playSoundEffect("/sound/winner.mp3");
                   setGameResult("you WIN!");
                 }
-                if (message.isAttack) {
+                if (message.isAddAttack) {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
-                  tetrisGameRef.current.isAttacked = true;
-
+                  tetrisGameRef.current.isAddAttacked = true;
+                } else if (message.isFlipAttack) {
                   // tetrisGameRef.current.toggleAttackedEffect = true;
-                  // const playOppTetrisElement =
-                  //   document.getElementById("tetris-container");
-                  // if (playOppTetrisElement) {
-                  //   playOppTetrisElement.classList.add("flipped-canvas");
-                  //   setTimeout(() => {
-                  //     playOppTetrisElement.classList.add("unflipped-canvas");
-                  //     setTimeout(() => {
-                  //       playOppTetrisElement.classList.remove("flipped-canvas");
-                  //       playOppTetrisElement.classList.remove(
-                  //         "unflipped-canvas",
-                  //       );
-                  //     }, 500);
-                  //   }, 3000);
-                  // }
-                }
-                if (message.isGaugeFull) {
-                  tetrisGameRef.current.isGaugeFullAttacked = true;
+                  const playOppTetrisElement =
+                    document.getElementById("tetris-container");
+                  if (
+                    playOppTetrisElement &&
+                    !playOppTetrisElement.classList.contains("flipped-canvas")
+                  ) {
+                    playOppTetrisElement.classList.add("flipped-canvas");
+                    setTimeout(() => {
+                      playOppTetrisElement.classList.add("unflipped-canvas");
+                      setTimeout(() => {
+                        playOppTetrisElement.classList.remove("flipped-canvas");
+                        playOppTetrisElement.classList.remove(
+                          "unflipped-canvas",
+                        );
+                      }, 500);
+                    }, 3000);
+                  }
+                } else if (message.isDonutAttack) {
+                  tetrisGameRef.current.isDonutAttacked = true;
                 }
                 tetrisGameRef.current.drawBoard2(message.board);
               }
@@ -596,28 +600,45 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (tetrisGameRef.current) {
-      if (
-        !tetrisGameRef.current.isGaugeFull &&
-        tetrisGameRef.current?.linesCleared % 4 === 3
-      ) {
-        tetrisGameRef.current.isGaugeFull = true;
+      const currentLinesCleared = tetrisGameRef.current.linesCleared;
+      const linesClearedDiff =
+        currentLinesCleared - previousLinesClearedRef.current;
+      if (linesClearedDiff > 0) {
+        let newGauge = gauge + linesClearedDiff;
+        if (newGauge >= 4) {
+          newGauge = 3;
+        }
+        setGauge(newGauge);
+        console.log("newGauge: ", newGauge);
+        if (newGauge == 1 && tetrisGameRef.current) {
+          tetrisGameRef.current.isAddAttack = true;
+          console.log("이즈애드어택", tetrisGameRef.current.isAddAttack);
+        } else if (newGauge == 2 && tetrisGameRef.current) {
+          tetrisGameRef.current.isFlipAttack = true;
+        } else if (newGauge == 3 && tetrisGameRef.current) {
+          tetrisGameRef.current.isDonutAttack = true;
+        }
+
+        if (newGauge === 3 && tetrisGameRef.current.linesCleared > 0) {
+          setTimeout(() => {
+            setGauge(0);
+          }, 1000);
+        }
+
+        if (!tetrisGameRef.current.isDonutAttack && newGauge === 3) {
+          tetrisGameRef.current.isDonutAttack = true;
+        }
       }
+      previousLinesClearedRef.current = currentLinesCleared;
     }
-  }, [linesCleared]);
+  }, [linesCleared, gauge]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        const currentGauge = tetrisGameRef.current.linesCleared % 4;
-        setGauge(currentGauge);
-        if (currentGauge === 3 && tetrisGameRef.current.linesCleared > 0) {
-          setTimeout(() => {
-            setGauge(0);
-          }, 1000);
-        }
         drawNextBlock(tetrisGameRef.current.getNextBlock());
-        tetrisGameRef.current.isGaugeFull = false;
+        tetrisGameRef.current.isDonutAttack = false;
       }
     }, 1000);
     return () => clearInterval(interval);
@@ -1042,6 +1063,7 @@ const Home: React.FC = () => {
                       Attack
                     </div>
                     <div className="text-center text-[60px] p-2 text-white">
+                      {/* TODO - 공격 횟수로 수정이 필요함 */}
                       {linesCleared !== null ? linesCleared : 0}
                     </div>
                   </div>

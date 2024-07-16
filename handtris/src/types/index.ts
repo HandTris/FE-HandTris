@@ -6,7 +6,7 @@ export type TetrisBoard = string[][];
 export type TetrisMessage = {
   board: TetrisBoard;
   isEnd: boolean;
-  isAttack: boolean;
+  isAddAttack: boolean;
 };
 
 export interface HandLandmarkResults {
@@ -57,11 +57,12 @@ export interface TetrisGame {
   roomCode: string | null;
   isGameStart: boolean;
   isRowFull: boolean;
-  isAttack: boolean;
-  isAttacked: boolean;
+  isAddAttack: boolean;
+  isAddAttacked: boolean;
   nextBlock: Piece;
-  isGaugeFull: boolean;
-  isGaugeFullAttacked: boolean;
+  isFlipAttack: boolean;
+  isDonutAttack: boolean;
+  isDonutAttacked: boolean;
   pieceBag: Piece[];
   toggleAttackEffect: boolean;
   toggleAttackedEffect: boolean;

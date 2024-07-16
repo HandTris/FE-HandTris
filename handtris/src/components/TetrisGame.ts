@@ -28,11 +28,12 @@ export class TetrisGame {
   roomCode: string | null;
   isGameStart: boolean;
   isRowFull: boolean;
-  isAttack: boolean;
-  isAttacked: boolean;
+  isAddAttack: boolean;
+  isAddAttacked: boolean;
+  isFlipAttack: boolean;
+  isDonutAttack: boolean;
+  isDonutAttacked: boolean;
   nextBlock: Piece;
-  isGaugeFull: boolean;
-  isGaugeFullAttacked: boolean;
   pieceBag: Piece[];
   toggleAttackEffect: boolean;
   toggleAttackedEffect: boolean;
@@ -73,12 +74,14 @@ export class TetrisGame {
     this.clearRow = this.clearFullRow;
     this.linesCleared = 0;
     this.isRowFull = false;
-    this.isAttack = false;
+    this.isAddAttack = false;
+    this.isFlipAttack = false;
+    this.isDonutAttack = false;
     this.toggleAttackEffect = false;
     this.toggleAttackedEffect = false;
-    this.isAttacked = false;
-    this.isGaugeFull = false;
-    this.isGaugeFullAttacked = false;
+    this.isAddAttacked = false;
+    this.isDonutAttack = false;
+    this.isDonutAttacked = false;
     this.previousGreyRows = new Set();
 
     this.drawBoard();
@@ -250,18 +253,19 @@ export class TetrisGame {
       if (!this.gameEnd) {
         this.wsManager.sendMessageOnGaming(
           this,
+          this.roomCode,
           this.board_forsend,
           this.isEnd,
-          this.isAttack,
-          this.roomCode,
-          this.isGaugeFull,
+          this.isAddAttack,
+          this.isFlipAttack,
+          this.isDonutAttack,
         );
+        this.isAddAttack = false;
+        this.isFlipAttack = false;
+        this.isDonutAttack = false;
       }
     }
     this.checkDangerousState();
-    if (this.isAttack) {
-      this.toggleAttackEffect = true;
-    }
 
     if (!this.gameEnd && !this.gameOver) {
       requestAnimationFrame(this.drop.bind(this));
@@ -455,9 +459,9 @@ export class Piece {
     } else {
       this.lock();
       this.game.p = this.game.nextBlock;
-      if (this.game.isGaugeFullAttacked == true) {
+      if (this.game.isDonutAttacked == true) {
         this.game.nextBlock = this.game.gaugeFullPiece();
-        this.game.isGaugeFullAttacked = false;
+        this.game.isDonutAttacked = false;
       } else {
         this.game.nextBlock = this.game.randomPiece();
       }
@@ -563,22 +567,24 @@ export class Piece {
     }
     playSoundEffect("/sound/placed.ogg");
     this.game.drawBoard();
+    if (this.game.isAddAttacked) {
+      this.game.addBlockRow();
+      this.game.isAddAttacked = false;
+    }
     this.game.wsManager.sendMessageOnGaming(
       this.game,
+      this.game.roomCode,
       this.game.board_forsend,
       this.game.isEnd,
-      this.game.isRowFull,
-      this.game.roomCode,
-      this.game.isGaugeFull,
+      this.game.isAddAttack,
+      this.game.isFlipAttack,
+      this.game.isDonutAttack,
     );
     this.game.isRowFull = false;
-    this.game.isGaugeFull = false;
-    if (this.game.isAttacked) {
-      this.game.addBlockRow();
-      this.game.isAttacked = false;
-    }
-    if (this.game.isAttack) {
-      this.game.toggleAttackEffect = true;
+    this.game.isDonutAttack = false;
+    if (this.game.isAddAttack) {
+      // this.game.toggleAttackEffect = true;
+      this.game.isAddAttack = false;
     }
   }
 
