@@ -565,7 +565,6 @@ const Home: React.FC = () => {
                   //     }, 500);
                   //   }, 3000);
                   // }
-
                 }
                 if (message.isGaugeFull) {
                   tetrisGameRef.current.isGaugeFullAttacked = true;
@@ -1011,6 +1010,9 @@ const Home: React.FC = () => {
                           height={"-30px"}
                         />
                       </div>
+                    </div>
+                  </div>
+                )}
                 {!isHandDetected && (
                   <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
                     <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
@@ -1103,15 +1105,6 @@ const Home: React.FC = () => {
                     alt="profile"
                     className="h-full w-full overflow-hidden object-cover"
                   />
-                  <div className="absolute inset-0">
-                    <canvas
-                      ref={confettiRef}
-                      id="canvas"
-                      width="350"
-                      height="271"
-                      className=""
-                    />
-                  </div>
                 </div>
               </div>
             </div>
