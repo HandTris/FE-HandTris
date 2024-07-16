@@ -831,19 +831,29 @@ const Home: React.FC = () => {
       if (confettiRef.current) {
         confettiRef.current.appendChild(confetti);
       }
+      if (tetrisGameRef.current) {
+        tetrisGameRef.current.toggleAttackEffect = false;
+      }
 
       return () => {
-        if (confettiRef.current) {
+        if (confettiRef.current && tetrisGameRef.current) {
           confettiRef.current?.removeChild(confetti);
+          tetrisGameRef.current.toggleAttackEffect = false;
         }
       };
     }
-  }, [showConfetti]);
+  });
 
   const toggleConfetti = useCallback(() => {
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 500);
   }, []);
+
+  useEffect(() => {
+    if (tetrisGameRef.current?.toggleAttackEffect) {
+      toggleConfetti();
+    }
+  });
 
   return (
     <div className="relative">
