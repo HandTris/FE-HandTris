@@ -89,7 +89,7 @@ const Home: React.FC = () => {
         setIsDangerous(newIsDangerous);
 
         if (newIsDangerous && !prevIsDangerousRef.current) {
-          playSoundEffect("/sound/warnings.mp3");
+          playSoundEffect("/sound/warning.mp3");
         }
 
         prevIsDangerousRef.current = newIsDangerous;
@@ -771,7 +771,7 @@ const Home: React.FC = () => {
       // handType이 "left"이면
       if (gesture == "Pointing Left") {
         console.log("Pointing Left");
-        if (now - lastMoveTime.current.rotate < 1000) {
+        if (now - lastMoveTime.current.rotate < 500) {
         } else {
           lastMoveTime.current.rotate = now;
           tetrisGameRef.current?.p.rotate();

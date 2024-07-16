@@ -536,7 +536,7 @@ export class Piece {
           this.game.gameOver = true;
           this.game.isEnd = true;
           backgroundMusic.pause();
-          playSoundEffect("/sounds/attack.mp3");
+          playSoundEffect("/sounds/attack.wav");
           this.game.showGameResult("you LOSE!");
           break;
         }
@@ -556,7 +556,8 @@ export class Piece {
             this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
           }
         }
-        this.game.flashRow(r);
+        // this.game.flashRow(r);
+        this.game.clearRow(r);
         playSoundEffect("/sounds/clear.wav");
       }
     }
