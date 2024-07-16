@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { motion } from "framer-motion";
 import { Formik, Form, FormikHelpers } from "formik";
@@ -36,7 +37,6 @@ const LoginForm = () => {
           values,
           { setSubmitting, setFieldError }: FormikHelpers<LoginFormValues>,
         ) => {
-          // 기존 토큰 삭제
           Cookies.remove("accessToken", { path: "/" });
           Cookies.remove("refreshToken", { path: "/" });
 
@@ -50,13 +50,11 @@ const LoginForm = () => {
               Cookies.set("accessToken", accessToken, {
                 path: "/",
                 sameSite: "lax",
-                secure: process.env.NODE_ENV === "production",
                 expires: 1,
               });
               Cookies.set("refreshToken", refreshToken, {
                 path: "/",
                 sameSite: "lax",
-                secure: process.env.NODE_ENV === "production",
                 expires: 1,
               });
 
@@ -71,6 +69,7 @@ const LoginForm = () => {
               if (setAccessToken && setRefreshToken) {
                 setSubmitting(false);
                 router.push("/lobby");
+                router.refresh();
                 setTimeout(() => showLoginSuccessToast(toast), 100);
               } else {
                 console.error("Failed to set tokens");
