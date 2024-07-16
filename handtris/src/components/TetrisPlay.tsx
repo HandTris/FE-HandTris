@@ -345,7 +345,7 @@ const Home: React.FC = () => {
             );
           }
         }
-      }, 70000);
+      }, 7000000); //NOTE - 자동 대기 방으로 이동하지 않도록 큰 수를 넣음
 
       return () => clearTimeout(timeoutId);
     }
@@ -617,6 +617,7 @@ const Home: React.FC = () => {
           }, 1000);
         }
         drawNextBlock(tetrisGameRef.current.getNextBlock());
+        tetrisGameRef.current.isGaugeFull = false;
       }
     }, 1000);
     return () => clearInterval(interval);
