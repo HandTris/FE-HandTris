@@ -320,6 +320,7 @@ export class TetrisGame {
     this.board.push(newRow);
     this.board.shift();
     this.drawBoard();
+    this.toggleAttackedEffect = true;
     this.board_forsend.push(newRow);
     this.board_forsend.shift();
   };
