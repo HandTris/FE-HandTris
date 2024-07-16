@@ -3,6 +3,7 @@ import { getAccessToken } from "@/util/getAccessToken";
 import { getRoomCode } from "@/util/getRoomCode";
 import SockJS from "sockjs-client";
 import Stomp, { Client, Frame, Message } from "stompjs";
+import { TetrisGame } from "./TetrisGame";
 
 interface WaitingInfo {
   isAllReady: boolean;
@@ -91,7 +92,7 @@ export class WebSocketManager {
   }
 
   sendMessageOnGaming(
-    game: any,
+    game: TetrisGame,
     board: TetrisBoard,
     isEnd: boolean,
     isAttack: boolean,

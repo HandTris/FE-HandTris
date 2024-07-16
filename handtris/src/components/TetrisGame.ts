@@ -563,7 +563,7 @@ export class Piece {
     playSoundEffect("/sound/placed.ogg");
     this.game.drawBoard();
     this.game.wsManager.sendMessageOnGaming(
-      this,
+      this.game,
       this.game.board_forsend,
       this.game.isEnd,
       this.game.isRowFull,
