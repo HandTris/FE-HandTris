@@ -91,6 +91,7 @@ export class WebSocketManager {
   }
 
   sendMessageOnGaming(
+    game: any,
     board: TetrisBoard,
     isEnd: boolean,
     isAttack: boolean,
@@ -121,7 +122,7 @@ export class WebSocketManager {
           // }
         }
         if (message.isGaugeFull) {
-          isGaugeFull = false;
+          game.isGaugeFull = false;
         }
       } else {
         console.log("WebSocket connection is not established yet.");

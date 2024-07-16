@@ -249,6 +249,7 @@ export class TetrisGame {
       this.dropStart = Date.now();
       if (!this.gameEnd) {
         this.wsManager.sendMessageOnGaming(
+          this,
           this.board_forsend,
           this.isEnd,
           this.isAttack,
@@ -562,6 +563,7 @@ export class Piece {
     playSoundEffect("/sound/placed.ogg");
     this.game.drawBoard();
     this.game.wsManager.sendMessageOnGaming(
+      this,
       this.game.board_forsend,
       this.game.isEnd,
       this.game.isRowFull,
