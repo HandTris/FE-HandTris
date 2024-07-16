@@ -59,6 +59,7 @@ const Home: React.FC = () => {
   const isSub = useRef(false);
   const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
+  const [isHandDetected, setIsHandDetected] = useState(true);
   const prevIsDangerousRef = useRef(false);
 
   const fetchRoomPlayers = useCallback(async () => {
@@ -545,17 +546,19 @@ const Home: React.FC = () => {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAttacked = true;
                   const playOppTetrisElement =
-                  document.getElementById("tetris-container");
-                if (playOppTetrisElement) {
-                  playOppTetrisElement.classList.add("flipped-canvas");
-                  setTimeout(() => {
-                    playOppTetrisElement.classList.add("unflipped-canvas");
+                    document.getElementById("tetris-container");
+                  if (playOppTetrisElement) {
+                    playOppTetrisElement.classList.add("flipped-canvas");
                     setTimeout(() => {
-                      playOppTetrisElement.classList.remove("flipped-canvas");
-                      playOppTetrisElement.classList.remove("unflipped-canvas");
-                    }, 500);
-                  }, 3000);
-                }
+                      playOppTetrisElement.classList.add("unflipped-canvas");
+                      setTimeout(() => {
+                        playOppTetrisElement.classList.remove("flipped-canvas");
+                        playOppTetrisElement.classList.remove(
+                          "unflipped-canvas",
+                        );
+                      }, 500);
+                    }, 3000);
+                  }
                 }
                 if (message.isGaugeFull) {
                   tetrisGameRef.current.isGaugeFullAttacked = true;
@@ -689,6 +692,8 @@ const Home: React.FC = () => {
       canvasRef.current!.width,
       canvasRef.current!.height,
     );
+    let leftHandDetected = false;
+    let rightHandDetected = false;
 
     if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
       for (let i = 0; i < results.multiHandLandmarks.length; i++) {
@@ -696,8 +701,8 @@ const Home: React.FC = () => {
         const classification = results.multiHandedness[i];
         const handType = classification.label;
         const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
+
         for (let j = 0; j < landmarks.length; j++) {
-          // 랜드마크 위치 좌우 반전
           landmarks[j].x = 1 - landmarks[j].x;
         }
         drawLandmarks(canvasCtx, landmarks, {
@@ -709,25 +714,30 @@ const Home: React.FC = () => {
           lineWidth: 1,
         });
         for (let j = 0; j < landmarks.length; j++) {
-          // 랜드마크 위치 원복
           landmarks[j].x = 1 - landmarks[j].x;
         }
+
         const gesture = recognizeGesture(landmarks, handType);
         if (handType === "Left") {
           setLeftHandLandmarks(landmarks);
+          leftHandDetected = true;
         } else {
           setRightHandLandmarks(landmarks);
+          rightHandDetected = true;
         }
         handleGesture(gesture, handType);
       }
-      if (borderRef.current) {
-        borderRef.current.style.boxShadow = "none";
-      }
-    } else {
-      if (borderRef.current) {
-        borderRef.current.style.boxShadow = "0 0 20px 20px red";
-      }
     }
+
+    const bothHandsDetected = leftHandDetected && rightHandDetected;
+    setIsHandDetected(bothHandsDetected);
+
+    if (borderRef.current) {
+      borderRef.current.style.boxShadow = bothHandsDetected
+        ? "none"
+        : "0 0 20px 20px red";
+    }
+
     canvasCtx.restore();
   }, []);
 
@@ -911,6 +921,7 @@ const Home: React.FC = () => {
                     DANGER!
                   </div>
                 )}
+
                 <div className={`${TETRIS_CANVAS}`}>
                   <canvas
                     ref={canvasTetrisRef}
@@ -919,6 +930,15 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
+                {!isHandDetected && (
+                  <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
+                    <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
+                      HANDS NOT DETECTED!
+                      <br />
+                      <span className="text-2xl">Please show your hands</span>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col justify-between">
                 <div className="flex flex-cols-2 gap-[50px]">
@@ -942,7 +962,9 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex h-[300px] w-[350px] flex-col border-4 border-l-0 border-t-0">
+                <div
+                  className={`flex h-[300px] w-[350px] flex-col border-4 border-l-0 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
+                >
                   <div className="press bg-white text-center text-2xl text-black">
                     Your Hands
                   </div>
