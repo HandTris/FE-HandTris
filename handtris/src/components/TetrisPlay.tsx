@@ -18,6 +18,7 @@ import RightJoystickModel from "@/components/RightJoystickModel";
 import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
+import ConfettiExplosion from "react-confetti-explosion";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -45,6 +46,7 @@ const Home: React.FC = () => {
   const canvasTetrisRef = useRef<HTMLCanvasElement>(null);
   const canvasTetris2Ref = useRef<HTMLCanvasElement>(null);
   const nextBlockRef = useRef<HTMLCanvasElement>(null);
+  const confettiRef = useRef<HTMLCanvasElement>(null);
   const gestureRef = useRef<HTMLDivElement>(null);
   const borderRef = useRef<HTMLDivElement>(null);
   const wsManagerRef = useRef<WebSocketManager | null>(null);
@@ -61,6 +63,8 @@ const Home: React.FC = () => {
   const [isDangerous, setIsDangerous] = useState(false);
   const [isHandDetected, setIsHandDetected] = useState(true);
   const prevIsDangerousRef = useRef(false);
+  const [showFirstAttack, setShowFirstAttack] = useState(false);
+  const [showFirstAttacked, setShowFirstAttacked] = useState(false);
 
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
@@ -545,20 +549,23 @@ const Home: React.FC = () => {
                 if (message.isAttack) {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAttacked = true;
-                  const playOppTetrisElement =
-                    document.getElementById("tetris-container");
-                  if (playOppTetrisElement) {
-                    playOppTetrisElement.classList.add("flipped-canvas");
-                    setTimeout(() => {
-                      playOppTetrisElement.classList.add("unflipped-canvas");
-                      setTimeout(() => {
-                        playOppTetrisElement.classList.remove("flipped-canvas");
-                        playOppTetrisElement.classList.remove(
-                          "unflipped-canvas",
-                        );
-                      }, 500);
-                    }, 3000);
-                  }
+
+                  // tetrisGameRef.current.toggleAttackedEffect = true;
+                  // const playOppTetrisElement =
+                  //   document.getElementById("tetris-container");
+                  // if (playOppTetrisElement) {
+                  //   playOppTetrisElement.classList.add("flipped-canvas");
+                  //   setTimeout(() => {
+                  //     playOppTetrisElement.classList.add("unflipped-canvas");
+                  //     setTimeout(() => {
+                  //       playOppTetrisElement.classList.remove("flipped-canvas");
+                  //       playOppTetrisElement.classList.remove(
+                  //         "unflipped-canvas",
+                  //       );
+                  //     }, 500);
+                  //   }, 3000);
+                  // }
+
                 }
                 if (message.isGaugeFull) {
                   tetrisGameRef.current.isGaugeFullAttacked = true;
@@ -830,6 +837,66 @@ const Home: React.FC = () => {
     }
   }, []);
 
+  useEffect(() => {
+    if (showFirstAttack) {
+      const confetti = document.createElement("div");
+      if (confettiRef.current) {
+        confettiRef.current.appendChild(confetti);
+      }
+      if (tetrisGameRef.current) {
+        tetrisGameRef.current.toggleAttackEffect = false;
+      }
+
+      return () => {
+        if (confettiRef.current && tetrisGameRef.current) {
+          confettiRef.current?.removeChild(confetti);
+          tetrisGameRef.current.toggleAttackEffect = false;
+        }
+      };
+    }
+  });
+  useEffect(() => {
+    if (showFirstAttacked) {
+      const confetti = document.createElement("div");
+      if (confettiRef.current) {
+        confettiRef.current.appendChild(confetti);
+      }
+      if (tetrisGameRef.current) {
+        tetrisGameRef.current.toggleAttackedEffect = false;
+      }
+
+      return () => {
+        if (confettiRef.current && tetrisGameRef.current) {
+          confettiRef.current?.removeChild(confetti);
+          tetrisGameRef.current.toggleAttackedEffect = false;
+        }
+      };
+    }
+  });
+
+  const toggleShowFirstAttack = useCallback(() => {
+    setShowFirstAttack(true);
+    setTimeout(() => setShowFirstAttack(false), 500);
+  }, []);
+
+  useEffect(() => {
+    if (tetrisGameRef.current?.toggleAttackEffect) {
+      toggleShowFirstAttack();
+    }
+  });
+
+  const toggleShowFirstAttacked = useCallback(() => {
+    setShowFirstAttacked(true);
+    setTimeout(() => setShowFirstAttacked(false), 500);
+  }, []);
+
+  useEffect(() => {
+    if (tetrisGameRef.current?.toggleAttackedEffect) {
+      tetrisGameRef.current.toggleAttackedEffect = false;
+      toggleShowFirstAttacked();
+    }
+  });
+
   return (
     <div className="relative">
       <AnimatePresence>
@@ -930,6 +997,20 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
+                {showFirstAttacked && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div>
+                        <ConfettiExplosion
+                          force={0.25}
+                          duration={1300}
+                          particleCount={25}
+                          particleSize={7}
+                          colors={["#c91212", "#ec9898", "#f4d4d4", "#910909"]}
+                          width={400}
+                          height={"-30px"}
+                        />
+                      </div>
                 {!isHandDetected && (
                   <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
                     <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
@@ -993,6 +1074,23 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
+                {showFirstAttack && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div>
+                        <ConfettiExplosion
+                          force={0.25}
+                          duration={1300}
+                          particleCount={25}
+                          particleSize={7}
+                          colors={["#c8c8c8", "#e3e1e1", "#f7f7f7", "#878787"]}
+                          width={400}
+                          height={"-30px"}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-center justify-between">
                 <div className="flex h-[150px] w-[150px] flex-col border-[3px]">
@@ -1005,6 +1103,15 @@ const Home: React.FC = () => {
                     alt="profile"
                     className="h-full w-full overflow-hidden object-cover"
                   />
+                  <div className="absolute inset-0">
+                    <canvas
+                      ref={confettiRef}
+                      id="canvas"
+                      width="350"
+                      height="271"
+                      className=""
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -107,18 +107,18 @@ export class WebSocketManager {
         );
         console.log("Message sent: ", message);
         if (message.isAttack) {
-          const playOppTetrisElement =
-            document.getElementById("opposer_tetris");
-          if (playOppTetrisElement) {
-            playOppTetrisElement.classList.add("flipped-canvas");
-            setTimeout(() => {
-              playOppTetrisElement.classList.add("unflipped-canvas");
-              setTimeout(() => {
-                playOppTetrisElement.classList.remove("flipped-canvas");
-                playOppTetrisElement.classList.remove("unflipped-canvas");
-              }, 500);
-            }, 3000);
-          }
+          // const playOppTetrisElement =
+          //   document.getElementById("opposer_tetris");
+          // if (playOppTetrisElement) {
+          //   playOppTetrisElement.classList.add("flipped-canvas");
+          //   setTimeout(() => {
+          //     playOppTetrisElement.classList.add("unflipped-canvas");
+          //     setTimeout(() => {
+          //       playOppTetrisElement.classList.remove("flipped-canvas");
+          //       playOppTetrisElement.classList.remove("unflipped-canvas");
+          //     }, 500);
+          //   }, 3000);
+          // }
         }
       } else {
         console.log("WebSocket connection is not established yet.");

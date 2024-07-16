@@ -34,6 +34,10 @@ export class TetrisGame {
   isGaugeFull: boolean;
   isGaugeFullAttacked: boolean;
   pieceBag: Piece[];
+  toggleAttackEffect: boolean;
+  toggleAttackedEffect: boolean;
+  previousGreyRows: Set<number>;
+
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
     x: number,
@@ -70,9 +74,12 @@ export class TetrisGame {
     this.linesCleared = 0;
     this.isRowFull = false;
     this.isAttack = false;
+    this.toggleAttackEffect = false;
+    this.toggleAttackedEffect = false;
     this.isAttacked = false;
     this.isGaugeFull = false;
     this.isGaugeFullAttacked = false;
+    this.previousGreyRows = new Set();
 
     this.drawBoard();
     this.drawSquareCanvas = this.drawSquare;
@@ -181,11 +188,27 @@ export class TetrisGame {
     this.ctx2.fillStyle = this.VACANT;
     this.ctx2.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
 
+    const currentGreyRows: Set<number> = new Set();
+
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
         this.drawSquare(this.ctx2, c, r, board2[r][c]);
+        if (board2[r][c] == "grey") {
+          currentGreyRows.add(r);
+        }
       }
     }
+
+    if (
+      currentGreyRows.size !== this.previousGreyRows.size ||
+      [...currentGreyRows].some(r => !this.previousGreyRows.has(r))
+    ) {
+      this.toggleAttackEffect = true;
+    } else {
+      this.toggleAttackEffect = false;
+    }
+
+    this.previousGreyRows = currentGreyRows;
   }
   createNewBag(): Piece[] {
     const bag = PIECES.slice(0, 7).map(
@@ -235,6 +258,9 @@ export class TetrisGame {
       }
     }
     this.checkDangerousState();
+    if (this.isAttack) {
+      this.toggleAttackEffect = true;
+    }
 
     if (!this.gameEnd && !this.gameOver) {
       requestAnimationFrame(this.drop.bind(this));
@@ -294,6 +320,7 @@ export class TetrisGame {
     this.board.push(newRow);
     this.board.shift();
     this.drawBoard();
+    this.toggleAttackedEffect = true;
     this.board_forsend.push(newRow);
     this.board_forsend.shift();
   };
@@ -546,6 +573,9 @@ export class Piece {
     if (this.game.isAttacked) {
       this.game.addBlockRow();
       this.game.isAttacked = false;
+    }
+    if (this.game.isAttack) {
+      this.game.toggleAttackEffect = true;
     }
   }
 
