@@ -19,7 +19,6 @@ import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
-import ReactDOM from "react-dom";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -829,18 +828,21 @@ const Home: React.FC = () => {
   useEffect(() => {
     if (showConfetti) {
       const confetti = document.createElement("div");
-      confettiRef.current.appendChild(confetti);
+      if (confettiRef.current) {
+        confettiRef.current.appendChild(confetti);
+      }
 
       return () => {
-        confettiRef.current?.removeChild(confetti);
+        if (confettiRef.current) {
+          confettiRef.current?.removeChild(confetti);
+        }
       };
     }
   }, [showConfetti]);
 
   const toggleConfetti = useCallback(() => {
-    console.log("토글컨페티");
     setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
+    setTimeout(() => setShowConfetti(false), 500);
   }, []);
 
   return (
@@ -914,13 +916,7 @@ const Home: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-around relative pt-8">
-            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center">
-              {showConfetti && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ConfettiExplosion />
-                </div>
-              )}
-            </div>
+            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
             <div className="relative flex">
               <div className="flex w-[20px] flex-col-reverse border-2">
                 <div
@@ -1000,6 +996,23 @@ const Home: React.FC = () => {
                     height="600"
                   />
                 </div>
+                {showConfetti && (
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div>
+                        <ConfettiExplosion
+                          force={0.25}
+                          duration={1300}
+                          particleCount={25}
+                          particleSize={7}
+                          colors={["#c8c8c8", "#e3e1e1", "#f7f7f7", "#878787"]}
+                          width={400}
+                          height={"-30px"}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-center justify-between">
                 <div className="flex h-[150px] w-[150px] flex-col border-[3px]">
