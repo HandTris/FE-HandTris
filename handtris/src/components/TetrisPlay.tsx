@@ -680,6 +680,9 @@ const Home: React.FC = () => {
     ): string => {
       const thumbTip = landmarks[4];
       const handBase = landmarks[17];
+      if (thumbTip === undefined || handBase === undefined) {
+        return "Unknown";
+      }
 
       if (handType === "Right") {
         // 플레이어 기준 왼손
