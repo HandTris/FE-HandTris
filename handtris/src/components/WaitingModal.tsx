@@ -56,10 +56,10 @@ const WaitingModal = ({
   };
 
   const isButtonDisabled =
-    players.length < 2 || (isButtonClicked && getButtonText() === "Start Game");
+    players.length < 2 || (isButtonClicked && getButtonText() === "Game Start");
 
   const handleButtonClick = () => {
-    if (getButtonText() === "Start Game") {
+    if (getButtonText() === "Game Start") {
       setIsButtonClicked(true);
       onStartGame();
     } else {
