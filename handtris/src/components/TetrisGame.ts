@@ -213,14 +213,59 @@ export class TetrisGame {
 
     this.previousGreyRows = currentGreyRows;
   }
+  // 특정 순서로 블록을 생성하기 위한 배열
+  private readonly PIECE_SEQUENCE = [
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+  ];
+
   createNewBag(): Piece[] {
-    const bag = PIECES.slice(0, 7).map(
+    const bag = this.PIECE_SEQUENCE.map(
       piece => new Piece(piece.shape, piece.color, this),
     );
-    for (let i = bag.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
-    }
+
+    // 이미 정해진 순서이므로 섞지 않습니다.
+
     return bag;
   }
 
