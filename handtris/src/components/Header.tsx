@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { myStatus } from "@/services/gameService";
 import { UserInfo } from "@/types";
+import ProfileImageDialog from "./ProfileImageDialog";
 
 function Header() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,6 +28,10 @@ function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalHovered, setIsModalHovered] = useState(false);
 
   const fetchMyStatus = useCallback(async () => {
     if (isLoggedIn) {
@@ -54,7 +59,7 @@ function Header() {
 
   useEffect(() => {
     fetchMyStatus();
-  }, [fetchMyStatus]);
+  }, [fetchMyStatus, refreshKey]);
 
   useEffect(() => {
     if (pathname === "/lobby" && searchParams.get("refresh") === "true") {
@@ -62,6 +67,10 @@ function Header() {
       router.replace("/lobby");
     }
   }, [pathname, searchParams, fetchMyStatus, router]);
+
+  const handleImageChange = useCallback(() => {
+    setRefreshKey(prevKey => prevKey + 1);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -140,13 +149,31 @@ function Header() {
                   <SheetTitle className="text-white">프로필 정보</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 flex flex-col items-center space-y-4">
-                  <Image
-                    src={myInfo.profileImageUrl || "/image/profile_1.jpeg"}
-                    alt="profile"
-                    width={100}
-                    height={100}
-                    className="rounded-full"
-                  />
+                  <Button
+                    variant="ghost"
+                    className="p-0 mt-6 mb-8 relative"
+                    onMouseEnter={() => setIsModalHovered(true)}
+                    onMouseLeave={() => setIsModalHovered(false)}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    <Image
+                      src={myInfo?.profileImageUrl || "/image/profile_1.jpeg"}
+                      alt="profile"
+                      width={100}
+                      height={100}
+                      className="rounded-full"
+                    />
+                    {isModalHovered && (
+                      <div
+                        className="absolute inset-0 rounded-full bg-black opacity-80 flex items-center justify-center cursor-pointer"
+                        onClick={() => setIsModalOpen(true)}
+                      >
+                        <span className="text-white text-sm font-semibold">
+                          이미지 변경
+                        </span>
+                      </div>
+                    )}
+                  </Button>
                   <h2 className="text-2xl font-bold">{myInfo.nickname}</h2>
                   <div className="w-full bg-gray-700 rounded-lg p-4 space-y-2">
                     <div className="flex justify-between">
@@ -171,6 +198,13 @@ function Header() {
                 </button>
               </SheetContent>
             </Sheet>
+            <ProfileImageDialog
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              imageUrl={myInfo?.profileImageUrl}
+              nickname={myInfo?.nickname}
+              onImageChange={handleImageChange}
+            />
             <LogoutDialog
               isOpen={isDialogOpen}
               setIsOpen={setIsDialogOpen}
