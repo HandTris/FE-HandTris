@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { UserCard } from "./UserCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -41,6 +42,7 @@ const WaitingModal = ({
   wsManager,
 }: WaitingModalProps) => {
   const router = useRouter();
+  const [isButtonClicked, setIsButtonClicked] = useState(false);
 
   if (!isOpen) return null;
 
@@ -53,7 +55,17 @@ const WaitingModal = ({
     return isReady ? "Cancel Ready" : "Ready";
   };
 
-  const isButtonDisabled = players.length < 2;
+  const isButtonDisabled =
+    players.length < 2 || (isButtonClicked && getButtonText() === "Start Game");
+
+  const handleButtonClick = () => {
+    if (getButtonText() === "Start Game") {
+      setIsButtonClicked(true);
+      onStartGame();
+    } else {
+      onReadyToggle();
+    }
+  };
 
   const handleBackToLobby = () => {
     const roomCode = sessionStorage.getItem("roomCode");
@@ -137,7 +149,7 @@ const WaitingModal = ({
             </div>
           </div>
           <button
-            onClick={isOwner ? onStartGame : onReadyToggle}
+            onClick={handleButtonClick}
             className={`mt-4 text-3xl pixel px-6 py-4 text-white rounded-lg transition-colors ${
               isButtonDisabled
                 ? "bg-gray-500 cursor-not-allowed"
