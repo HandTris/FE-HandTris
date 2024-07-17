@@ -271,7 +271,7 @@ const Home: React.FC = () => {
         `/topic/owner/${roomCode}`,
         (message: unknown) => {
           const parsedMessage = message as { isOwner?: boolean };
-          console.log("대기방에서 받는 메시지: ", parsedMessage);
+          // console.log("대기방에서 받는 메시지: ", parsedMessage);
           if (parsedMessage.isOwner !== undefined) {
             setIsOwner(prevIsOwner => {
               if (prevIsOwner === null) {
@@ -359,7 +359,7 @@ const Home: React.FC = () => {
         wsManagerRef.current.subscribe(
           `/topic/state/${roomCode}`,
           (message: { isReady: boolean; isStart: boolean }) => {
-            console.log("대기 정보 message received: ", message);
+            // console.log("대기 정보 message received: ", message);
             setIsAllReady(message.isReady);
             setIsReady(message.isReady); // 서버에서 받은 레디 상태를 설정
             if (message.isStart && !isStart) {
@@ -430,7 +430,7 @@ const Home: React.FC = () => {
         },
         `/topic/state/${roomCode}`,
       );
-      console.log(`Message sent to /topic/state/${roomCode}`);
+      // console.log(`Message sent to /topic/state/${roomCode}`);
       return newState;
     });
   };
@@ -447,7 +447,7 @@ const Home: React.FC = () => {
           `/app/${roomCode}/tetris/start`,
         );
         playSoundEffect("/sounds/start.mp3");
-        console.log("Message sent to start the game");
+        // console.log("Message sent to start the game");
       } catch (error) {
         console.error("Failed to send message to start the game", error);
       }
@@ -631,7 +631,7 @@ const Home: React.FC = () => {
           newGauge = 3;
         }
         setGauge(newGauge);
-        console.log("newGauge: ", newGauge);
+        // console.log("newGauge: ", newGauge);
         if (newGauge == 1 && tetrisGameRef.current) {
           tetrisGameRef.current.isAddAttack = true;
         } else if (newGauge == 2 && tetrisGameRef.current) {
@@ -815,7 +815,7 @@ const Home: React.FC = () => {
     } else {
       // handType이 "left"이면
       if (gesture == "Pointing Left") {
-        console.log("Pointing Left");
+        // console.log("Pointing Left");
         if (now - lastMoveTime.current.rotate < 500) {
         } else {
           lastMoveTime.current.rotate = now;
@@ -823,7 +823,7 @@ const Home: React.FC = () => {
           triggerGestureFeedback("Rotate");
         }
       } else if (gesture == "Pointing Right") {
-        console.log("Pointing Right");
+        // console.log("Pointing Right");
         if (now - lastMoveTime.current.drop < 1000) {
         } else {
           lastMoveTime.current.drop = now;
