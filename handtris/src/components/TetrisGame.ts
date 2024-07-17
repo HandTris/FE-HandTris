@@ -607,6 +607,14 @@ export class Piece {
         }
         // this.game.flashRow(r);
         this.game.clearRow(r);
+        const playTetrisElement = document.getElementById("tetris-container");
+        if (playTetrisElement) {
+          playTetrisElement.classList.add("shakeRow");
+
+          setTimeout(() => {
+            playTetrisElement.classList.remove("shakeRow");
+          }, 200);
+        }
         playSoundEffect("/sounds/clear.wav");
       }
     }
