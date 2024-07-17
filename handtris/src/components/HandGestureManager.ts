@@ -1,11 +1,10 @@
-// src/components/HandGestureManager.ts
-
 import { Camera } from "@mediapipe/camera_utils";
 import { Hands, Results } from "@mediapipe/hands";
 
 export class HandGestureManager {
   hands: Hands;
   onResultsCallback: (results: Results) => void;
+  camera: Camera | null = null;
 
   constructor(onResults: (results: Results) => void) {
     this.onResultsCallback = onResults;
@@ -34,5 +33,11 @@ export class HandGestureManager {
     });
 
     camera.start();
+  }
+  stop() {
+    if (this.camera) {
+      this.camera.stop();
+      this.camera = null;
+    }
   }
 }
