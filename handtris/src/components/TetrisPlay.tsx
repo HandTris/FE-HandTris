@@ -455,6 +455,28 @@ const Home: React.FC = () => {
   };
 
   const startGame = async () => {
+    if (canvasTetrisRef.current) {
+      const ctx = canvasTetrisRef.current.getContext("2d");
+      if (ctx) {
+        ctx.clearRect(
+          0,
+          0,
+          canvasTetrisRef.current.width,
+          canvasTetrisRef.current.height,
+        );
+      }
+    }
+    if (canvasTetris2Ref.current) {
+      const ctx2 = canvasTetris2Ref.current.getContext("2d");
+      if (ctx2) {
+        ctx2.clearRect(
+          0,
+          0,
+          canvasTetris2Ref.current.width,
+          canvasTetris2Ref.current.height,
+        );
+      }
+    }
     setIsDangerous(false);
     setShowWaitingModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
