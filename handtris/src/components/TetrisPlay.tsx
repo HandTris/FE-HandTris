@@ -634,7 +634,6 @@ const Home: React.FC = () => {
         console.log("newGauge: ", newGauge);
         if (newGauge == 1 && tetrisGameRef.current) {
           tetrisGameRef.current.isAddAttack = true;
-          console.log("이즈애드어택", tetrisGameRef.current.isAddAttack);
         } else if (newGauge == 2 && tetrisGameRef.current) {
           tetrisGameRef.current.isFlipAttack = true;
         } else if (newGauge == 3 && tetrisGameRef.current) {
