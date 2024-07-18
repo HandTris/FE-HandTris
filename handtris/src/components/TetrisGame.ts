@@ -31,8 +31,10 @@ export class TetrisGame {
   isAddAttack: boolean;
   isAddAttacked: boolean;
   isFlipAttack: boolean;
+  isFlipAttackToggleOn: boolean;
   isDonutAttack: boolean;
   isDonutAttacked: boolean;
+  isDonutAttackToggleOn: boolean;
   nextBlock: Piece;
   pieceBag: Piece[];
   toggleAttackEffect: boolean;
@@ -76,7 +78,9 @@ export class TetrisGame {
     this.isRowFull = false;
     this.isAddAttack = false;
     this.isFlipAttack = false;
+    this.isFlipAttackToggleOn = false;
     this.isDonutAttack = false;
+    this.isDonutAttackToggleOn = false;
     this.toggleAttackEffect = false;
     this.toggleAttackedEffect = false;
     this.isAddAttacked = false;
