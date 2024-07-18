@@ -133,6 +133,7 @@ export class WebSocketManager {
         }
         if (message.isDonutAttack) {
           game.isDonutAttack = false;
+          game.isDonutAttackToggleOn = true;
         }
       } else {
         console.log("WebSocket connection is not established yet.");

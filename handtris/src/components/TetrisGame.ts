@@ -196,6 +196,7 @@ export class TetrisGame {
     this.ctx2.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
 
     const currentGreyRows: Set<number> = new Set();
+    const pinkCounts = [0, 0, 0];
 
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
@@ -203,7 +204,16 @@ export class TetrisGame {
         if (board2[r][c] == "grey") {
           currentGreyRows.add(r);
         }
+        // 0행, 1행, 2행의 pink 개수 세기
+        if (r <= 2 && board2[r][c] == "pink") {
+          pinkCounts[r]++;
+        }
       }
+    }
+
+    // 0행, 1행, 2행에 각각 3개, 2개, 3개의 pink가 있는지 확인
+    if (pinkCounts[0] === 3 && pinkCounts[1] === 2 && pinkCounts[2] === 3) {
+      this.isDonutAttackToggleOn = false;
     }
 
     if (
