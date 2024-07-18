@@ -95,6 +95,7 @@ export class TetrisGame {
   }
 
   clearFullRow(row: number) {
+    this.linesCleared++;
     for (let y = row; y > 1; y--) {
       for (let c = 0; c < this.COL; c++) {
         this.board[y][c] = this.board[y - 1][c];
@@ -104,7 +105,6 @@ export class TetrisGame {
       this.board[0][c] = this.VACANT;
     }
     this.drawBoard();
-    this.linesCleared++;
   }
 
   createBoard(): string[][] {
@@ -518,7 +518,7 @@ export class Piece {
     } else {
       this.lock();
       this.game.p = this.game.nextBlock;
-      if (this.game.isDonutAttacked == true) {
+      if (this.game.isDonutAttacked == true && this.game.p.color !== "pink") {
         this.game.nextBlock = this.game.gaugeFullPiece();
         this.game.isDonutAttacked = false;
       } else {
@@ -614,13 +614,13 @@ export class Piece {
       }
       if (isRowFull) {
         this.game.isRowFull = true;
+        this.game.clearRow(r);
         for (let y = r; y > 1; y--) {
           for (let c = 0; c < this.game.COL; c++) {
             this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
           }
         }
         // this.game.flashRow(r);
-        this.game.clearRow(r);
         const playTetrisElement = document.getElementById("tetris-container");
         if (playTetrisElement) {
           playTetrisElement.classList.add("shakeRow");
