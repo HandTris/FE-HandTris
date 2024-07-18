@@ -566,7 +566,7 @@ const Home: React.FC = () => {
               if (tetrisGameRef.current) {
                 if (message.isEnd) {
                   tetrisGameRef.current.gameEnd = true;
-                  backgroundMusic.pause();
+                  toggleMusic();
                   playSoundEffect("/sound/winner.mp3");
                   setGameResult("you WIN!");
                 }
@@ -614,10 +614,7 @@ const Home: React.FC = () => {
         console.error("Failed to connect to WebSocket for game", error);
       }
     }
-    backgroundMusic.play();
-    if (isMusicPlaying) {
-      toggleMusic();
-    }
+    toggleMusic();
   };
 
   useEffect(() => {

@@ -56,13 +56,14 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const toggleMusic = () => {
     if (isMusicPlaying) {
-      themeMusic.pause();
-      backgroundMusic.pause();
-    } else {
-      themeMusic.play();
+      themeMusic.stop();
       backgroundMusic.play();
+      setIsMusicPlaying(false);
+    } else {
+      backgroundMusic.stop();
+      themeMusic.play();
+      setIsMusicPlaying(true);
     }
-    setIsMusicPlaying(!isMusicPlaying);
   };
 
   const adjustedPlaySoundEffect = (soundUrl: string) => {
