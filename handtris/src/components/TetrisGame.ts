@@ -114,7 +114,7 @@ export class TetrisGame {
     return board;
   }
   checkDangerousState() {
-    const dangerThreshold = 5;
+    const dangerThreshold = 8;
     for (let r = 0; r < dangerThreshold; r++) {
       for (let c = 0; c < this.COL; c++) {
         if (this.board[r][c] !== this.VACANT) {
@@ -607,6 +607,14 @@ export class Piece {
         }
         // this.game.flashRow(r);
         this.game.clearRow(r);
+        const playTetrisElement = document.getElementById("tetris-container");
+        if (playTetrisElement) {
+          playTetrisElement.classList.add("shakeRow");
+
+          setTimeout(() => {
+            playTetrisElement.classList.remove("shakeRow");
+          }, 200);
+        }
         playSoundEffect("/sounds/clear.wav");
       }
     }

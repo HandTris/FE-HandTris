@@ -255,6 +255,34 @@ canvas {
     animation: shake 0.2s;
 }
 
+@keyframes shakeRow {
+  0% {
+      transform: translateY(30px) scale(1.05);
+  }
+  10% {
+      transform: translateY(0) scale(1);
+  }
+  30% {
+      transform: translateY(15px) scale(1.03);
+  }
+  50% {
+      transform: translateY(0) scale(0.97);
+  }
+  70% {
+      transform: translateY(5px) scale(1.02);
+  }
+  85% {
+      transform: translateY(0) scale(0.99);
+  }
+  100% {
+      transform: translateY(0) scale(1);
+  }
+}
+
+.shakeRow {
+  animation: shakeRow 0.3s;
+}
+
 
 
 @keyframes fall {
