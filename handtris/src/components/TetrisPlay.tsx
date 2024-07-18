@@ -1224,9 +1224,9 @@ const Home: React.FC = () => {
             <div className="mb-[100px] ml-[70px] mr-[70px]">
               <div className="flex h-[200px] w-[350px] flex-col border-4 border-t-0">
                 <div className="press bg-white text-center text-2xl text-black">
-                  BATTLE CMD
+                  ATTACK CMD
                 </div>
-                <div className="text-center text-[40px] p-2 text-white">
+                <div className="flex justify-center gap-8 text-[40px] columns-2 mt-8 p-2 text-white">
                   <Image
                     src={
                       tetrisGameRef.current?.isFlipAttackToggleOn === true
@@ -1247,7 +1247,6 @@ const Home: React.FC = () => {
                     width={85}
                     height={85}
                   />
-                  <span>DONUT</span>
                 </div>
               </div>
             </div>
