@@ -14,6 +14,7 @@ import {
 import CountUp from "react-countup";
 import { getRoomCode } from "@/util/getRoomCode";
 import { WebSocketManager } from "./WebSocketManager";
+import { useMusic } from "./MusicProvider";
 interface GameResultModalProps {
   result: "WIN" | "LOSE";
   onPlayAgain: () => void;
@@ -35,7 +36,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
   const router = useRouter();
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [prevWinRate, setPrevWinRate] = useState<number | null>(null);
-
+  const { toggleMusic } = useMusic();
   const handleBackToLobby = () => {
     const roomCode = getRoomCode();
     if (roomCode && wsManager && wsManager.connected) {
@@ -48,7 +49,7 @@ const GameResultModal: React.FC<GameResultModalProps> = ({
     }
     sessionStorage.removeItem("roomCode");
     sessionStorage.removeItem("roomName");
-
+    toggleMusic();
     router.push("/lobby?refresh=true");
   };
   useEffect(() => {
