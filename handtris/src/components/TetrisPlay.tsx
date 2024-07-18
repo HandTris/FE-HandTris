@@ -66,7 +66,9 @@ const Home: React.FC = () => {
   const prevIsDangerousRef = useRef(false);
   const [showFirstAttack, setShowFirstAttack] = useState(false);
   const [showFirstAttacked, setShowFirstAttacked] = useState(false);
-
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
+  const [showDonutWarning, setShowDonutWarning] = useState(false);
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -110,68 +112,43 @@ const Home: React.FC = () => {
     const canvas = nextBlockRef.current;
     if (canvas && nextBlock) {
       const context = canvas.getContext("2d");
-      if (context) {
+      if (context && tetrisGameRef.current) {
         context.clearRect(0, 0, canvas.width, canvas.height);
+
+        const drawBlock = (x: number, y: number) => {
+          const offsetX =
+            {
+              orange: 1.3,
+              blue: 0.5,
+              green: 1.0,
+              red: 1.0,
+              yellow: 1.0,
+              pink: 1.05,
+            }[nextBlock.color] || 0.5;
+
+          const offsetY =
+            {
+              orange: 0.5,
+              blue: -0.1,
+              green: 0.9,
+              red: 1.0,
+              yellow: 0.8,
+              pink: 0.45,
+            }[nextBlock.color] || 0.5;
+
+          tetrisGameRef.current?.drawSquareCanvas(
+            context,
+            x + offsetX,
+            y + offsetY,
+            nextBlock.color,
+            false,
+          );
+        };
+
         nextBlock.activeTetromino.forEach((row, y) => {
           row.forEach((value, x) => {
-            if (value && tetrisGameRef.current) {
-              if (nextBlock.color === "orange") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.3,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "blue") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y - 0.1,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "green") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.9,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "red") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 1.0,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "yellow") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.8,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "pink") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.05,
-                  y + 0.45,
-                  nextBlock.color,
-                  false,
-                );
-              } else {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              }
+            if (value) {
+              drawBlock(x, y);
             }
           });
         });
@@ -574,7 +551,7 @@ const Home: React.FC = () => {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAddAttacked = true;
                 } else if (message.isFlipAttack) {
-                  // tetrisGameRef.current.toggleAttackedEffect = true;
+                  setIsFlipping(true);
                   const playOppTetrisElement =
                     document.getElementById("tetris-container");
                   if (
@@ -583,14 +560,19 @@ const Home: React.FC = () => {
                   ) {
                     playOppTetrisElement.classList.add("flipped-canvas");
                     setTimeout(() => {
-                      playOppTetrisElement.classList.add("unflipped-canvas");
+                      setIsFlipping(false);
                       setTimeout(() => {
-                        playOppTetrisElement.classList.remove("flipped-canvas");
-                        playOppTetrisElement.classList.remove(
-                          "unflipped-canvas",
-                        );
-                      }, 500);
-                    }, 3000);
+                        playOppTetrisElement.classList.add("unflipped-canvas");
+                        setTimeout(() => {
+                          playOppTetrisElement.classList.remove(
+                            "flipped-canvas",
+                          );
+                          playOppTetrisElement.classList.remove(
+                            "unflipped-canvas",
+                          );
+                        }, 500);
+                      }, 100);
+                    }, 2900);
                   }
                 } else if (message.isDonutAttack) {
                   tetrisGameRef.current.isDonutAttacked = true;
@@ -878,6 +860,19 @@ const Home: React.FC = () => {
         });
     }
   }, []);
+  useEffect(() => {
+    if (tetrisGameRef.current) {
+      const nextBlock = tetrisGameRef.current.getNextBlock();
+      const isDonut = nextBlock.color === "pink";
+      setIsNextBlockDonut(isDonut);
+      if (isDonut) {
+        setShowDonutWarning(true);
+        // NOTE 효과추가
+        setTimeout(() => setShowDonutWarning(false), 3000);
+      }
+      drawNextBlock(nextBlock);
+    }
+  }, [tetrisGameRef.current?.getNextBlock()]);
 
   useEffect(() => {
     if (showFirstAttack) {
@@ -1026,11 +1021,22 @@ const Home: React.FC = () => {
                 className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
               >
                 {isDangerous && (
-                  <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-60 text-white text-center py-[2px] pixel animate-pulse">
+                  <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
                     DANGER!
                   </div>
                 )}
-
+                {isFlipping && (
+                  <div className="absolute inset-0 bg-blue-500 opacity-15 z-10 flex items-center justify-center">
+                    <span className="text-4xl pixel font-bold text-white shadow-text flip-text">
+                      FLIP!
+                    </span>
+                  </div>
+                )}
+                {showDonutWarning && (
+                  <div className="absolute top-8 left-0 right-0 z-10 bg-pink-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
+                    DONUT INCOMING!
+                  </div>
+                )}
                 <div className={`${TETRIS_CANVAS}`}>
                   <canvas
                     ref={canvasTetrisRef}
@@ -1068,15 +1074,25 @@ const Home: React.FC = () => {
               </div>
               <div className="flex flex-col justify-between">
                 <div className="flex flex-cols-2 gap-[50px]">
-                  <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
-                    <div className="press bg-white text-center text-2xl text-black">
-                      NEXT
+                  <div
+                    className={`flex h-[150px] w-[150px] flex-col border-4 border-t-0 relative ${
+                      isNextBlockDonut ? "border-pink-400 animate-pulse" : ""
+                    }`}
+                  >
+                    <div
+                      className={`press text-center pixel text-2xl ${
+                        isNextBlockDonut
+                          ? "bg-pink-400 text-white font-bold animate-pulse"
+                          : "text-black bg-white"
+                      }`}
+                    >
+                      {isNextBlockDonut ? "DONUT!" : "NEXT"}
                     </div>
                     <canvas
                       ref={nextBlockRef}
                       width="150"
                       height="150"
-                      className="w-full h-full"
+                      className={`w-full h-full ${isNextBlockDonut ? "animate-pulse" : ""}`}
                     />
                   </div>
                   <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
@@ -1084,13 +1100,12 @@ const Home: React.FC = () => {
                       Attack
                     </div>
                     <div className="text-center text-[60px] p-2 text-white">
-                      {/* TODO - 공격 횟수로 수정이 필요함 */}
                       {linesCleared !== null ? linesCleared : 0}
                     </div>
                   </div>
                 </div>
                 <div
-                  className={`flex h-[300px] w-[350px] flex-col border-4 border-l-0 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
+                  className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
                 >
                   <div className="press bg-white text-center text-2xl text-black">
                     Your Hands
