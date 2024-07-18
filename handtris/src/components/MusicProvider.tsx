@@ -37,9 +37,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     themeMusic.play();
     setIsMusicPlaying(true);
-    return () => {
-      themeMusic.stop();
-    };
   }, []);
 
   useEffect(() => {
