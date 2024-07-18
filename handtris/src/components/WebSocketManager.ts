@@ -120,17 +120,20 @@ export class WebSocketManager {
             document.getElementById("opposer_tetris");
           if (playOppTetrisElement) {
             playOppTetrisElement.classList.add("flipped-canvas");
+            game.isFlipAttackToggleOn = true;
             setTimeout(() => {
               playOppTetrisElement.classList.add("unflipped-canvas");
               setTimeout(() => {
                 playOppTetrisElement.classList.remove("flipped-canvas");
                 playOppTetrisElement.classList.remove("unflipped-canvas");
+                game.isFlipAttackToggleOn = false;
               }, 500);
             }, 3000);
           }
         }
         if (message.isDonutAttack) {
           game.isDonutAttack = false;
+          game.isDonutAttackToggleOn = true;
         }
       } else {
         console.log("WebSocket connection is not established yet.");

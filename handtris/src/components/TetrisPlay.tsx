@@ -26,7 +26,7 @@ const Home: React.FC = () => {
   const { toggleMusic } = useMusic();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
-  const [isReady, setIsReady] = useState(false); // 레디 상태 추가
+  const [isReady, setIsReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
@@ -1220,6 +1220,36 @@ const Home: React.FC = () => {
                 width={85}
                 height={85}
               />
+            </div>
+            <div className="mb-[100px] ml-[70px] mr-[70px]">
+              <div className="flex h-[200px] w-[350px] flex-col border-4 border-t-0">
+                <div className="press bg-white text-center text-2xl text-black">
+                  BATTLE CMD
+                </div>
+                <div className="text-center text-[40px] p-2 text-white">
+                  <Image
+                    src={
+                      tetrisGameRef.current?.isFlipAttackToggleOn === true
+                        ? "/image/RotatePressed.png"
+                        : "/image/RotateDefault.png"
+                    }
+                    alt="Drop"
+                    width={85}
+                    height={85}
+                  />
+                  <Image
+                    src={
+                      tetrisGameRef.current?.isDonutAttackToggleOn === true
+                        ? "/image/DropPressed.png"
+                        : "/image/DropDefault.png"
+                    }
+                    alt="Rotate"
+                    width={85}
+                    height={85}
+                  />
+                  <span>DONUT</span>
+                </div>
+              </div>
             </div>
           </div>
           <AnimatePresence>
