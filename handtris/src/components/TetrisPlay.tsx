@@ -7,7 +7,7 @@ import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import { backgroundMusic, playSoundEffect } from "@/hook/howl";
+import { playSoundEffect } from "@/hook/howl";
 import { getRoomCode } from "@/util/getRoomCode";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,7 +23,7 @@ import ConfettiExplosion from "react-confetti-explosion";
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
 const Home: React.FC = () => {
-  const { isMusicPlaying, toggleMusic } = useMusic();
+  const { toggleMusic } = useMusic();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
   const [isReady, setIsReady] = useState(false); // 레디 상태 추가
