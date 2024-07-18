@@ -114,7 +114,7 @@ export class TetrisGame {
     return board;
   }
   checkDangerousState() {
-    const dangerThreshold = 5;
+    const dangerThreshold = 8;
     for (let r = 0; r < dangerThreshold; r++) {
       for (let c = 0; c < this.COL; c++) {
         if (this.board[r][c] !== this.VACANT) {
