@@ -70,15 +70,6 @@ const Home: React.FC = () => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
   const [showDonutWarning, setShowDonutWarning] = useState(false);
-  const [animationState, setAnimationState] = useState({
-    opacity: 1,
-    y: 0,
-  });
-  const [donutAttackToggle, setDonutAttackToggle] = useState(
-    tetrisGameRef.current?.isDonutAttackToggleOn
-      ? "/image/DropPressed.png"
-      : "/image/DropDefault.png",
-  );
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -623,6 +614,7 @@ const Home: React.FC = () => {
         // console.log("newGauge: ", newGauge);
         if (newGauge == 1 && tetrisGameRef.current) {
           tetrisGameRef.current.isAddAttack = true;
+          tetrisGameRef.current.isAddAttackToggleOn = true;
         } else if (newGauge == 2 && tetrisGameRef.current) {
           tetrisGameRef.current.isFlipAttack = true;
         } else if (newGauge == 3 && tetrisGameRef.current) {
@@ -921,33 +913,6 @@ const Home: React.FC = () => {
     }
   });
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout | undefined;
-
-    if (tetrisGameRef.current) {
-      const { isDonutAttackToggleOn, linesCleared } = tetrisGameRef.current;
-
-      if (!isDonutAttackToggleOn && linesCleared > 0) {
-        setAnimationState({ opacity: 0, y: -500 });
-
-        timeoutId = setTimeout(() => {
-          setAnimationState({ opacity: 1, y: 0 });
-          setDonutAttackToggle("/image/DropDefault.png");
-        }, 1000);
-      } else if (linesCleared > 0) {
-        setAnimationState({ opacity: 1, y: 0 });
-        setDonutAttackToggle("/image/DropPressed.png");
-      }
-    }
-
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [
-    tetrisGameRef.current?.isDonutAttackToggleOn,
-    tetrisGameRef.current?.linesCleared,
-  ]);
-
   const toggleShowFirstAttack = useCallback(() => {
     setShowFirstAttack(true);
     setTimeout(() => setShowFirstAttack(false), 500);
@@ -1049,7 +1014,7 @@ const Home: React.FC = () => {
                   {/* 첫 번째 아이콘 */}
                   <ArrowUpNarrowWide
                     className={`border-2 absolute text-white rounded-lg
-                        ${gauge === 1 ? "bg-indigo-400" : "bg-black"}
+                        ${gauge === 1 && tetrisGameRef.current?.isAddAttackToggleOn ? "bg-indigo-400" : "bg-black"}
                     w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
