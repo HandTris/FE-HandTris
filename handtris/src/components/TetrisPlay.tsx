@@ -69,6 +69,15 @@ const Home: React.FC = () => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
   const [showDonutWarning, setShowDonutWarning] = useState(false);
+  const [animationState, setAnimationState] = useState({
+    opacity: 1,
+    y: 0,
+  });
+  const [donutAttackToggle, setDonutAttackToggle] = useState(
+    tetrisGameRef.current?.isDonutAttackToggleOn
+      ? "/image/DropPressed.png"
+      : "/image/DropDefault.png",
+  );
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -911,6 +920,27 @@ const Home: React.FC = () => {
     }
   });
 
+  useEffect(() => {
+    let timeoutId;
+    if (
+      !tetrisGameRef.current?.isDonutAttackToggleOn &&
+      tetrisGameRef.current?.linesCleared > 0
+    ) {
+      setAnimationState({ opacity: 0, y: -500 });
+
+      // Change the image after 1 second if `isDonutAttackToggleOn` is false
+      timeoutId = setTimeout(() => {
+        setAnimationState({ opacity: 1, y: 0 });
+        setDonutAttackToggle("/image/DropDefault.png");
+      }, 1000);
+    } else if (tetrisGameRef.current?.linesCleared > 0) {
+      setAnimationState({ opacity: 1, y: 0 });
+      setDonutAttackToggle("/image/DropPressed.png");
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [tetrisGameRef.current?.isDonutAttackToggleOn]);
+
   const toggleShowFirstAttack = useCallback(() => {
     setShowFirstAttack(true);
     setTimeout(() => setShowFirstAttack(false), 500);
@@ -1005,122 +1035,185 @@ const Home: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-around relative pt-8">
-            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
-            <div className="relative flex">
-              <div className="flex w-[20px] flex-col-reverse border-2">
-                <div
-                  className="w-full transition-all duration-700 ease-in-out"
-                  style={{
-                    height: `${(gauge / 3) * 100}%`,
-                    background: "linear-gradient(to top, green, lightgreen)",
-                  }}
-                ></div>
-              </div>
-              <div
-                id="tetris-container"
-                className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
-              >
-                {isDangerous && (
-                  <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
-                    DANGER!
-                  </div>
-                )}
-                {isFlipping && (
-                  <div className="absolute inset-0 bg-blue-500 opacity-15 z-10 flex items-center justify-center">
-                    <span className="text-4xl pixel font-bold text-white shadow-text flip-text">
-                      FLIP!
-                    </span>
-                  </div>
-                )}
-                {showDonutWarning && (
-                  <div className="absolute top-8 left-0 right-0 z-10 bg-pink-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
-                    DONUT INCOMING!
-                  </div>
-                )}
-                <div className={`${TETRIS_CANVAS}`}>
-                  <canvas
-                    ref={canvasTetrisRef}
-                    id="tetris"
-                    width="300"
-                    height="600"
+            <div className="modal-container absolute inset-0 z-50 flex items-center justify-center"></div>
+            <div className="">
+              <div className="flex justify-center">
+                <div className="relative flex w-[100px] z-30 flex-col-reverse">
+                  {/* 첫 번째 아이콘 */}
+                  <Image
+                    src={
+                      gauge === 1
+                        ? "/image/DropPressed.png"
+                        : "/image/DropDefault.png"
+                    }
+                    alt="gauge indicator"
+                    className="absolute"
+                    style={{
+                      left: "90%",
+                      bottom: `${(1 / 3) * 100}%`,
+                      transform: "translateX(-50%) translateY(50%)",
+                    }}
+                    width={70}
+                    height={70}
+                  />
+
+                  {/* 두 번째 아이콘 */}
+                  <Image
+                    src={
+                      tetrisGameRef.current?.isFlipAttackToggleOn
+                        ? "/image/DropPressed.png"
+                        : "/image/DropDefault.png"
+                    }
+                    alt="gauge indicator"
+                    className="absolute"
+                    style={{
+                      left: "90%",
+                      bottom: `${(2 / 3) * 100}%`,
+                      transform: "translateX(-50%) translateY(50%)",
+                    }}
+                    width={70}
+                    height={70}
+                  />
+
+                  {/* 세 번째 아이콘 */}
+                  <Image
+                    src={
+                      tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3
+                        ? "/image/DropPressed.png"
+                        : "/image/DropDefault.png"
+                    }
+                    alt="gauge indicator"
+                    className="absolute"
+                    style={{
+                      left: "90%",
+                      bottom: `${(2.95 / 3) * 100}%`,
+                      transform: "translateX(-50%) translateY(50%)",
+                    }}
+                    width={70}
+                    height={70}
                   />
                 </div>
-                {showFirstAttacked && (
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div>
-                        <ConfettiExplosion
-                          force={0.25}
-                          duration={1300}
-                          particleCount={25}
-                          particleSize={7}
-                          colors={["#c91212", "#ec9898", "#f4d4d4", "#910909"]}
-                          width={400}
-                          height={"-30px"}
-                        />
+                <div className="relative flex z-10 w-[30px] flex-col-reverse border-2">
+                  <div
+                    className="transition-all duration-700 ease-in-out"
+                    style={{
+                      height: `${(gauge / 3) * 100}%`,
+                      background: "linear-gradient(to top, green, lightgreen)",
+                    }}
+                  ></div>
+                </div>
+                <div
+                  id="tetris-container"
+                  className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
+                >
+                  {isDangerous && (
+                    <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
+                      DANGER!
+                    </div>
+                  )}
+                  {isFlipping && (
+                    <div className="absolute inset-0 bg-blue-500 opacity-15 z-10 flex items-center justify-center">
+                      <span className="text-4xl pixel font-bold text-white shadow-text flip-text">
+                        FLIP!
+                      </span>
+                    </div>
+                  )}
+                  {showDonutWarning && (
+                    <div className="absolute top-8 left-0 right-0 z-10 bg-pink-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
+                      DONUT INCOMING!
+                    </div>
+                  )}
+                  <div className={`${TETRIS_CANVAS}`}>
+                    <canvas
+                      ref={canvasTetrisRef}
+                      id="tetris"
+                      width="300"
+                      height="600"
+                    />
+                  </div>
+                  {showFirstAttacked && (
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div>
+                          <ConfettiExplosion
+                            force={0.25}
+                            duration={1300}
+                            particleCount={25}
+                            particleSize={7}
+                            colors={[
+                              "#c91212",
+                              "#ec9898",
+                              "#f4d4d4",
+                              "#910909",
+                            ]}
+                            width={400}
+                            height={"-30px"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {!isHandDetected && (
+                    <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
+                      <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
+                        HANDS NOT DETECTED!
+                        <br />
+                        <span className="text-2xl">Please show your hands</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-between">
+                  <div className="flex flex-cols-2 gap-[50px]">
+                    <div
+                      className={`flex h-[150px] w-[150px] flex-col border-4 border-t-0 relative ${
+                        isNextBlockDonut ? "border-pink-400 animate-pulse" : ""
+                      }`}
+                    >
+                      <div
+                        className={`press text-center pixel text-2xl ${
+                          isNextBlockDonut
+                            ? "bg-pink-400 text-white font-bold animate-pulse"
+                            : "text-black bg-white"
+                        }`}
+                      >
+                        {isNextBlockDonut ? "DONUT!" : "NEXT"}
+                      </div>
+                      <canvas
+                        ref={nextBlockRef}
+                        width="150"
+                        height="150"
+                        className={`w-full h-full ${isNextBlockDonut ? "animate-pulse" : ""}`}
+                      />
+                    </div>
+                    <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
+                      <div className="press bg-white text-center text-xl text-black">
+                        Attack
+                      </div>
+                      <div className="text-center text-[60px] p-2 text-white">
+                        {/* TODO - 공격 횟수로 수정이 필요함 */}
+                        {linesCleared !== null ? linesCleared : 0}
                       </div>
                     </div>
                   </div>
-                )}
-                {!isHandDetected && (
-                  <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
-                    <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
-                      HANDS NOT DETECTED!
-                      <br />
-                      <span className="text-2xl">Please show your hands</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col justify-between">
-                <div className="flex flex-cols-2 gap-[50px]">
                   <div
-                    className={`flex h-[150px] w-[150px] flex-col border-4 border-t-0 relative ${
-                      isNextBlockDonut ? "border-pink-400 animate-pulse" : ""
-                    }`}
+                    className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
                   >
-                    <div
-                      className={`press text-center pixel text-2xl ${
-                        isNextBlockDonut
-                          ? "bg-pink-400 text-white font-bold animate-pulse"
-                          : "text-black bg-white"
-                      }`}
-                    >
-                      {isNextBlockDonut ? "DONUT!" : "NEXT"}
+                    <div className="press bg-white text-center text-2xl text-black">
+                      Your Hands
                     </div>
-                    <canvas
-                      ref={nextBlockRef}
-                      width="150"
-                      height="150"
-                      className={`w-full h-full ${isNextBlockDonut ? "animate-pulse" : ""}`}
-                    />
-                  </div>
-                  <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
-                    <div className="press bg-white text-center text-xl text-black">
-                      Attack
+                    <div className="relative">
+                      <div className="absolute inset-0">
+                        <canvas
+                          ref={canvasRef}
+                          id="canvas"
+                          width="350"
+                          height="271"
+                          className=""
+                        />
+                      </div>
+                      <div className="absolute inset-0"></div>
                     </div>
-                    <div className="text-center text-[60px] p-2 text-white">
-                      {linesCleared !== null ? linesCleared : 0}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
-                >
-                  <div className="press bg-white text-center text-2xl text-black">
-                    Your Hands
-                  </div>
-                  <div className="relative">
-                    <div className="absolute inset-0">
-                      <canvas
-                        ref={canvasRef}
-                        id="canvas"
-                        width="350"
-                        height="271"
-                        className=""
-                      />
-                    </div>
-                    <div className="absolute inset-0"></div>
                   </div>
                 </div>
               </div>
@@ -1227,26 +1320,40 @@ const Home: React.FC = () => {
                   ATTACK CMD
                 </div>
                 <div className="flex justify-center gap-8 text-[40px] columns-2 mt-8 p-2 text-white">
-                  <Image
-                    src={
-                      tetrisGameRef.current?.isFlipAttackToggleOn === true
-                        ? "/image/RotatePressed.png"
-                        : "/image/RotateDefault.png"
+                  <motion.div
+                    initial={{ opacity: 1, y: 0 }}
+                    animate={
+                      tetrisGameRef.current?.isFlipAttackToggleOn
+                        ? { opacity: 0, y: -500 }
+                        : { opacity: 1, y: 0 }
                     }
-                    alt="Drop"
-                    width={85}
-                    height={85}
-                  />
-                  <Image
-                    src={
-                      tetrisGameRef.current?.isDonutAttackToggleOn === true
-                        ? "/image/DropPressed.png"
-                        : "/image/DropDefault.png"
-                    }
-                    alt="Rotate"
-                    width={85}
-                    height={85}
-                  />
+                    transition={{ duration: 1.0 }}
+                    className="z-50"
+                  >
+                    <Image
+                      src={
+                        tetrisGameRef.current?.isFlipAttackToggleOn
+                          ? "/image/RotatePressed.png"
+                          : "/image/RotateDefault.png"
+                      }
+                      alt="gauge indicator"
+                      width={85}
+                      height={85}
+                    />
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 1, y: 0 }}
+                    animate={animationState}
+                    transition={{ duration: 1.0 }}
+                    className="z-50"
+                  >
+                    <Image
+                      src={donutAttackToggle}
+                      alt="gauge indicator"
+                      width={85}
+                      height={85}
+                    />
+                  </motion.div>
                 </div>
               </div>
             </div>
