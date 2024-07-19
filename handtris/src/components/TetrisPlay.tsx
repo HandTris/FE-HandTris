@@ -19,6 +19,7 @@ import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
+import { ArrowUpNarrowWide, Donut, FlipVertical2 } from "lucide-react";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -1040,57 +1041,45 @@ const Home: React.FC = () => {
               <div className="flex justify-center">
                 <div className="relative flex w-[100px] z-30 flex-col-reverse">
                   {/* 첫 번째 아이콘 */}
-                  <Image
-                    src={
-                      gauge === 1
-                        ? "/image/DropPressed.png"
-                        : "/image/DropDefault.png"
-                    }
-                    alt="gauge indicator"
-                    className="absolute"
+                  <ArrowUpNarrowWide
+                    className={`border-2 absolute text-white rounded-lg
+                        ${gauge === 1 ? "bg-indigo-400" : "bg-black"}
+                    w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(1 / 3) * 100}%`,
-                      transform: "translateX(-50%) translateY(50%)",
+                      transform: "translateX(0%) translateY(50%)",
                     }}
-                    width={70}
-                    height={70}
                   />
 
                   {/* 두 번째 아이콘 */}
-                  <Image
-                    src={
-                      tetrisGameRef.current?.isFlipAttackToggleOn
-                        ? "/image/DropPressed.png"
-                        : "/image/DropDefault.png"
-                    }
-                    alt="gauge indicator"
-                    className="absolute"
+                  <FlipVertical2
+                    className={`absolute
+                        border-2 text-white rounded-lg
+                         ${
+                           tetrisGameRef.current?.isFlipAttackToggleOn
+                             ? "bg-yellow-500"
+                             : "bg-black"
+                         }
+                    w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(2 / 3) * 100}%`,
-                      transform: "translateX(-50%) translateY(50%)",
+                      transform: "translateX(0%) translateY(50%)",
                     }}
-                    width={70}
-                    height={70}
                   />
 
                   {/* 세 번째 아이콘 */}
-                  <Image
-                    src={
-                      tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3
-                        ? "/image/DropPressed.png"
-                        : "/image/DropDefault.png"
-                    }
-                    alt="gauge indicator"
-                    className="absolute"
+                  <Donut
+                    className={`absolute 
+                        border-2 text-white rounded-lg
+                        ${tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3 ? "bg-pink-500" : " bg-black"}
+                    w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(2.95 / 3) * 100}%`,
-                      transform: "translateX(-50%) translateY(50%)",
+                      transform: "translateX(0%) translateY(50%)",
                     }}
-                    width={70}
-                    height={70}
                   />
                 </div>
                 <div className="relative flex z-10 w-[30px] flex-col-reverse border-2">
@@ -1320,40 +1309,22 @@ const Home: React.FC = () => {
                   ATTACK CMD
                 </div>
                 <div className="flex justify-center gap-8 text-[40px] columns-2 mt-8 p-2 text-white">
-                  <motion.div
-                    initial={{ opacity: 1, y: 0 }}
-                    animate={
+                  <FlipVertical2
+                    className={`${
                       tetrisGameRef.current?.isFlipAttackToggleOn
-                        ? { opacity: 0, y: -500 }
-                        : { opacity: 1, y: 0 }
+                        ? "bg-yellow-400"
+                        : "bg-black"
                     }
-                    transition={{ duration: 1.0 }}
-                    className="z-50"
-                  >
-                    <Image
-                      src={
-                        tetrisGameRef.current?.isFlipAttackToggleOn
-                          ? "/image/RotatePressed.png"
-                          : "/image/RotateDefault.png"
-                      }
-                      alt="gauge indicator"
-                      width={85}
-                      height={85}
-                    />
-                  </motion.div>
-                  <motion.div
-                    initial={{ opacity: 1, y: 0 }}
-                    animate={animationState}
-                    transition={{ duration: 1.0 }}
-                    className="z-50"
-                  >
-                    <Image
-                      src={donutAttackToggle}
-                      alt="gauge indicator"
-                      width={85}
-                      height={85}
-                    />
-                  </motion.div>
+                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                  />
+                  <Donut
+                    className={`${
+                      tetrisGameRef.current?.isDonutAttackToggleOn
+                        ? "bg-pink-500"
+                        : "bg-black"
+                    }
+                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                  />
                 </div>
               </div>
             </div>
