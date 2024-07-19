@@ -40,6 +40,7 @@ export class TetrisGame {
   toggleAttackEffect: boolean;
   toggleAttackedEffect: boolean;
   previousGreyRows: Set<number>;
+  isAddAttackToggleOn: boolean;
 
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
@@ -81,6 +82,7 @@ export class TetrisGame {
     this.isFlipAttackToggleOn = false;
     this.isDonutAttack = false;
     this.isDonutAttackToggleOn = false;
+    this.isAddAttackToggleOn = false;
     this.toggleAttackEffect = false;
     this.toggleAttackedEffect = false;
     this.isAddAttacked = false;
@@ -221,6 +223,7 @@ export class TetrisGame {
       [...currentGreyRows].some(r => !this.previousGreyRows.has(r))
     ) {
       this.toggleAttackEffect = true;
+      this.isAddAttackToggleOn = false;
     } else {
       this.toggleAttackEffect = false;
     }
