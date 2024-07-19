@@ -922,25 +922,31 @@ const Home: React.FC = () => {
   });
 
   useEffect(() => {
-    let timeoutId;
-    if (
-      !tetrisGameRef.current?.isDonutAttackToggleOn &&
-      tetrisGameRef.current?.linesCleared > 0
-    ) {
-      setAnimationState({ opacity: 0, y: -500 });
+    let timeoutId: NodeJS.Timeout | undefined;
 
-      // Change the image after 1 second if `isDonutAttackToggleOn` is false
-      timeoutId = setTimeout(() => {
+    if (tetrisGameRef.current) {
+      const { isDonutAttackToggleOn, linesCleared } = tetrisGameRef.current;
+
+      if (!isDonutAttackToggleOn && linesCleared > 0) {
+        setAnimationState({ opacity: 0, y: -500 });
+
+        timeoutId = setTimeout(() => {
+          setAnimationState({ opacity: 1, y: 0 });
+          setDonutAttackToggle("/image/DropDefault.png");
+        }, 1000);
+      } else if (linesCleared > 0) {
         setAnimationState({ opacity: 1, y: 0 });
-        setDonutAttackToggle("/image/DropDefault.png");
-      }, 1000);
-    } else if (tetrisGameRef.current?.linesCleared > 0) {
-      setAnimationState({ opacity: 1, y: 0 });
-      setDonutAttackToggle("/image/DropPressed.png");
+        setDonutAttackToggle("/image/DropPressed.png");
+      }
     }
 
-    return () => clearTimeout(timeoutId);
-  }, [tetrisGameRef.current?.isDonutAttackToggleOn]);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [
+    tetrisGameRef.current?.isDonutAttackToggleOn,
+    tetrisGameRef.current?.linesCleared,
+  ]);
 
   const toggleShowFirstAttack = useCallback(() => {
     setShowFirstAttack(true);
