@@ -22,6 +22,7 @@ type MusicContextType = {
   playSoundEffect: (soundUrl: string) => void;
   menuHoverSound: () => void;
   menuClickSound: () => void;
+  stopAllMusic: () => void;
 };
 
 const MusicContext = createContext<MusicContextType | undefined>(undefined);
@@ -50,7 +51,11 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     Howler.volume(effectsVolume);
   }, [effectsVolume]);
-
+  const stopAllMusic = () => {
+    themeMusic.stop();
+    backgroundMusic.stop();
+    setIsMusicPlaying(false);
+  };
   const toggleMusic = () => {
     if (isMusicPlaying) {
       themeMusic.stop();
@@ -86,6 +91,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({
         themeVolume,
         backgroundVolume,
         effectsVolume,
+        stopAllMusic,
         playSoundEffect: adjustedPlaySoundEffect,
         menuHoverSound: adjustedMenuHoverSound,
         menuClickSound: adjustedMenuClickSound,

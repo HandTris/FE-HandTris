@@ -23,7 +23,7 @@ import ConfettiExplosion from "react-confetti-explosion";
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
 const Home: React.FC = () => {
-  const { toggleMusic } = useMusic();
+  const { toggleMusic, stopAllMusic } = useMusic();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -543,7 +543,7 @@ const Home: React.FC = () => {
               if (tetrisGameRef.current) {
                 if (message.isEnd) {
                   tetrisGameRef.current.gameEnd = true;
-                  toggleMusic();
+                  stopAllMusic();
                   playSoundEffect("/sound/winner.mp3");
                   setGameResult("you WIN!");
                 }
