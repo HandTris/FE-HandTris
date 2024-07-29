@@ -1,13 +1,10 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
 import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
-import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
-import { backgroundMusic, playSoundEffect } from "@/hook/howl";
+import { playSoundEffect } from "@/hook/howl";
 import { getRoomCode } from "@/util/getRoomCode";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
@@ -19,6 +16,8 @@ import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
+import { ArrowUpNarrowWide, Donut, FlipVertical2 } from "lucide-react";
+import { LandmarkList } from "@mediapipe/hands";
 import { drawNextBlock } from "./drawNextBlock";
 import { showCountdown } from "./showCountdown";
 import { useHandleGesture } from "@/hook/useHandleGesture";
@@ -26,10 +25,10 @@ import { useHandleGesture } from "@/hook/useHandleGesture";
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
 const Home: React.FC = () => {
-  const { isMusicPlaying, toggleMusic } = useMusic();
+  const { toggleMusic, stopAllMusic } = useMusic();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [isAllReady, setIsAllReady] = useState(false);
-  const [isReady, setIsReady] = useState(false); // 레디 상태 추가
+  const [isReady, setIsReady] = useState(false);
   const [isStart, setIsStart] = useState(false);
   const [gestureFeedback, setGestureFeedback] = useState<string | null>(null);
   const [lastGesture, setLastGesture] = useState<string | null>(null);
@@ -69,7 +68,9 @@ const Home: React.FC = () => {
   const prevIsDangerousRef = useRef(false);
   const [showFirstAttack, setShowFirstAttack] = useState(false);
   const [showFirstAttacked, setShowFirstAttacked] = useState(false);
-
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
+  const [showDonutWarning, setShowDonutWarning] = useState(false);
   const fetchRoomPlayers = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -108,6 +109,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchRoomPlayers();
   }, [fetchRoomPlayers]);
+
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -201,7 +203,7 @@ const Home: React.FC = () => {
         `/topic/owner/${roomCode}`,
         (message: unknown) => {
           const parsedMessage = message as { isOwner?: boolean };
-          console.log("대기방에서 받는 메시지: ", parsedMessage);
+          // console.log("대기방에서 받는 메시지: ", parsedMessage);
           if (parsedMessage.isOwner !== undefined) {
             setIsOwner(prevIsOwner => {
               if (prevIsOwner === null) {
@@ -289,7 +291,7 @@ const Home: React.FC = () => {
         wsManagerRef.current.subscribe(
           `/topic/state/${roomCode}`,
           (message: { isReady: boolean; isStart: boolean }) => {
-            console.log("대기 정보 message received: ", message);
+            // console.log("대기 정보 message received: ", message);
             setIsAllReady(message.isReady);
             setIsReady(message.isReady); // 서버에서 받은 레디 상태를 설정
             if (message.isStart && !isStart) {
@@ -360,7 +362,7 @@ const Home: React.FC = () => {
         },
         `/topic/state/${roomCode}`,
       );
-      console.log(`Message sent to /topic/state/${roomCode}`);
+      // console.log(`Message sent to /topic/state/${roomCode}`);
       return newState;
     });
   };
@@ -377,7 +379,7 @@ const Home: React.FC = () => {
           `/app/${roomCode}/tetris/start`,
         );
         playSoundEffect("/sounds/start.mp3");
-        console.log("Message sent to start the game");
+        // console.log("Message sent to start the game");
       } catch (error) {
         console.error("Failed to send message to start the game", error);
       }
@@ -412,7 +414,12 @@ const Home: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
     if (!handsManagerRef.current) {
-      handsManagerRef.current = new HandGestureManager(onResults);
+      handsManagerRef.current = new HandGestureManager(
+        setLeftHandLandmarks,
+        setRightHandLandmarks,
+        handleGesture,
+        onResults,
+      );
       handsManagerRef.current.start(videoRef.current!);
     }
     await showCountdown();
@@ -434,7 +441,7 @@ const Home: React.FC = () => {
               if (tetrisGameRef.current) {
                 if (message.isEnd) {
                   tetrisGameRef.current.gameEnd = true;
-                  backgroundMusic.pause();
+                  stopAllMusic();
                   playSoundEffect("/sound/winner.mp3");
                   setGameResult("you WIN!");
                 }
@@ -442,7 +449,7 @@ const Home: React.FC = () => {
                   // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAddAttacked = true;
                 } else if (message.isFlipAttack) {
-                  // tetrisGameRef.current.toggleAttackedEffect = true;
+                  setIsFlipping(true);
                   const playOppTetrisElement =
                     document.getElementById("tetris-container");
                   if (
@@ -451,14 +458,19 @@ const Home: React.FC = () => {
                   ) {
                     playOppTetrisElement.classList.add("flipped-canvas");
                     setTimeout(() => {
-                      playOppTetrisElement.classList.add("unflipped-canvas");
+                      setIsFlipping(false);
                       setTimeout(() => {
-                        playOppTetrisElement.classList.remove("flipped-canvas");
-                        playOppTetrisElement.classList.remove(
-                          "unflipped-canvas",
-                        );
-                      }, 500);
-                    }, 3000);
+                        playOppTetrisElement.classList.add("unflipped-canvas");
+                        setTimeout(() => {
+                          playOppTetrisElement.classList.remove(
+                            "flipped-canvas",
+                          );
+                          playOppTetrisElement.classList.remove(
+                            "unflipped-canvas",
+                          );
+                        }, 500);
+                      }, 100);
+                    }, 2900);
                   }
                 } else if (message.isDonutAttack) {
                   tetrisGameRef.current.isDonutAttacked = true;
@@ -482,10 +494,7 @@ const Home: React.FC = () => {
         console.error("Failed to connect to WebSocket for game", error);
       }
     }
-    backgroundMusic.play();
-    if (isMusicPlaying) {
-      toggleMusic();
-    }
+    toggleMusic();
   };
 
   useEffect(() => {
@@ -499,10 +508,10 @@ const Home: React.FC = () => {
           newGauge = 3;
         }
         setGauge(newGauge);
-        console.log("newGauge: ", newGauge);
+        // console.log("newGauge: ", newGauge);
         if (newGauge == 1 && tetrisGameRef.current) {
           tetrisGameRef.current.isAddAttack = true;
-          console.log("이즈애드어택", tetrisGameRef.current.isAddAttack);
+          tetrisGameRef.current.isAddAttackToggleOn = true;
         } else if (newGauge == 2 && tetrisGameRef.current) {
           tetrisGameRef.current.isFlipAttack = true;
         } else if (newGauge == 3 && tetrisGameRef.current) {
@@ -537,7 +546,7 @@ const Home: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-  const triggerGestureFeedback = (feedback: string) => {
+const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
@@ -567,137 +576,21 @@ const Home: React.FC = () => {
     triggerGestureFeedback,
     lastGestureRef,
   });
+  
   const onResults = useCallback(
-    (results: HandLandmarkResults) => {
-      const canvas = canvasRef.current;
-      const canvasCtx = canvas?.getContext("2d");
-
-      if (!canvas || !canvasCtx) {
-        console.error("Canvas or canvas context is not available");
-        return;
-      }
-      const recognizeGesture = (
-        landmarks: LandmarkList,
-        handType: string,
-      ): string => {
-        const thumbTip = landmarks[4];
-        const handBase = landmarks[17];
-        if (thumbTip === undefined || handBase === undefined) {
-          return "Unknown";
-        }
-
-        if (handType === "Right") {
-          // 플레이어 기준 왼손
-          const thumbCalculateAngleRight = (
-            thumbTip: LandmarkList[number],
-            thumbBase: LandmarkList[number],
-          ) => {
-            const deltaY = thumbTip.y - thumbBase.y;
-            const deltaX = thumbTip.x - thumbBase.x;
-            const radians = Math.atan2(deltaX, deltaY);
-            const degrees = radians * (180 / Math.PI);
-            return degrees;
-          };
-
-          const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
-          const rightAngleThreshold = 30;
-          const leftAngleThreshold = 10;
-          if (isHandOpen(landmarks)) {
-            return "Palm";
-          }
-          if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-            return "Pointing Left";
-          }
-          if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-            return "Pointing Right";
-          }
-        } else {
-          // 플레이어 기준 오른손
-          const thumbCalculateAngleLeft = (
-            thumbTip: LandmarkList[number],
-            thumbBase: LandmarkList[number],
-          ) => {
-            const deltaY = thumbTip.y - thumbBase.y;
-            const deltaX = thumbTip.x - thumbBase.x;
-            const radians = Math.atan2(deltaX, deltaY);
-            const degrees = radians * (180 / Math.PI);
-            return degrees;
-          };
-
-          const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
-          const rightAngleThreshold = 10;
-          const leftAngleThreshold = 30;
-          if (isHandOpen(landmarks)) {
-            return "Palm";
-          }
-          if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-            return "Pointing Left";
-          }
-          if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-            return "Pointing Right";
-          }
-        }
-        return "Unknown";
-      };
-
-      canvasCtx.save();
-      canvasCtx.clearRect(
-        0,
-        0,
-        canvasRef.current!.width,
-        canvasRef.current!.height,
-      );
-      let leftHandDetected = false;
-      let rightHandDetected = false;
-
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-          const landmarks = results.multiHandLandmarks[i] as LandmarkList;
-          const classification = results.multiHandedness[i];
-          const handType = classification.label;
-          const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
-
-          for (let j = 0; j < landmarks.length; j++) {
-            landmarks[j].x = 1 - landmarks[j].x;
-          }
-          drawLandmarks(canvasCtx, landmarks, {
-            color: landmarkColor,
-            lineWidth: 0.1,
-          });
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-            color: "#ffffff",
-            lineWidth: 1,
-          });
-          for (let j = 0; j < landmarks.length; j++) {
-            landmarks[j].x = 1 - landmarks[j].x;
-          }
-
-          const gesture = recognizeGesture(landmarks, handType);
-          if (handType === "Left") {
-            setLeftHandLandmarks(landmarks);
-            leftHandDetected = true;
-          } else {
-            setRightHandLandmarks(landmarks);
-            rightHandDetected = true;
-          }
-          handleGesture(gesture, handType);
-        }
-      }
-
-      const bothHandsDetected = leftHandDetected && rightHandDetected;
-      setIsHandDetected(bothHandsDetected);
+    (results: HandLandmarkResults & { bothHandsDetected: boolean }) => {
+     
+      setIsHandDetected(results.bothHandsDetected);
 
       if (borderRef.current) {
-        borderRef.current.style.boxShadow = bothHandsDetected
+        borderRef.current.style.boxShadow = results.bothHandsDetected
           ? "none"
           : "0 0 20px 20px red";
       }
-
-      canvasCtx.restore();
     },
     [handleGesture],
   );
-
+  
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -711,6 +604,19 @@ const Home: React.FC = () => {
         });
     }
   }, []);
+  useEffect(() => {
+    if (tetrisGameRef.current) {
+      const nextBlock = tetrisGameRef.current.getNextBlock();
+      const isDonut = nextBlock.color === "pink";
+      setIsNextBlockDonut(isDonut);
+      if (isDonut) {
+        setShowDonutWarning(true);
+        // NOTE 효과추가
+        setTimeout(() => setShowDonutWarning(false), 3000);
+      }
+      drawNextBlock(nextBlock);
+    }
+  }, [tetrisGameRef.current?.getNextBlock()]);
 
   useEffect(() => {
     if (showFirstAttack) {
@@ -843,102 +749,173 @@ const Home: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center justify-around relative pt-8">
-            <div className="modal-container absolute inset-0 z-10 flex items-center justify-center"></div>
-            <div className="relative flex">
-              <div className="flex w-[20px] flex-col-reverse border-2">
-                <div
-                  className="w-full transition-all duration-700 ease-in-out"
-                  style={{
-                    height: `${(gauge / 3) * 100}%`,
-                    background: "linear-gradient(to top, green, lightgreen)",
-                  }}
-                ></div>
-              </div>
-              <div
-                id="tetris-container"
-                className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
-              >
-                {isDangerous && (
-                  <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-60 text-white text-center py-[2px] pixel animate-pulse">
-                    DANGER!
-                  </div>
-                )}
+            <div className="modal-container absolute inset-0 z-50 flex items-center justify-center"></div>
+            <div className="">
+              <div className="flex justify-center">
+                <div className="relative flex w-[100px] z-30 flex-col-reverse">
+                  {/* 첫 번째 아이콘 */}
+                  <ArrowUpNarrowWide
+                    className={`border-2 absolute text-white rounded-lg
+                        ${gauge === 1 && tetrisGameRef.current?.isAddAttackToggleOn ? "bg-indigo-400" : "bg-black"}
+                    w-[40px] h-[40px]`}
+                    style={{
+                      left: "90%",
+                      bottom: `${(1 / 3) * 100}%`,
+                      transform: "translateX(0%) translateY(50%)",
+                    }}
+                  />
 
-                <div className={`${TETRIS_CANVAS}`}>
-                  <canvas
-                    ref={canvasTetrisRef}
-                    id="tetris"
-                    width="300"
-                    height="600"
+                  {/* 두 번째 아이콘 */}
+                  <FlipVertical2
+                    className={`absolute
+                        border-2 text-white rounded-lg
+                         ${
+                           tetrisGameRef.current?.isFlipAttackToggleOn
+                             ? "bg-yellow-500"
+                             : "bg-black"
+                         }
+                    w-[40px] h-[40px]`}
+                    style={{
+                      left: "90%",
+                      bottom: `${(2 / 3) * 100}%`,
+                      transform: "translateX(0%) translateY(50%)",
+                    }}
+                  />
+
+                  {/* 세 번째 아이콘 */}
+                  <Donut
+                    className={`absolute 
+                        border-2 text-white rounded-lg
+                        ${tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3 ? "bg-pink-500" : " bg-black"}
+                    w-[40px] h-[40px]`}
+                    style={{
+                      left: "90%",
+                      bottom: `${(2.95 / 3) * 100}%`,
+                      transform: "translateX(0%) translateY(50%)",
+                    }}
                   />
                 </div>
-                {showFirstAttacked && (
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div>
-                        <ConfettiExplosion
-                          force={0.25}
-                          duration={1300}
-                          particleCount={25}
-                          particleSize={7}
-                          colors={["#c91212", "#ec9898", "#f4d4d4", "#910909"]}
-                          width={400}
-                          height={"-30px"}
-                        />
+                <div className="relative flex z-10 w-[30px] flex-col-reverse border-2">
+                  <div
+                    className="transition-all duration-700 ease-in-out"
+                    style={{
+                      height: `${(gauge / 3) * 100}%`,
+                      background: "linear-gradient(to top, green, lightgreen)",
+                    }}
+                  ></div>
+                </div>
+                <div
+                  id="tetris-container"
+                  className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
+                >
+                  {isDangerous && (
+                    <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
+                      DANGER!
+                    </div>
+                  )}
+                  {isFlipping && (
+                    <div className="absolute inset-0 bg-blue-500 opacity-15 z-10 flex items-center justify-center">
+                      <span className="text-4xl pixel font-bold text-white shadow-text flip-text">
+                        FLIP!
+                      </span>
+                    </div>
+                  )}
+                  {showDonutWarning && (
+                    <div className="absolute top-8 left-0 right-0 z-10 bg-pink-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
+                      DONUT INCOMING!
+                    </div>
+                  )}
+                  <div className={`${TETRIS_CANVAS}`}>
+                    <canvas
+                      ref={canvasTetrisRef}
+                      id="tetris"
+                      width="300"
+                      height="600"
+                    />
+                  </div>
+                  {showFirstAttacked && (
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div>
+                          <ConfettiExplosion
+                            force={0.25}
+                            duration={1300}
+                            particleCount={25}
+                            particleSize={7}
+                            colors={[
+                              "#c91212",
+                              "#ec9898",
+                              "#f4d4d4",
+                              "#910909",
+                            ]}
+                            width={400}
+                            height={"-30px"}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {!isHandDetected && (
+                    <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
+                      <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
+                        HANDS NOT DETECTED!
+                        <br />
+                        <span className="text-2xl">Please show your hands</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-between">
+                  <div className="flex flex-cols-2 gap-[50px]">
+                    <div
+                      className={`flex h-[150px] w-[150px] flex-col border-4 border-t-0 relative ${
+                        isNextBlockDonut ? "border-pink-400 animate-pulse" : ""
+                      }`}
+                    >
+                      <div
+                        className={`press text-center pixel text-2xl ${
+                          isNextBlockDonut
+                            ? "bg-pink-400 text-white font-bold animate-pulse"
+                            : "text-black bg-white"
+                        }`}
+                      >
+                        {isNextBlockDonut ? "DONUT!" : "NEXT"}
+                      </div>
+                      <canvas
+                        ref={nextBlockRef}
+                        width="150"
+                        height="150"
+                        className={`w-full h-full ${isNextBlockDonut ? "animate-pulse" : ""}`}
+                      />
+                    </div>
+                    <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
+                      <div className="press bg-white text-center text-xl text-black">
+                        Attack
+                      </div>
+                      <div className="text-center text-[60px] p-2 text-white">
+                        {/* TODO - 공격 횟수로 수정이 필요함 */}
+                        {linesCleared !== null ? linesCleared : 0}
                       </div>
                     </div>
                   </div>
-                )}
-                {!isHandDetected && (
-                  <div className="absolute inset-0 z-30 bg-black bg-opacity-70 flex items-center justify-center">
-                    <div className="text-yellow-400 text-4xl font-bold pixel animate-pulse text-center">
-                      HANDS NOT DETECTED!
-                      <br />
-                      <span className="text-2xl">Please show your hands</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col justify-between">
-                <div className="flex flex-cols-2 gap-[50px]">
-                  <div className="flex h-[150px] w-[150px] flex-col border-4 border-l-0 border-t-0">
+                  <div
+                    className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
+                  >
                     <div className="press bg-white text-center text-2xl text-black">
-                      NEXT
+                      Your Hands
                     </div>
-                    <canvas
-                      ref={nextBlockRef}
-                      width="150"
-                      height="150"
-                      className="w-full h-full"
-                    />
-                  </div>
-                  <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
-                    <div className="press bg-white text-center text-xl text-black">
-                      Attack
+                    <div className="relative">
+                      <div className="absolute inset-0">
+                        <canvas
+                          ref={canvasRef}
+                          id="canvas"
+                          width="350"
+                          height="271"
+                          className=""
+                        />
+                      </div>
+                      <div className="absolute inset-0"></div>
                     </div>
-                    <div className="text-center text-[60px] p-2 text-white">
-                      {/* TODO - 공격 횟수로 수정이 필요함 */}
-                      {linesCleared !== null ? linesCleared : 0}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`flex h-[300px] w-[350px] flex-col border-4 border-l-0 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
-                >
-                  <div className="press bg-white text-center text-2xl text-black">
-                    Your Hands
-                  </div>
-                  <div className="relative">
-                    <div className="absolute inset-0">
-                      <canvas
-                        ref={canvasRef}
-                        id="canvas"
-                        width="350"
-                        height="271"
-                        className=""
-                      />
-                    </div>
-                    <div className="absolute inset-0"></div>
                   </div>
                 </div>
               </div>
@@ -1038,6 +1015,31 @@ const Home: React.FC = () => {
                 width={85}
                 height={85}
               />
+            </div>
+            <div className="mb-[100px] ml-[70px] mr-[70px]">
+              <div className="flex h-[200px] w-[350px] flex-col border-4 border-t-0">
+                <div className="press bg-white text-center text-2xl text-black">
+                  ATTACK CMD
+                </div>
+                <div className="flex justify-center gap-8 text-[40px] columns-2 mt-8 p-2 text-white">
+                  <FlipVertical2
+                    className={`${
+                      tetrisGameRef.current?.isFlipAttackToggleOn
+                        ? "bg-yellow-400"
+                        : "bg-black"
+                    }
+                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                  />
+                  <Donut
+                    className={`${
+                      tetrisGameRef.current?.isDonutAttackToggleOn
+                        ? "bg-pink-500"
+                        : "bg-black"
+                    }
+                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <AnimatePresence>

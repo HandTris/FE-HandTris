@@ -31,13 +31,16 @@ export class TetrisGame {
   isAddAttack: boolean;
   isAddAttacked: boolean;
   isFlipAttack: boolean;
+  isFlipAttackToggleOn: boolean;
   isDonutAttack: boolean;
   isDonutAttacked: boolean;
+  isDonutAttackToggleOn: boolean;
   nextBlock: Piece;
   pieceBag: Piece[];
   toggleAttackEffect: boolean;
   toggleAttackedEffect: boolean;
   previousGreyRows: Set<number>;
+  isAddAttackToggleOn: boolean;
 
   drawSquareCanvas: (
     ctx: CanvasRenderingContext2D,
@@ -76,7 +79,10 @@ export class TetrisGame {
     this.isRowFull = false;
     this.isAddAttack = false;
     this.isFlipAttack = false;
+    this.isFlipAttackToggleOn = false;
     this.isDonutAttack = false;
+    this.isDonutAttackToggleOn = false;
+    this.isAddAttackToggleOn = false;
     this.toggleAttackEffect = false;
     this.toggleAttackedEffect = false;
     this.isAddAttacked = false;
@@ -91,6 +97,7 @@ export class TetrisGame {
   }
 
   clearFullRow(row: number) {
+    this.linesCleared++;
     for (let y = row; y > 1; y--) {
       for (let c = 0; c < this.COL; c++) {
         this.board[y][c] = this.board[y - 1][c];
@@ -100,7 +107,6 @@ export class TetrisGame {
       this.board[0][c] = this.VACANT;
     }
     this.drawBoard();
-    this.linesCleared++;
   }
 
   createBoard(): string[][] {
@@ -114,7 +120,7 @@ export class TetrisGame {
     return board;
   }
   checkDangerousState() {
-    const dangerThreshold = 5;
+    const dangerThreshold = 8;
     for (let r = 0; r < dangerThreshold; r++) {
       for (let c = 0; c < this.COL; c++) {
         if (this.board[r][c] !== this.VACANT) {
@@ -192,6 +198,7 @@ export class TetrisGame {
     this.ctx2.fillRect(0, 0, this.COL * this.SQ, this.ROW * this.SQ);
 
     const currentGreyRows: Set<number> = new Set();
+    const pinkCounts = [0, 0, 0];
 
     for (let r = 0; r < this.ROW; r++) {
       for (let c = 0; c < this.COL; c++) {
@@ -199,7 +206,16 @@ export class TetrisGame {
         if (board2[r][c] == "grey") {
           currentGreyRows.add(r);
         }
+        // 0행, 1행, 2행의 pink 개수 세기
+        if (r <= 2 && board2[r][c] == "pink") {
+          pinkCounts[r]++;
+        }
       }
+    }
+
+    // 0행, 1행, 2행에 각각 3개, 2개, 3개의 pink가 있는지 확인
+    if (pinkCounts[0] === 3 && pinkCounts[1] === 2 && pinkCounts[2] === 3) {
+      this.isDonutAttackToggleOn = false;
     }
 
     if (
@@ -207,20 +223,66 @@ export class TetrisGame {
       [...currentGreyRows].some(r => !this.previousGreyRows.has(r))
     ) {
       this.toggleAttackEffect = true;
+      this.isAddAttackToggleOn = false;
     } else {
       this.toggleAttackEffect = false;
     }
 
     this.previousGreyRows = currentGreyRows;
   }
+  // 특정 순서로 블록을 생성하기 위한 배열
+  private readonly PIECE_SEQUENCE = [
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+    PIECES[0],
+    PIECES[3],
+    PIECES[1],
+    PIECES[6],
+    PIECES[4],
+    PIECES[5],
+    PIECES[2],
+  ];
+
   createNewBag(): Piece[] {
-    const bag = PIECES.slice(0, 7).map(
+    const bag = this.PIECE_SEQUENCE.map(
       piece => new Piece(piece.shape, piece.color, this),
     );
-    for (let i = bag.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
-    }
+
+    // 이미 정해진 순서이므로 섞지 않습니다.
+
     return bag;
   }
 
@@ -459,7 +521,7 @@ export class Piece {
     } else {
       this.lock();
       this.game.p = this.game.nextBlock;
-      if (this.game.isDonutAttacked == true) {
+      if (this.game.isDonutAttacked == true && this.game.p.color !== "pink") {
         this.game.nextBlock = this.game.gaugeFullPiece();
         this.game.isDonutAttacked = false;
       } else {
@@ -555,13 +617,21 @@ export class Piece {
       }
       if (isRowFull) {
         this.game.isRowFull = true;
+        this.game.clearRow(r);
         for (let y = r; y > 1; y--) {
           for (let c = 0; c < this.game.COL; c++) {
             this.game.board_forsend[y][c] = this.game.board_forsend[y - 1][c];
           }
         }
         // this.game.flashRow(r);
-        this.game.clearRow(r);
+        const playTetrisElement = document.getElementById("tetris-container");
+        if (playTetrisElement) {
+          playTetrisElement.classList.add("shakeRow");
+
+          setTimeout(() => {
+            playTetrisElement.classList.remove("shakeRow");
+          }, 200);
+        }
         playSoundEffect("/sounds/clear.wav");
       }
     }

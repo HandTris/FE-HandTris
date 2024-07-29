@@ -73,7 +73,7 @@ function Footer() {
               </div>
               <div className="space-y-2">
                 <h4 className="font-medium leading-none text-green-400">
-                  Sound Effects
+                  Global Sound
                 </h4>
                 <Slider
                   value={[effectsVolume]}
