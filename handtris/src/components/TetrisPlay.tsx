@@ -19,6 +19,9 @@ import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
+import { drawNextBlock } from "./drawNextBlock";
+import { showCountdown } from "./showCountdown";
+import { useHandleGesture } from "@/hook/useHandleGesture";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -105,79 +108,6 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchRoomPlayers();
   }, [fetchRoomPlayers]);
-
-  const drawNextBlock = (nextBlock: Piece) => {
-    const canvas = nextBlockRef.current;
-    if (canvas && nextBlock) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        nextBlock.activeTetromino.forEach((row, y) => {
-          row.forEach((value, x) => {
-            if (value && tetrisGameRef.current) {
-              if (nextBlock.color === "orange") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.3,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "blue") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y - 0.1,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "green") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.9,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "red") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 1.0,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "yellow") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.8,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "pink") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.05,
-                  y + 0.45,
-                  nextBlock.color,
-                  false,
-                );
-              } else {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              }
-            }
-          });
-        });
-      }
-    }
-  };
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -485,69 +415,7 @@ const Home: React.FC = () => {
       handsManagerRef.current = new HandGestureManager(onResults);
       handsManagerRef.current.start(videoRef.current!);
     }
-    const showCountdown = () => {
-      tetrisGameRef.current = null;
-      if (nextBlockRef.current !== null) {
-        const ctx = nextBlockRef.current.getContext("2d");
-        if (ctx !== null) {
-          ctx.clearRect(0, 0, 150, 150);
-        }
-      }
-      return new Promise<void>(resolve => {
-        let count = 3;
-        const modals: HTMLElement[] = [];
-
-        const createModal = (): HTMLElement => {
-          const modal = document.createElement("div");
-          modal.classList.add(
-            "absolute",
-            "top-1/2",
-            "left-1/2",
-            "transform",
-            "-translate-x-1/2",
-            "-translate-y-1/2",
-            "text-white",
-            "text-center",
-            "transition-all",
-            "duration-700",
-          );
-          return modal;
-        };
-
-        for (let i = 0; i < 4; i++) {
-          const modal = createModal();
-          modals.push(modal);
-          document.querySelector(".modal-container")?.appendChild(modal);
-        }
-
-        const updateCountdown = () => {
-          const modal = modals[3 - count];
-          modal.innerHTML = count > 0 ? count.toString() : "Go!";
-          modal.style.opacity = "1";
-          modal.style.fontSize = "0rem";
-
-          setTimeout(() => {
-            modal.style.opacity = "0";
-            modal.style.fontSize = "40rem";
-          }, 100);
-        };
-
-        const countdownInterval = setInterval(() => {
-          updateCountdown();
-          count--;
-          if (count < 0) {
-            clearInterval(countdownInterval);
-            setTimeout(() => {
-              modals.forEach(modal =>
-                document.querySelector(".modal-container")?.removeChild(modal),
-              );
-              resolve();
-            }, 1000);
-          }
-        }, 1000);
-      });
-    };
-
+    await showCountdown();
     if (canvasTetrisRef.current && canvasTetris2Ref.current) {
       const ctx = canvasTetrisRef.current.getContext("2d")!;
       const ctx2 = canvasTetris2Ref.current.getContext("2d")!;
@@ -601,7 +469,7 @@ const Home: React.FC = () => {
           );
           isSub.current = true;
         }
-        await showCountdown();
+
         tetrisGameRef.current = new TetrisGame(
           ctx,
           ctx2,
@@ -659,191 +527,16 @@ const Home: React.FC = () => {
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        drawNextBlock(tetrisGameRef.current.getNextBlock());
+        drawNextBlock(
+          tetrisGameRef.current.getNextBlock(),
+          nextBlockRef.current,
+          tetrisGameRef.current,
+        );
         tetrisGameRef.current.isDonutAttack = false;
       }
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const onResults = useCallback((results: HandLandmarkResults) => {
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas?.getContext("2d");
-
-    if (!canvas || !canvasCtx) {
-      console.error("Canvas or canvas context is not available");
-      return;
-    }
-    const recognizeGesture = (
-      landmarks: LandmarkList,
-      handType: string,
-    ): string => {
-      const thumbTip = landmarks[4];
-      const handBase = landmarks[17];
-      if (thumbTip === undefined || handBase === undefined) {
-        return "Unknown";
-      }
-
-      if (handType === "Right") {
-        // 플레이어 기준 왼손
-        const thumbCalculateAngleRight = (
-          thumbTip: LandmarkList[number],
-          thumbBase: LandmarkList[number],
-        ) => {
-          const deltaY = thumbTip.y - thumbBase.y;
-          const deltaX = thumbTip.x - thumbBase.x;
-          const radians = Math.atan2(deltaX, deltaY);
-          const degrees = radians * (180 / Math.PI);
-          return degrees;
-        };
-
-        const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
-        const rightAngleThreshold = 30;
-        const leftAngleThreshold = 10;
-        if (isHandOpen(landmarks)) {
-          return "Palm";
-        }
-        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Left";
-        }
-        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Right";
-        }
-      } else {
-        // 플레이어 기준 오른손
-        const thumbCalculateAngleLeft = (
-          thumbTip: LandmarkList[number],
-          thumbBase: LandmarkList[number],
-        ) => {
-          const deltaY = thumbTip.y - thumbBase.y;
-          const deltaX = thumbTip.x - thumbBase.x;
-          const radians = Math.atan2(deltaX, deltaY);
-          const degrees = radians * (180 / Math.PI);
-          return degrees;
-        };
-
-        const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
-        const rightAngleThreshold = 10;
-        const leftAngleThreshold = 30;
-        if (isHandOpen(landmarks)) {
-          return "Palm";
-        }
-        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Left";
-        }
-        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Right";
-        }
-      }
-      return "Unknown";
-    };
-
-    canvasCtx.save();
-    canvasCtx.clearRect(
-      0,
-      0,
-      canvasRef.current!.width,
-      canvasRef.current!.height,
-    );
-    let leftHandDetected = false;
-    let rightHandDetected = false;
-
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-        const landmarks = results.multiHandLandmarks[i] as LandmarkList;
-        const classification = results.multiHandedness[i];
-        const handType = classification.label;
-        const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
-
-        for (let j = 0; j < landmarks.length; j++) {
-          landmarks[j].x = 1 - landmarks[j].x;
-        }
-        drawLandmarks(canvasCtx, landmarks, {
-          color: landmarkColor,
-          lineWidth: 0.1,
-        });
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#ffffff",
-          lineWidth: 1,
-        });
-        for (let j = 0; j < landmarks.length; j++) {
-          landmarks[j].x = 1 - landmarks[j].x;
-        }
-
-        const gesture = recognizeGesture(landmarks, handType);
-        if (handType === "Left") {
-          setLeftHandLandmarks(landmarks);
-          leftHandDetected = true;
-        } else {
-          setRightHandLandmarks(landmarks);
-          rightHandDetected = true;
-        }
-        handleGesture(gesture, handType);
-      }
-    }
-
-    const bothHandsDetected = leftHandDetected && rightHandDetected;
-    setIsHandDetected(bothHandsDetected);
-
-    if (borderRef.current) {
-      borderRef.current.style.boxShadow = bothHandsDetected
-        ? "none"
-        : "0 0 20px 20px red";
-    }
-
-    canvasCtx.restore();
-  }, []);
-
-  const handleGesture = (gesture: string, handType: string) => {
-    const now = Date.now();
-
-    if (handType === "Right") {
-      if (gesture === "Pointing Right") {
-        if (now - lastMoveTime.current.right < 200) {
-          return;
-        }
-        lastMoveTime.current.right = now;
-        tetrisGameRef.current?.p.moveRight();
-        triggerGestureFeedback("Move Right");
-      } else if (gesture === "Pointing Left") {
-        if (now - lastMoveTime.current.left < 200) {
-          return;
-        }
-        lastMoveTime.current.left = now;
-        tetrisGameRef.current?.p.moveLeft();
-        triggerGestureFeedback("Move Left");
-      }
-    } else {
-      // handType이 "left"이면
-      if (gesture == "Pointing Left") {
-        console.log("Pointing Left");
-        if (now - lastMoveTime.current.rotate < 500) {
-        } else {
-          lastMoveTime.current.rotate = now;
-          tetrisGameRef.current?.p.rotate();
-          triggerGestureFeedback("Rotate");
-        }
-      } else if (gesture == "Pointing Right") {
-        console.log("Pointing Right");
-        if (now - lastMoveTime.current.drop < 1000) {
-        } else {
-          lastMoveTime.current.drop = now;
-          tetrisGameRef.current?.moveToGhostPosition();
-          triggerGestureFeedback("Drop");
-          const playTetrisElement = document.getElementById("tetris-container");
-          if (playTetrisElement) {
-            playTetrisElement.classList.add("shake");
-
-            setTimeout(() => {
-              playTetrisElement.classList.remove("shake");
-            }, 200);
-          }
-        }
-      }
-      lastGestureRef.current = gesture;
-    }
-  };
-
   const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
@@ -868,6 +561,142 @@ const Home: React.FC = () => {
       setLastGesture(null);
     }, 1000);
   };
+  const handleGesture = useHandleGesture({
+    tetrisGameRef,
+    lastMoveTime,
+    triggerGestureFeedback,
+    lastGestureRef,
+  });
+  const onResults = useCallback(
+    (results: HandLandmarkResults) => {
+      const canvas = canvasRef.current;
+      const canvasCtx = canvas?.getContext("2d");
+
+      if (!canvas || !canvasCtx) {
+        console.error("Canvas or canvas context is not available");
+        return;
+      }
+      const recognizeGesture = (
+        landmarks: LandmarkList,
+        handType: string,
+      ): string => {
+        const thumbTip = landmarks[4];
+        const handBase = landmarks[17];
+        if (thumbTip === undefined || handBase === undefined) {
+          return "Unknown";
+        }
+
+        if (handType === "Right") {
+          // 플레이어 기준 왼손
+          const thumbCalculateAngleRight = (
+            thumbTip: LandmarkList[number],
+            thumbBase: LandmarkList[number],
+          ) => {
+            const deltaY = thumbTip.y - thumbBase.y;
+            const deltaX = thumbTip.x - thumbBase.x;
+            const radians = Math.atan2(deltaX, deltaY);
+            const degrees = radians * (180 / Math.PI);
+            return degrees;
+          };
+
+          const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
+          const rightAngleThreshold = 30;
+          const leftAngleThreshold = 10;
+          if (isHandOpen(landmarks)) {
+            return "Palm";
+          }
+          if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+            return "Pointing Left";
+          }
+          if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+            return "Pointing Right";
+          }
+        } else {
+          // 플레이어 기준 오른손
+          const thumbCalculateAngleLeft = (
+            thumbTip: LandmarkList[number],
+            thumbBase: LandmarkList[number],
+          ) => {
+            const deltaY = thumbTip.y - thumbBase.y;
+            const deltaX = thumbTip.x - thumbBase.x;
+            const radians = Math.atan2(deltaX, deltaY);
+            const degrees = radians * (180 / Math.PI);
+            return degrees;
+          };
+
+          const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
+          const rightAngleThreshold = 10;
+          const leftAngleThreshold = 30;
+          if (isHandOpen(landmarks)) {
+            return "Palm";
+          }
+          if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+            return "Pointing Left";
+          }
+          if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+            return "Pointing Right";
+          }
+        }
+        return "Unknown";
+      };
+
+      canvasCtx.save();
+      canvasCtx.clearRect(
+        0,
+        0,
+        canvasRef.current!.width,
+        canvasRef.current!.height,
+      );
+      let leftHandDetected = false;
+      let rightHandDetected = false;
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i] as LandmarkList;
+          const classification = results.multiHandedness[i];
+          const handType = classification.label;
+          const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
+
+          for (let j = 0; j < landmarks.length; j++) {
+            landmarks[j].x = 1 - landmarks[j].x;
+          }
+          drawLandmarks(canvasCtx, landmarks, {
+            color: landmarkColor,
+            lineWidth: 0.1,
+          });
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+            color: "#ffffff",
+            lineWidth: 1,
+          });
+          for (let j = 0; j < landmarks.length; j++) {
+            landmarks[j].x = 1 - landmarks[j].x;
+          }
+
+          const gesture = recognizeGesture(landmarks, handType);
+          if (handType === "Left") {
+            setLeftHandLandmarks(landmarks);
+            leftHandDetected = true;
+          } else {
+            setRightHandLandmarks(landmarks);
+            rightHandDetected = true;
+          }
+          handleGesture(gesture, handType);
+        }
+      }
+
+      const bothHandsDetected = leftHandDetected && rightHandDetected;
+      setIsHandDetected(bothHandsDetected);
+
+      if (borderRef.current) {
+        borderRef.current.style.boxShadow = bothHandsDetected
+          ? "none"
+          : "0 0 20px 20px red";
+      }
+
+      canvasCtx.restore();
+    },
+    [handleGesture],
+  );
 
   useEffect(() => {
     if (videoRef.current) {
