@@ -19,6 +19,7 @@ import GameResultModal from "@/components/GameResultModal";
 import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
+import { drawNextBlock } from "./drawNextBlock";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -105,79 +106,6 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchRoomPlayers();
   }, [fetchRoomPlayers]);
-
-  const drawNextBlock = (nextBlock: Piece) => {
-    const canvas = nextBlockRef.current;
-    if (canvas && nextBlock) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        nextBlock.activeTetromino.forEach((row, y) => {
-          row.forEach((value, x) => {
-            if (value && tetrisGameRef.current) {
-              if (nextBlock.color === "orange") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.3,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "blue") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y - 0.1,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "green") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.9,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "red") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 1.0,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "yellow") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.0,
-                  y + 0.8,
-                  nextBlock.color,
-                  false,
-                );
-              } else if (nextBlock.color === "pink") {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 1.05,
-                  y + 0.45,
-                  nextBlock.color,
-                  false,
-                );
-              } else {
-                tetrisGameRef.current.drawSquareCanvas(
-                  context,
-                  x + 0.5,
-                  y + 0.5,
-                  nextBlock.color,
-                  false,
-                );
-              }
-            }
-          });
-        });
-      }
-    }
-  };
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -659,7 +587,11 @@ const Home: React.FC = () => {
     const interval = setInterval(() => {
       if (tetrisGameRef.current) {
         setLinesCleared(tetrisGameRef.current.linesCleared);
-        drawNextBlock(tetrisGameRef.current.getNextBlock());
+        drawNextBlock(
+          tetrisGameRef.current.getNextBlock(),
+          nextBlockRef.current,
+          tetrisGameRef.current,
+        );
         tetrisGameRef.current.isDonutAttack = false;
       }
     }, 1000);
