@@ -654,69 +654,6 @@ const Home: React.FC = () => {
       console.error("Canvas or canvas context is not available");
       return;
     }
-    const recognizeGesture = (
-      landmarks: LandmarkList,
-      handType: string,
-    ): string => {
-      const thumbTip = landmarks[4];
-      const handBase = landmarks[17];
-      if (thumbTip === undefined || handBase === undefined) {
-        return "Unknown";
-      }
-
-      if (handType === "Right") {
-        // 플레이어 기준 왼손
-        const thumbCalculateAngleRight = (
-          thumbTip: LandmarkList[number],
-          thumbBase: LandmarkList[number],
-        ) => {
-          const deltaY = thumbTip.y - thumbBase.y;
-          const deltaX = thumbTip.x - thumbBase.x;
-          const radians = Math.atan2(deltaX, deltaY);
-          const degrees = radians * (180 / Math.PI);
-          return degrees;
-        };
-
-        const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
-        const rightAngleThreshold = 30;
-        const leftAngleThreshold = 10;
-        if (isHandOpen(landmarks)) {
-          return "Palm";
-        }
-        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Left";
-        }
-        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Right";
-        }
-      } else {
-        // 플레이어 기준 오른손
-        const thumbCalculateAngleLeft = (
-          thumbTip: LandmarkList[number],
-          thumbBase: LandmarkList[number],
-        ) => {
-          const deltaY = thumbTip.y - thumbBase.y;
-          const deltaX = thumbTip.x - thumbBase.x;
-          const radians = Math.atan2(deltaX, deltaY);
-          const degrees = radians * (180 / Math.PI);
-          return degrees;
-        };
-
-        const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
-        const rightAngleThreshold = 10;
-        const leftAngleThreshold = 30;
-        if (isHandOpen(landmarks)) {
-          return "Palm";
-        }
-        if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Left";
-        }
-        if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
-          return "Pointing Right";
-        }
-      }
-      return "Unknown";
-    };
 
     canvasCtx.save();
     canvasCtx.clearRect(
@@ -749,16 +686,20 @@ const Home: React.FC = () => {
         for (let j = 0; j < landmarks.length; j++) {
           landmarks[j].x = 1 - landmarks[j].x;
         }
-
-        const gesture = recognizeGesture(landmarks, handType);
-        if (handType === "Left") {
-          setLeftHandLandmarks(landmarks);
-          leftHandDetected = true;
-        } else {
-          setRightHandLandmarks(landmarks);
-          rightHandDetected = true;
+        if (handsManagerRef.current) {
+          const gesture = handsManagerRef.current.recognizeGesture(
+            landmarks,
+            handType,
+          );
+          if (handType === "Left") {
+            setLeftHandLandmarks(landmarks);
+            leftHandDetected = true;
+          } else {
+            setRightHandLandmarks(landmarks);
+            rightHandDetected = true;
+          }
+          handleGesture(gesture, handType);
         }
-        handleGesture(gesture, handType);
       }
     }
 

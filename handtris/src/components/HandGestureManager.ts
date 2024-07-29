@@ -1,5 +1,6 @@
+import { isHandGood, isHandOpen } from "@/util/handLogic";
 import { Camera } from "@mediapipe/camera_utils";
-import { Hands, Results } from "@mediapipe/hands";
+import { Hands, LandmarkList, Results } from "@mediapipe/hands";
 
 export class HandGestureManager {
   hands: Hands;
@@ -39,5 +40,64 @@ export class HandGestureManager {
       this.camera.stop();
       this.camera = null;
     }
+  }
+
+  recognizeGesture(landmarks: LandmarkList, handType: string): string {
+    const thumbTip = landmarks[4];
+    const handBase = landmarks[17];
+    if (thumbTip === undefined || handBase === undefined) {
+      return "Unknown";
+    }
+
+    if (handType === "Right") {
+      const thumbCalculateAngleRight = (
+        thumbTip: LandmarkList[number],
+        thumbBase: LandmarkList[number],
+      ) => {
+        const deltaY = thumbTip.y - thumbBase.y;
+        const deltaX = thumbTip.x - thumbBase.x;
+        const radians = Math.atan2(deltaX, deltaY);
+        const degrees = radians * (180 / Math.PI);
+        return degrees;
+      };
+
+      const thumbAngle = thumbCalculateAngleRight(handBase, thumbTip);
+      const rightAngleThreshold = 30;
+      const leftAngleThreshold = 10;
+      if (isHandOpen(landmarks)) {
+        return "Palm";
+      }
+      if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+        return "Pointing Left";
+      }
+      if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+        return "Pointing Right";
+      }
+    } else {
+      const thumbCalculateAngleLeft = (
+        thumbTip: LandmarkList[number],
+        thumbBase: LandmarkList[number],
+      ) => {
+        const deltaY = thumbTip.y - thumbBase.y;
+        const deltaX = thumbTip.x - thumbBase.x;
+        const radians = Math.atan2(deltaX, deltaY);
+        const degrees = radians * (180 / Math.PI);
+        return degrees;
+      };
+
+      const thumbAngle = thumbCalculateAngleLeft(handBase, thumbTip);
+      const rightAngleThreshold = 10;
+      const leftAngleThreshold = 30;
+      if (isHandOpen(landmarks)) {
+        return "Palm";
+      }
+      if (thumbAngle < -leftAngleThreshold && isHandGood(landmarks)) {
+        return "Pointing Left";
+      }
+      if (thumbAngle > rightAngleThreshold && isHandGood(landmarks)) {
+        return "Pointing Right";
+      }
+    }
+    return "Unknown";
   }
 }
