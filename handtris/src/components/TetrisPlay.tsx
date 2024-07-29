@@ -1,11 +1,8 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
 import { WebSocketManager } from "@/components/WebSocketManager";
 import { Piece, TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
-import { isHandGood, isHandOpen } from "@/util/handLogic";
 import Image from "next/image";
 import { playSoundEffect } from "@/hook/howl";
 import { getRoomCode } from "@/util/getRoomCode";
@@ -20,6 +17,7 @@ import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
 import { ArrowUpNarrowWide, Donut, FlipVertical2 } from "lucide-react";
+import { LandmarkList } from "@mediapipe/hands";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -460,7 +458,12 @@ const Home: React.FC = () => {
     await new Promise(resolve => setTimeout(resolve, 800));
     const roomCode = getRoomCode();
     if (!handsManagerRef.current) {
-      handsManagerRef.current = new HandGestureManager(onResults);
+      handsManagerRef.current = new HandGestureManager(
+        setLeftHandLandmarks,
+        setRightHandLandmarks,
+        handleGesture,
+        onResults,
+      );
       handsManagerRef.current.start(videoRef.current!);
     }
     const showCountdown = () => {
@@ -646,74 +649,77 @@ const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const onResults = useCallback((results: HandLandmarkResults) => {
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas?.getContext("2d");
+  const onResults = useCallback(
+    (results: HandLandmarkResults & { bothHandsDetected: boolean }) => {
+      // const canvas = canvasRef.current;
+      // const canvasCtx = canvas?.getContext("2d");
 
-    if (!canvas || !canvasCtx) {
-      console.error("Canvas or canvas context is not available");
-      return;
-    }
+      // if (!canvas || !canvasCtx) {
+      //   console.error("Canvas or canvas context is not available");
+      //   return;
+      // }
 
-    canvasCtx.save();
-    canvasCtx.clearRect(
-      0,
-      0,
-      canvasRef.current!.width,
-      canvasRef.current!.height,
-    );
-    let leftHandDetected = false;
-    let rightHandDetected = false;
+      // canvasCtx.save();
+      // canvasCtx.clearRect(
+      //   0,
+      //   0,
+      //   canvasRef.current!.width,
+      //   canvasRef.current!.height,
+      // );
+      // const leftHandDetected = false;
+      // const rightHandDetected = false;
 
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
-        const landmarks = results.multiHandLandmarks[i] as LandmarkList;
-        const classification = results.multiHandedness[i];
-        const handType = classification.label;
-        const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
+      // if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      // for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+      // const landmarks = results.multiHandLandmarks[i] as LandmarkList;
+      // const classification = results.multiHandedness[i];
+      // const handType = classification.label;
+      // const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
 
-        for (let j = 0; j < landmarks.length; j++) {
-          landmarks[j].x = 1 - landmarks[j].x;
-        }
-        drawLandmarks(canvasCtx, landmarks, {
-          color: landmarkColor,
-          lineWidth: 0.1,
-        });
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-          color: "#ffffff",
-          lineWidth: 1,
-        });
-        for (let j = 0; j < landmarks.length; j++) {
-          landmarks[j].x = 1 - landmarks[j].x;
-        }
-        if (handsManagerRef.current) {
-          const gesture = handsManagerRef.current.recognizeGesture(
-            landmarks,
-            handType,
-          );
-          if (handType === "Left") {
-            setLeftHandLandmarks(landmarks);
-            leftHandDetected = true;
-          } else {
-            setRightHandLandmarks(landmarks);
-            rightHandDetected = true;
-          }
-          handleGesture(gesture, handType);
-        }
+      // for (let j = 0; j < landmarks.length; j++) {
+      //   landmarks[j].x = 1 - landmarks[j].x;
+      // }
+      // drawLandmarks(canvasCtx, landmarks, {
+      //   color: landmarkColor,
+      //   lineWidth: 0.1,
+      // });
+      // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+      //   color: "#ffffff",
+      //   lineWidth: 1,
+      // });
+      // for (let j = 0; j < landmarks.length; j++) {
+      //   landmarks[j].x = 1 - landmarks[j].x;
+      // }
+      // if (handsManagerRef.current) {
+      //   const gesture = handsManagerRef.current.recognizeGesture(
+      //     landmarks,
+      //     handType,
+      //   );
+      // if (handType === "Left") {
+      // setLeftHandLandmarks(landmarks);
+      // leftHandDetected = true;
+      // } else {
+      // setRightHandLandmarks(landmarks);
+      // rightHandDetected = true;
+      // }
+      //   handleGesture(gesture, handType);
+      // }
+      // }
+      // }
+
+      // const bothHandsDetected = leftHandDetected && rightHandDetected;
+      setIsHandDetected(results.bothHandsDetected);
+
+      if (borderRef.current) {
+        borderRef.current.style.boxShadow = results.bothHandsDetected
+          ? "none"
+          : "0 0 20px 20px red";
       }
-    }
 
-    const bothHandsDetected = leftHandDetected && rightHandDetected;
-    setIsHandDetected(bothHandsDetected);
-
-    if (borderRef.current) {
-      borderRef.current.style.boxShadow = bothHandsDetected
-        ? "none"
-        : "0 0 20px 20px red";
-    }
-
-    canvasCtx.restore();
-  }, []);
+      // canvasCtx.restore();
+    },
+    [],
+  );
 
   const handleGesture = (gesture: string, handType: string) => {
     const now = Date.now();

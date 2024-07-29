@@ -1,14 +1,35 @@
+import { Hands, Results } from "@mediapipe/hands";
+import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
+import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import { Camera } from "@mediapipe/camera_utils";
-import { Hands, LandmarkList, Results } from "@mediapipe/hands";
+
+interface ExtendedResults extends Results {
+  bothHandsDetected: boolean;
+}
+
+type SetLandmarksFunction = React.Dispatch<
+  React.SetStateAction<LandmarkList | undefined>
+>;
 
 export class HandGestureManager {
   hands: Hands;
-  onResultsCallback: (results: Results) => void;
   camera: Camera | null = null;
+  setLeftHandLandmarks: SetLandmarksFunction;
+  setRightHandLandmarks: SetLandmarksFunction;
+  handleGesture: (gesture: string, handType: string) => void;
+  onResultsCallback: (results: ExtendedResults) => void;
 
-  constructor(onResults: (results: Results) => void) {
+  constructor(
+    setLeftHandLandmarks: SetLandmarksFunction,
+    setRightHandLandmarks: SetLandmarksFunction,
+    handleGesture: (gesture: string, handType: string) => void,
+    onResults: (results: ExtendedResults) => void,
+  ) {
     this.onResultsCallback = onResults;
+    this.setLeftHandLandmarks = setLeftHandLandmarks;
+    this.setRightHandLandmarks = setRightHandLandmarks;
+    this.handleGesture = handleGesture;
     this.hands = new Hands({
       locateFile: (file: string) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
@@ -21,8 +42,63 @@ export class HandGestureManager {
       minTrackingConfidence: 0.7,
     });
 
-    this.hands.onResults(this.onResultsCallback);
+    this.hands.onResults(this.processResults);
   }
+  processResults = (results: Results) => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const canvasCtx = canvas?.getContext("2d");
+
+    if (!canvas || !canvasCtx) {
+      console.error("Canvas or canvas context is not available");
+      return;
+    }
+
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let leftHandDetected = false;
+    let rightHandDetected = false;
+
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+        const landmarks = results.multiHandLandmarks[i] as LandmarkList;
+        const classification = results.multiHandedness[i];
+        const handType = classification.label;
+        const landmarkColor = handType === "Left" ? "#FF0000" : "#0A8008";
+
+        for (let j = 0; j < landmarks.length; j++) {
+          landmarks[j].x = 1 - landmarks[j].x;
+        }
+        drawLandmarks(canvasCtx, landmarks, {
+          color: landmarkColor,
+          lineWidth: 0.1,
+        });
+        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+          color: "#ffffff",
+          lineWidth: 1,
+        });
+        for (let j = 0; j < landmarks.length; j++) {
+          landmarks[j].x = 1 - landmarks[j].x;
+        }
+
+        const gesture = this.recognizeGesture(landmarks, handType);
+        if (handType === "Left") {
+          this.setLeftHandLandmarks(landmarks);
+          leftHandDetected = true;
+        } else {
+          this.setRightHandLandmarks(landmarks);
+          rightHandDetected = true;
+        }
+        this.handleGesture(gesture, handType);
+      }
+    }
+
+    canvasCtx.restore();
+    this.onResultsCallback({
+      ...results,
+      bothHandsDetected: leftHandDetected && rightHandDetected,
+    } as ExtendedResults);
+  };
 
   start(videoElement: HTMLVideoElement) {
     const camera = new Camera(videoElement, {
