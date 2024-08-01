@@ -8,6 +8,8 @@
 - [Next.js](https://nextjs.org/)
 - [TensorFlow.js](https://www.tensorflow.org/js)
 
+<img style="width:500px" src="https://github.com/user-attachments/assets/f3713e9c-fe1b-4124-8d7d-a0a4f6858c96" alt="POSTER" />
+
 ## 커밋 메시지 규칙
 
 - **[🛠️ CREATE]**: 새로운 파일이나 프로젝트 생성
