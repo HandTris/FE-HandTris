@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
 import { WebSocketManager } from "@/components/WebSocketManager";
-import { Piece, TetrisGame } from "@/components/TetrisGame";
+import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import Image from "next/image";
 import { playSoundEffect } from "@/hook/howl";
@@ -110,7 +110,6 @@ const Home: React.FC = () => {
     fetchRoomPlayers();
   }, [fetchRoomPlayers]);
 
-
   useEffect(() => {
     const roomCode = getRoomCode();
     const handleBeforeUnload = () => {
@@ -160,7 +159,7 @@ const Home: React.FC = () => {
       }
     };
     connectWebSocket();
-  }, []);
+  });
 
   useEffect(() => {
     const preventRefresh = (e: KeyboardEvent | BeforeUnloadEvent) => {
@@ -347,7 +346,7 @@ const Home: React.FC = () => {
   const handleReadyToggle = () => {
     if (!isOwner) {
       handleReadyClick();
-      playSoundEffect("/sounds/ready.mp3");
+      playSoundEffect("/sound/ready.mp3");
     }
   };
 
@@ -378,7 +377,7 @@ const Home: React.FC = () => {
           },
           `/app/${roomCode}/tetris/start`,
         );
-        playSoundEffect("/sounds/start.mp3");
+        playSoundEffect("/sound/start.mp3");
         // console.log("Message sent to start the game");
       } catch (error) {
         console.error("Failed to send message to start the game", error);
@@ -546,7 +545,7 @@ const Home: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-const triggerGestureFeedback = (feedback: string) => {
+  const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
@@ -576,10 +575,9 @@ const triggerGestureFeedback = (feedback: string) => {
     triggerGestureFeedback,
     lastGestureRef,
   });
-  
+
   const onResults = useCallback(
     (results: HandLandmarkResults & { bothHandsDetected: boolean }) => {
-     
       setIsHandDetected(results.bothHandsDetected);
 
       if (borderRef.current) {
@@ -590,7 +588,7 @@ const triggerGestureFeedback = (feedback: string) => {
     },
     [handleGesture],
   );
-  
+
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -614,7 +612,11 @@ const triggerGestureFeedback = (feedback: string) => {
         // NOTE 효과추가
         setTimeout(() => setShowDonutWarning(false), 3000);
       }
-      drawNextBlock(nextBlock);
+      drawNextBlock(
+        tetrisGameRef.current.getNextBlock(),
+        nextBlockRef.current,
+        tetrisGameRef.current,
+      );
     }
   }, [tetrisGameRef.current?.getNextBlock()]);
 
@@ -911,7 +913,6 @@ const triggerGestureFeedback = (feedback: string) => {
                           id="canvas"
                           width="350"
                           height="271"
-                          className=""
                         />
                       </div>
                       <div className="absolute inset-0"></div>
