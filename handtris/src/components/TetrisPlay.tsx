@@ -9,11 +9,10 @@ import { getRoomCode } from "@/util/getRoomCode";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
-import WaitingModal, { Player } from "@/components/WaitingModal";
+import WaitingModal from "@/components/WaitingModal";
 import LeftJoystickModel from "@/components/LeftJoystickModel";
 import RightJoystickModel from "@/components/RightJoystickModel";
 import GameResultModal from "@/components/GameResultModal";
-import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
 import { ArrowUpNarrowWide, Donut, FlipVertical2 } from "lucide-react";
@@ -21,6 +20,8 @@ import { LandmarkList } from "@mediapipe/hands";
 import { drawNextBlock } from "./drawNextBlock";
 import { showCountdown } from "./showCountdown";
 import { useHandleGesture } from "@/hook/useHandleGesture";
+import { updateStatus } from "@/services/gameService";
+import useFetchRoomPlayers from "@/hook/fetchRoomPlayers";
 
 const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
 
@@ -59,8 +60,6 @@ const Home: React.FC = () => {
   const lastGestureRef = useRef<string | null>(null);
   const previousLinesClearedRef = useRef(0);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const isSub = useRef(false);
   const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
@@ -71,22 +70,9 @@ const Home: React.FC = () => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
   const [showDonutWarning, setShowDonutWarning] = useState(false);
-  const fetchRoomPlayers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const roomCode = getRoomCode();
-      if (roomCode) {
-        const response = await searchRoomPlayer(roomCode);
-        if (response.data) {
-          setRoomPlayers(response.data);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch room players:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+
+  const { roomPlayers, isLoading, fetchRoomPlayers } = useFetchRoomPlayers();
+
   useEffect(() => {
     const checkDangerousState = () => {
       if (tetrisGameRef.current) {
