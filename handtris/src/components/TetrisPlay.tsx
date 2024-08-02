@@ -23,6 +23,7 @@ import { useHandleGesture } from "@/hook/useHandleGesture";
 import { updateStatus } from "@/services/gameService";
 import useFetchRoomPlayers from "@/hook/fetchRoomPlayers";
 import useSubscribeToEntering from "@/hook/useSubscribeToEntering";
+import useSubscribeToState from "@/hook/useSubscribeToState";
 import { TETRIS_CANVAS } from "@/styles";
 
 const Home: React.FC = () => {
@@ -61,7 +62,6 @@ const Home: React.FC = () => {
   const previousLinesClearedRef = useRef(0);
   const [showResultModal, setShowResultModal] = useState(false);
   const isSub = useRef(false);
-  const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
   const [isHandDetected, setIsHandDetected] = useState(true);
   const prevIsDangerousRef = useRef(false);
@@ -187,71 +187,6 @@ const Home: React.FC = () => {
       window.removeEventListener("beforeunload", preventRefresh);
     };
   }, [toast]);
-
-  useEffect(() => {
-    if (isOwner != null) {
-      subscribeToState();
-    }
-  }, [isOwner]);
-
-  useEffect(() => {
-    if (gameResult) {
-      const timeoutId = setTimeout(() => {
-        setGameResult(null);
-        setIsStart(false);
-        setIsAllReady(false);
-        setLinesCleared(null);
-        setGauge(0);
-        if (tetrisGameRef.current) {
-          tetrisGameRef.current.linesCleared = 0;
-        }
-        if (canvasTetrisRef.current) {
-          const ctx = canvasTetrisRef.current.getContext("2d");
-          if (ctx) {
-            ctx.clearRect(
-              0,
-              0,
-              canvasTetrisRef.current.width,
-              canvasTetrisRef.current.height,
-            );
-          }
-        }
-        if (canvasTetris2Ref.current) {
-          const ctx2 = canvasTetris2Ref.current.getContext("2d");
-          if (ctx2) {
-            ctx2.clearRect(
-              0,
-              0,
-              canvasTetris2Ref.current.width,
-              canvasTetris2Ref.current.height,
-            );
-          }
-        }
-      }, 7000000); //NOTE - 자동 대기 방으로 이동하지 않도록 큰 수를 넣음
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [gameResult]);
-
-  const subscribeToState = async () => {
-    const roomCode = getRoomCode();
-    if (wsManagerRef.current && isOwner != null) {
-      if (!isSubTemp.current) {
-        wsManagerRef.current.subscribe(
-          `/topic/state/${roomCode}`,
-          (message: { isReady: boolean; isStart: boolean }) => {
-            setIsAllReady(message.isReady);
-            setIsReady(message.isReady);
-            if (message.isStart && !isStart) {
-              setIsStart(true);
-              startGame();
-            }
-          },
-        );
-        isSubTemp.current = true;
-      }
-    }
-  };
 
   const handlePlayAgain = () => {
     setShowResultModal(false);
@@ -440,7 +375,15 @@ const Home: React.FC = () => {
     }
     toggleMusic();
   };
-
+  useSubscribeToState(
+    wsManagerRef,
+    isOwner,
+    setIsAllReady,
+    setIsReady,
+    setIsStart,
+    startGame,
+    isStart,
+  );
   useEffect(() => {
     if (tetrisGameRef.current) {
       const currentLinesCleared = tetrisGameRef.current.linesCleared;
