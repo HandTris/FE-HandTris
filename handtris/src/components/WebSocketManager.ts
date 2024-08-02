@@ -45,7 +45,7 @@ export class WebSocketManager {
         },
         (error: string | Frame) => {
           console.error(`Connection error: ${error}`);
-          alert(`Failed to connect to WebSocket: ${error}`);
+          //   alert(`Failed to connect to WebSocket: ${error}`);
           reject(error);
         },
       );
@@ -62,7 +62,7 @@ export class WebSocketManager {
           },
           (error: string | Frame) => {
             console.error(`Disconnection error: ${error}`);
-            alert(`Failed to disconnect from WebSocket: ${error}`);
+            // alert(`Failed to disconnect from WebSocket: ${error}`);
             reject(error);
           },
         );

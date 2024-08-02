@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useCallback, useState } from "react";
 import { WebSocketManager } from "@/components/WebSocketManager";
-import { Piece, TetrisGame } from "@/components/TetrisGame";
+import { TetrisGame } from "@/components/TetrisGame";
 import { HandGestureManager } from "@/components/HandGestureManager";
 import Image from "next/image";
 import { playSoundEffect } from "@/hook/howl";
@@ -9,11 +9,10 @@ import { getRoomCode } from "@/util/getRoomCode";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { HandLandmarkResults, TetrisBoard } from "@/types";
-import WaitingModal, { Player } from "@/components/WaitingModal";
+import WaitingModal from "@/components/WaitingModal";
 import LeftJoystickModel from "@/components/LeftJoystickModel";
 import RightJoystickModel from "@/components/RightJoystickModel";
 import GameResultModal from "@/components/GameResultModal";
-import { searchRoomPlayer, updateStatus } from "@/services/gameService";
 import { useMusic } from "./MusicProvider";
 import ConfettiExplosion from "react-confetti-explosion";
 import { ArrowUpNarrowWide, Donut, FlipVertical2 } from "lucide-react";
@@ -21,8 +20,11 @@ import { LandmarkList } from "@mediapipe/hands";
 import { drawNextBlock } from "./drawNextBlock";
 import { showCountdown } from "./showCountdown";
 import { useHandleGesture } from "@/hook/useHandleGesture";
-
-const TETRIS_CANVAS = `flex items-center justify-between w-full border-2 border-t-0`;
+import { updateStatus } from "@/services/gameService";
+import useFetchRoomPlayers from "@/hook/fetchRoomPlayers";
+import useSubscribeToEntering from "@/hook/useSubscribeToEntering";
+import useSubscribeToState from "@/hook/useSubscribeToState";
+import { TETRIS_CANVAS } from "@/styles";
 
 const Home: React.FC = () => {
   const { toggleMusic, stopAllMusic } = useMusic();
@@ -59,10 +61,7 @@ const Home: React.FC = () => {
   const lastGestureRef = useRef<string | null>(null);
   const previousLinesClearedRef = useRef(0);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const isSub = useRef(false);
-  const isSubTemp = useRef(false);
   const [isDangerous, setIsDangerous] = useState(false);
   const [isHandDetected, setIsHandDetected] = useState(true);
   const prevIsDangerousRef = useRef(false);
@@ -71,22 +70,15 @@ const Home: React.FC = () => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [isNextBlockDonut, setIsNextBlockDonut] = useState(false);
   const [showDonutWarning, setShowDonutWarning] = useState(false);
-  const fetchRoomPlayers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const roomCode = getRoomCode();
-      if (roomCode) {
-        const response = await searchRoomPlayer(roomCode);
-        if (response.data) {
-          setRoomPlayers(response.data);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch room players:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+
+  const { roomPlayers, isLoading, fetchRoomPlayers } = useFetchRoomPlayers();
+  const { subscribeToEntering } = useSubscribeToEntering(
+    wsManagerRef,
+    setIsOwner,
+    setIsAllReady,
+    fetchRoomPlayers,
+  );
+
   useEffect(() => {
     const checkDangerousState = () => {
       if (tetrisGameRef.current) {
@@ -109,7 +101,6 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchRoomPlayers();
   }, [fetchRoomPlayers]);
-
 
   useEffect(() => {
     const roomCode = getRoomCode();
@@ -160,7 +151,7 @@ const Home: React.FC = () => {
       }
     };
     connectWebSocket();
-  }, []);
+  });
 
   useEffect(() => {
     const preventRefresh = (e: KeyboardEvent | BeforeUnloadEvent) => {
@@ -196,115 +187,6 @@ const Home: React.FC = () => {
       window.removeEventListener("beforeunload", preventRefresh);
     };
   }, [toast]);
-
-  const subscribeToEntering = useCallback(
-    (roomCode: string | null) => {
-      wsManagerRef.current?.subscribe(
-        `/topic/owner/${roomCode}`,
-        (message: unknown) => {
-          const parsedMessage = message as { isOwner?: boolean };
-          // console.log("대기방에서 받는 메시지: ", parsedMessage);
-          if (parsedMessage.isOwner !== undefined) {
-            setIsOwner(prevIsOwner => {
-              if (prevIsOwner === null) {
-                if (parsedMessage.isOwner) {
-                  return true;
-                } else {
-                  fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
-                  return false;
-                }
-              } else if (prevIsOwner === true && !parsedMessage.isOwner) {
-                setIsAllReady(false);
-                fetchRoomPlayers(); // 상대방이 입장했을 때 플레이어 정보 다시 가져오기
-              } else if (prevIsOwner === true && parsedMessage.isOwner) {
-                fetchRoomPlayers();
-              } else if (prevIsOwner === false && parsedMessage.isOwner) {
-                fetchRoomPlayers();
-                setIsOwner(true);
-                return parsedMessage.isOwner;
-              }
-              return prevIsOwner;
-            });
-          }
-        },
-      );
-
-      if (roomCode) {
-        wsManagerRef.current?.sendMessageOnEntering(
-          {},
-          `/app/${roomCode}/owner/info`,
-        );
-      }
-    },
-    [fetchRoomPlayers],
-  );
-
-  useEffect(() => {
-    if (isOwner != null) {
-      subscribeToState();
-    }
-  }, [isOwner]);
-
-  useEffect(() => {
-    if (gameResult) {
-      const timeoutId = setTimeout(() => {
-        setGameResult(null);
-        setIsStart(false);
-        setIsAllReady(false);
-        setLinesCleared(null);
-        setGauge(0);
-        if (tetrisGameRef.current) {
-          tetrisGameRef.current.linesCleared = 0;
-        }
-        if (canvasTetrisRef.current) {
-          const ctx = canvasTetrisRef.current.getContext("2d");
-          if (ctx) {
-            ctx.clearRect(
-              0,
-              0,
-              canvasTetrisRef.current.width,
-              canvasTetrisRef.current.height,
-            );
-          }
-        }
-        if (canvasTetris2Ref.current) {
-          const ctx2 = canvasTetris2Ref.current.getContext("2d");
-          if (ctx2) {
-            ctx2.clearRect(
-              0,
-              0,
-              canvasTetris2Ref.current.width,
-              canvasTetris2Ref.current.height,
-            );
-          }
-        }
-      }, 7000000); //NOTE - 자동 대기 방으로 이동하지 않도록 큰 수를 넣음
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [gameResult]);
-
-  const subscribeToState = async () => {
-    const roomCode = getRoomCode();
-    if (wsManagerRef.current && isOwner != null) {
-      if (!isSubTemp.current) {
-        wsManagerRef.current.subscribe(
-          `/topic/state/${roomCode}`,
-          (message: { isReady: boolean; isStart: boolean }) => {
-            // console.log("대기 정보 message received: ", message);
-            setIsAllReady(message.isReady);
-            setIsReady(message.isReady); // 서버에서 받은 레디 상태를 설정
-            if (message.isStart && !isStart) {
-              setIsStart(true);
-              startGame(); // 클라이언트 시작 로직
-            }
-          },
-        );
-        console.log(`Subscribed to /topic/state/${roomCode}`);
-        isSubTemp.current = true;
-      }
-    }
-  };
 
   const handlePlayAgain = () => {
     setShowResultModal(false);
@@ -347,7 +229,7 @@ const Home: React.FC = () => {
   const handleReadyToggle = () => {
     if (!isOwner) {
       handleReadyClick();
-      playSoundEffect("/sounds/ready.mp3");
+      playSoundEffect("/sound/ready.mp3");
     }
   };
 
@@ -362,7 +244,6 @@ const Home: React.FC = () => {
         },
         `/topic/state/${roomCode}`,
       );
-      // console.log(`Message sent to /topic/state/${roomCode}`);
       return newState;
     });
   };
@@ -378,8 +259,7 @@ const Home: React.FC = () => {
           },
           `/app/${roomCode}/tetris/start`,
         );
-        playSoundEffect("/sounds/start.mp3");
-        // console.log("Message sent to start the game");
+        playSoundEffect("/sound/start.mp3");
       } catch (error) {
         console.error("Failed to send message to start the game", error);
       }
@@ -446,7 +326,6 @@ const Home: React.FC = () => {
                   setGameResult("you WIN!");
                 }
                 if (message.isAddAttack) {
-                  // tetrisGameRef.current.addBlockRow(); //NOTE - 실시간 공격 적용 시 이 부분 수정 필요
                   tetrisGameRef.current.isAddAttacked = true;
                 } else if (message.isFlipAttack) {
                   setIsFlipping(true);
@@ -496,7 +375,15 @@ const Home: React.FC = () => {
     }
     toggleMusic();
   };
-
+  useSubscribeToState(
+    wsManagerRef,
+    isOwner,
+    setIsAllReady,
+    setIsReady,
+    setIsStart,
+    startGame,
+    isStart,
+  );
   useEffect(() => {
     if (tetrisGameRef.current) {
       const currentLinesCleared = tetrisGameRef.current.linesCleared;
@@ -508,7 +395,6 @@ const Home: React.FC = () => {
           newGauge = 3;
         }
         setGauge(newGauge);
-        // console.log("newGauge: ", newGauge);
         if (newGauge == 1 && tetrisGameRef.current) {
           tetrisGameRef.current.isAddAttack = true;
           tetrisGameRef.current.isAddAttackToggleOn = true;
@@ -546,7 +432,7 @@ const Home: React.FC = () => {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-const triggerGestureFeedback = (feedback: string) => {
+  const triggerGestureFeedback = (feedback: string) => {
     if (feedback === lastGesture) {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
@@ -576,10 +462,9 @@ const triggerGestureFeedback = (feedback: string) => {
     triggerGestureFeedback,
     lastGestureRef,
   });
-  
+
   const onResults = useCallback(
     (results: HandLandmarkResults & { bothHandsDetected: boolean }) => {
-     
       setIsHandDetected(results.bothHandsDetected);
 
       if (borderRef.current) {
@@ -590,7 +475,7 @@ const triggerGestureFeedback = (feedback: string) => {
     },
     [handleGesture],
   );
-  
+
   useEffect(() => {
     if (videoRef.current) {
       navigator.mediaDevices
@@ -611,10 +496,13 @@ const triggerGestureFeedback = (feedback: string) => {
       setIsNextBlockDonut(isDonut);
       if (isDonut) {
         setShowDonutWarning(true);
-        // NOTE 효과추가
         setTimeout(() => setShowDonutWarning(false), 3000);
       }
-      drawNextBlock(nextBlock);
+      drawNextBlock(
+        tetrisGameRef.current.getNextBlock(),
+        nextBlockRef.current,
+        tetrisGameRef.current,
+      );
     }
   }, [tetrisGameRef.current?.getNextBlock()]);
 
@@ -753,41 +641,36 @@ const triggerGestureFeedback = (feedback: string) => {
             <div className="">
               <div className="flex justify-center">
                 <div className="relative flex w-[100px] z-30 flex-col-reverse">
-                  {/* 첫 번째 아이콘 */}
                   <ArrowUpNarrowWide
-                    className={`border-2 absolute text-white rounded-lg
-                        ${gauge === 1 && tetrisGameRef.current?.isAddAttackToggleOn ? "bg-indigo-400" : "bg-black"}
-                    w-[40px] h-[40px]`}
+                    className={`border-2 absolute text-white rounded-lg ${
+                      gauge === 1 && tetrisGameRef.current?.isAddAttackToggleOn
+                        ? "bg-indigo-400"
+                        : "bg-black"
+                    } w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(1 / 3) * 100}%`,
                       transform: "translateX(0%) translateY(50%)",
                     }}
                   />
-
-                  {/* 두 번째 아이콘 */}
                   <FlipVertical2
-                    className={`absolute
-                        border-2 text-white rounded-lg
-                         ${
-                           tetrisGameRef.current?.isFlipAttackToggleOn
-                             ? "bg-yellow-500"
-                             : "bg-black"
-                         }
-                    w-[40px] h-[40px]`}
+                    className={`absolute border-2 text-white rounded-lg ${
+                      tetrisGameRef.current?.isFlipAttackToggleOn
+                        ? "bg-yellow-500"
+                        : "bg-black"
+                    } w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(2 / 3) * 100}%`,
                       transform: "translateX(0%) translateY(50%)",
                     }}
                   />
-
-                  {/* 세 번째 아이콘 */}
                   <Donut
-                    className={`absolute 
-                        border-2 text-white rounded-lg
-                        ${tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3 ? "bg-pink-500" : " bg-black"}
-                    w-[40px] h-[40px]`}
+                    className={`absolute border-2 text-white rounded-lg ${
+                      tetrisGameRef.current?.isDonutAttackToggleOn && gauge == 3
+                        ? "bg-pink-500"
+                        : " bg-black"
+                    } w-[40px] h-[40px]`}
                     style={{
                       left: "90%",
                       bottom: `${(2.95 / 3) * 100}%`,
@@ -806,7 +689,9 @@ const triggerGestureFeedback = (feedback: string) => {
                 </div>
                 <div
                   id="tetris-container"
-                  className={`flex flex-col justify-between relative ${isDangerous ? "danger-state" : ""}`}
+                  className={`flex flex-col justify-between relative ${
+                    isDangerous ? "danger-state" : ""
+                  }`}
                 >
                   {isDangerous && (
                     <div className="absolute top-0 left-0 right-0 z-10 bg-red-600 opacity-40 text-white text-center py-[2px] pixel animate-pulse">
@@ -885,7 +770,9 @@ const triggerGestureFeedback = (feedback: string) => {
                         ref={nextBlockRef}
                         width="150"
                         height="150"
-                        className={`w-full h-full ${isNextBlockDonut ? "animate-pulse" : ""}`}
+                        className={`w-full h-full ${
+                          isNextBlockDonut ? "animate-pulse" : ""
+                        }`}
                       />
                     </div>
                     <div className="flex h-[150px] w-[150px] flex-col border-4 border-t-0 ">
@@ -893,13 +780,14 @@ const triggerGestureFeedback = (feedback: string) => {
                         Attack
                       </div>
                       <div className="text-center text-[60px] p-2 text-white">
-                        {/* TODO - 공격 횟수로 수정이 필요함 */}
                         {linesCleared !== null ? linesCleared : 0}
                       </div>
                     </div>
                   </div>
                   <div
-                    className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${!isHandDetected ? "border-yellow-400 hand-warning" : ""}`}
+                    className={`flex h-[300px] w-[350px] flex-col border-4 border-t-0 ${
+                      !isHandDetected ? "border-yellow-400 hand-warning" : ""
+                    }`}
                   >
                     <div className="press bg-white text-center text-2xl text-black">
                       Your Hands
@@ -911,7 +799,6 @@ const triggerGestureFeedback = (feedback: string) => {
                           id="canvas"
                           width="350"
                           height="271"
-                          className=""
                         />
                       </div>
                       <div className="absolute inset-0"></div>
@@ -964,7 +851,6 @@ const triggerGestureFeedback = (feedback: string) => {
             </div>
           </div>
 
-          {/* 조이스틱 모델 및 제스쳐 피드백 부분 */}
           <div className="flex justify-start items-center gap-2 ml-[50px]">
             <div className="flex justify-center items-center">
               <Image
@@ -1027,16 +913,14 @@ const triggerGestureFeedback = (feedback: string) => {
                       tetrisGameRef.current?.isFlipAttackToggleOn
                         ? "bg-yellow-400"
                         : "bg-black"
-                    }
-                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                    } border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
                   />
                   <Donut
                     className={`${
                       tetrisGameRef.current?.isDonutAttackToggleOn
                         ? "bg-pink-500"
                         : "bg-black"
-                    }
-                        border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
+                    } border-4 p-2 rounded-xl text-white w-[105px] h-[105px] transition-all duration-700 ease-in-out`}
                   />
                 </div>
               </div>
