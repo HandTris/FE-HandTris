@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { getRoomCode } from "@/util/getRoomCode";
 import { searchRoomPlayer } from "@/services/gameService";
+import { Player } from "@/components/WaitingModal";
 
 const useFetchRoomPlayers = () => {
   const [roomPlayers, setRoomPlayers] = useState<Player[]>([]);
