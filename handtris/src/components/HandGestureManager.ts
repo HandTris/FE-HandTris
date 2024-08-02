@@ -4,11 +4,11 @@ import { HAND_CONNECTIONS, LandmarkList } from "@mediapipe/hands";
 import { isHandGood, isHandOpen } from "@/util/handLogic";
 import { Camera } from "@mediapipe/camera_utils";
 
-interface ExtendedResults extends Results {
+export interface ExtendedResults extends Results {
   bothHandsDetected: boolean;
 }
 
-type SetLandmarksFunction = React.Dispatch<
+export type SetLandmarksFunction = React.Dispatch<
   React.SetStateAction<LandmarkList | undefined>
 >;
 
